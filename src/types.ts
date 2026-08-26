@@ -24,6 +24,20 @@ export interface BoosterDef extends RectDef {
   power?: number;
 }
 
+export interface RampDef extends RectDef {
+  dx: number;
+  dy: number;
+  lift?: number;
+  boost?: number;
+}
+
+export interface TrampolineDef {
+  x: number;
+  y: number;
+  r: number;
+  power?: number;
+}
+
 export interface BumperDef {
   x: number;
   y: number;
@@ -42,22 +56,37 @@ export interface PopBumperDef extends BumperDef {
   triggerRadius: number;
 }
 
+export interface PopVoidDef extends RectDef {
+  triggerX: number;
+  triggerY: number;
+  triggerRadius: number;
+}
+
+export interface StarRequirement {
+  maxStrokes?: number;
+  maxTimeMs?: number;
+}
+
 export interface LevelDefinition {
   id: string;
   mode: GameMode;
   group: number;
   ball: Vec2;
   hole: Vec2;
-  threeStars: number;
-  twoStars: number;
+  threeStar: StarRequirement;
+  twoStar: StarRequirement;
   walls?: RectDef[];
   triangles?: TriangleDef[];
   sand?: RectDef[];
   ice?: RectDef[];
+  voids?: RectDef[];
   boosters?: BoosterDef[];
+  ramps?: RampDef[];
+  trampolines?: TrampolineDef[];
   bumpers?: BumperDef[];
   popWalls?: PopWallDef[];
   popBumpers?: PopBumperDef[];
+  popVoids?: PopVoidDef[];
 }
 
 export interface LevelRecord {
