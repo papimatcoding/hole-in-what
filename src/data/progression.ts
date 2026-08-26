@@ -5,8 +5,10 @@ export interface StarRewardDefinition {
   cosmeticId: string;
 }
 
-// 40 Classic holes = 120 possible stars. 60★ asks for solid progress without forcing completion.
-export const TROLL_UNLOCK_STARS = 60;
+// HARD is the game's hook, not an endgame reward. A strong first Classic chapter or
+// roughly eight good Classic performances is enough to reveal it.
+export const TROLL_UNLOCK_STARS = 24;
+export const TROLL_UNLOCK_CLASSIC_COMPLETIONS = 10;
 
 export const STAR_REWARDS: StarRewardDefinition[] = [
   { stars: 10, cosmeticId: "trail-stardust" },
