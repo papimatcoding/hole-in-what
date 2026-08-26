@@ -41,12 +41,12 @@ function c10():LevelDefinition{
   return path(l,{x:430,y:705},{x:105,y:540},{x:430,y:375},{x:420,y:235});
 }
 
-// 11: mechanic-introduction breather. The direct attacking line deliberately crosses sand.
+// 11: sand introduction. The easy line crosses the sand; the dry bypass is faster but asks for a deliberate route.
 function c11():LevelDefinition{
   const l=base("classic",11,{x:105,y:820},{x:430,y:180},2,3,"sand");
-  l.sand=[r(180,455,180,175)];
-  l.walls=[r(28,340,190,W)];
-  return path(l,{x:245,y:545},{x:360,y:360},{x:430,y:245});
+  l.sand=[r(160,455,230,175)];
+  l.walls=[r(330,650,182,W),r(28,340,190,W)];
+  return path(l,{x:270,y:675},{x:270,y:535},{x:315,y:405},{x:430,y:245});
 }
 // 12–14 build back up using familiar geometry.
 function c12():LevelDefinition{const l=base("classic",12,{x:270,y:820},{x:270,y:170},2,3,"wall");l.walls=[r(28,540,190,W),r(322,540,190,W),r(258,285,W,195)];return path(l,{x:270,y:500},{x:150,y:390},{x:150,y:255},{x:270,y:210});}
