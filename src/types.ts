@@ -30,7 +30,6 @@ export interface FanDef extends RectDef {
   strength?: number;
 }
 
-// Kept for compatibility with earlier V8.1 level data.
 export type WindDef = FanDef;
 
 export interface PortalPointDef {
@@ -105,8 +104,32 @@ export interface PopVoidDef extends RectDef {
   triggerRadius: number;
 }
 
+export type CourseMechanic =
+  | "wall"
+  | "bumper"
+  | "sand"
+  | "ice"
+  | "booster"
+  | "fan"
+  | "curve"
+  | "portal"
+  | "moving"
+  | "void"
+  | "ramp"
+  | "trampoline";
+
+export type TrollTrapArchetype =
+  | "gate-pop"
+  | "bumper-ambush"
+  | "floor-drop"
+  | "cross-gate"
+  | "safe-lane-collapse"
+  | "rebound-punish"
+  | "late-combo";
+
 export interface StarRequirement {
   maxStrokes?: number;
+  /** Retained for old saves/data compatibility. Current campaign stars are stroke-only. */
   maxTimeMs?: number;
 }
 
@@ -118,8 +141,12 @@ export interface LevelDefinition {
   hole: Vec2;
   threeStar: StarRequirement;
   twoStar: StarRequirement;
-  /** Intended route used only by the deterministic course generator/validator. */
+  /** Intended route used by deterministic generation, auditing and bot research. */
   designPath?: Vec2[];
+  /** Mechanic the authored mastery route is expected to engage with. */
+  primaryMechanic?: CourseMechanic;
+  /** HARD surprise grammar. Pure metadata; gameplay is still expressed by normal primitives. */
+  trollArchetype?: TrollTrapArchetype;
   fairways?: RectDef[];
   walls?: RectDef[];
   triangles?: TriangleDef[];
