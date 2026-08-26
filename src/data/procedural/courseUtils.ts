@@ -98,7 +98,9 @@ function circleTouchesPath(level:LevelDefinition,x:number,y:number,radius:number
 function cleanRects(level:LevelDefinition,key:"voids"|"sand"|"ice"|"fans"|"ramps"):void {
   const walls=level.walls ?? [];
   const list=(level[key] ?? []) as RectDef[];
-  (level as unknown as Record<string,unknown>)[key]=list.filter(rect=>!walls.some(w=>overlap(rect,w,3)));
+  // Touching a wall edge is valid: authored sand/ice often fills a corridor exactly up to its rails.
+  // Only remove zones with a real geometric overlap, not a few pixels of defensive clearance.
+  (level as unknown as Record<string,unknown>)[key]=list.filter(rect=>!walls.some(w=>overlap(rect,w,0)));
 }
 
 function normalizePhysics(level:LevelDefinition):void {
