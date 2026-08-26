@@ -41,7 +41,8 @@ export class LevelSelectScene extends Phaser.Scene {
       fontFamily: "system-ui, sans-serif", fontSize: "40px", color: "#f5f7fa"
     }).setInteractive({ useHandCursor: true }).on("pointerup", () => this.scene.start("menu"));
 
-    this.add.text(270, 58, this.mode.toUpperCase(), {
+    const modeLabel = this.mode === "troll" ? "HARD" : "CLASSIC";
+    this.add.text(270, 58, modeLabel, {
       fontFamily: "system-ui, sans-serif", fontSize: "30px", fontStyle: "bold", color: "#f5f7fa"
     }).setOrigin(0.5);
 
