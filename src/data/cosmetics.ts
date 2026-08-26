@@ -8,20 +8,25 @@ export interface CosmeticDefinition {
   primary: number;
   secondary?: number;
   rarity: "common" | "rare" | "epic" | "seasonal";
+  price?: number;
 }
 
 export const cosmetics: CosmeticDefinition[] = [
-  { id: "ball-classic", category: "ball", name: "Classic", description: "La original.", primary: 0xfbfefe, secondary: 0xbac4ce, rarity: "common" },
-  { id: "ball-midnight", category: "ball", name: "Midnight", description: "Negro mate con borde frío.", primary: 0x151b23, secondary: 0x87a4bd, rarity: "rare" },
-  { id: "ball-spirit", category: "ball", name: "Spirit Orb", description: "Un adelanto de Spirit Bloom.", primary: 0xb8d8ff, secondary: 0xe9c7ff, rarity: "seasonal" },
+  { id: "ball-classic", category: "ball", name: "Classic", description: "Golf puro. Hoyuelos incluidos.", primary: 0xfbfefe, secondary: 0xbac4ce, rarity: "common" },
+  { id: "ball-midnight", category: "ball", name: "Midnight", description: "Negro mate con media luna fría.", primary: 0x111821, secondary: 0x8eb6d4, rarity: "rare", price: 120 },
+  { id: "ball-orbit", category: "ball", name: "Orbit", description: "Un pequeño planeta en juego.", primary: 0x203b67, secondary: 0x86d9ff, rarity: "rare", price: 220 },
+  { id: "ball-ember", category: "ball", name: "Ember", description: "Núcleo oscuro con grietas vivas.", primary: 0x241816, secondary: 0xff9b4a, rarity: "epic", price: 320 },
+  { id: "ball-spirit", category: "ball", name: "Spirit Orb", description: "Flor de luz suspendida en un orbe.", primary: 0xb8d8ff, secondary: 0xe9c7ff, rarity: "seasonal" },
 
   { id: "trail-none", category: "trail", name: "Sin estela", description: "Limpio y simple.", primary: 0xffffff, rarity: "common" },
-  { id: "trail-mist", category: "trail", name: "Mist", description: "Pequeñas motas suaves.", primary: 0xc8e6ff, rarity: "rare" },
-  { id: "trail-petals", category: "trail", name: "Petals", description: "Pétalos espirituales.", primary: 0xf0c9ef, secondary: 0xc8d7ff, rarity: "seasonal" },
+  { id: "trail-mist", category: "trail", name: "Mist", description: "Motas suaves que se disipan.", primary: 0xc8e6ff, rarity: "rare", price: 100 },
+  { id: "trail-sparks", category: "trail", name: "Sparks", description: "Destellos cortos tras cada golpe.", primary: 0xffd27d, secondary: 0xff8f5a, rarity: "epic", price: 180 },
+  { id: "trail-petals", category: "trail", name: "Petals", description: "Pétalos espirituales en movimiento.", primary: 0xf0c9ef, secondary: 0xc8d7ff, rarity: "seasonal" },
 
   { id: "hole-default", category: "holeEffect", name: "Default", description: "Entrada limpia.", primary: 0xffffff, rarity: "common" },
-  { id: "hole-pulse", category: "holeEffect", name: "Pulse", description: "Una onda al embocar.", primary: 0xa8d8ff, rarity: "rare" },
-  { id: "hole-bloom", category: "holeEffect", name: "Spirit Bloom", description: "Una flor de luz al embocar.", primary: 0xe8bfe8, secondary: 0xbad9ff, rarity: "seasonal" }
+  { id: "hole-pulse", category: "holeEffect", name: "Pulse", description: "Una onda concéntrica al embocar.", primary: 0xa8d8ff, rarity: "rare", price: 130 },
+  { id: "hole-nova", category: "holeEffect", name: "Nova", description: "Un destello radial breve y seco.", primary: 0xffd98a, secondary: 0xffffff, rarity: "epic", price: 240 },
+  { id: "hole-bloom", category: "holeEffect", name: "Spirit Bloom", description: "Una flor de luz se abre en el hoyo.", primary: 0xe8bfe8, secondary: 0xbad9ff, rarity: "seasonal" }
 ];
 
 export const cosmeticsByCategory = (category: CosmeticCategory): CosmeticDefinition[] =>
