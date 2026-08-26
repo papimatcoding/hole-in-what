@@ -8,6 +8,7 @@ import { ResultsScene } from "./scenes/ResultsScene";
 import { CosmeticsScene } from "./scenes/CosmeticsScene";
 import { ShopScene } from "./scenes/ShopScene";
 import { RewardsScene } from "./scenes/RewardsScene";
+import { EditorScene } from "./scenes/EditorScene";
 
 const renderWidth=Math.round(DESIGN_WIDTH*RENDER_SCALE);
 const renderHeight=Math.round(DESIGN_HEIGHT*RENDER_SCALE);
@@ -18,7 +19,7 @@ const config:Phaser.Types.Core.GameConfig={
   width:renderWidth,
   height:renderHeight,
   backgroundColor:"#0d1117",
-  scene:[MenuScene,LevelSelectScene,GameplayScene,ResultsScene,CosmeticsScene,ShopScene,RewardsScene],
+  scene:[MenuScene,LevelSelectScene,GameplayScene,ResultsScene,CosmeticsScene,ShopScene,RewardsScene,EditorScene],
   scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH,width:renderWidth,height:renderHeight},
   render:{antialias:true,roundPixels:false}
 };
