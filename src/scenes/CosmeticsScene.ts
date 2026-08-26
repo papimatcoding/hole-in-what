@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { setupDesignCamera, sharpenSceneText } from "../config/display";
 import { cosmeticsByCategory, type CosmeticCategory, type CosmeticDefinition } from "../data/cosmetics";
 import { drawBall } from "../systems/CosmeticRenderer";
 import { SaveSystem } from "../systems/SaveSystem";
@@ -37,6 +38,7 @@ export class CosmeticsScene extends Phaser.Scene {
   }
 
   create(): void {
+    setupDesignCamera(this);
     this.cameras.main.setBackgroundColor("#0d1117");
 
     this.add.text(42, 64, "‹", {
@@ -83,6 +85,7 @@ export class CosmeticsScene extends Phaser.Scene {
     this.cards = this.add.container(0, 0);
     this.updateBalance();
     this.renderCategory();
+    sharpenSceneText(this);
   }
 
   private makeTabs(): void {
@@ -104,6 +107,7 @@ export class CosmeticsScene extends Phaser.Scene {
         this.selectedIndex = 0;
         this.feedbackText.setText("");
         this.renderCategory();
+        sharpenSceneText(this);
       };
       bg.on("pointerup", open);
       text.on("pointerup", open);
@@ -163,6 +167,7 @@ export class CosmeticsScene extends Phaser.Scene {
           SaveSystem.equip(CATEGORY_TO_SLOT[this.category], item.id);
           this.feedbackText.setText("");
           this.renderCategory();
+          sharpenSceneText(this);
           return;
         }
 
@@ -181,6 +186,7 @@ export class CosmeticsScene extends Phaser.Scene {
         this.feedbackText.setText("Desbloqueado");
         this.updateBalance();
         this.renderCategory();
+        sharpenSceneText(this);
       };
 
       card.on("pointerup", select);
