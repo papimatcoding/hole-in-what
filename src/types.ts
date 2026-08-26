@@ -75,14 +75,15 @@ export interface LevelDefinition {
   hole: Vec2;
   threeStar: StarRequirement;
   twoStar: StarRequirement;
+  fairways?: RectDef[];
   walls?: RectDef[];
   triangles?: TriangleDef[];
   sand?: RectDef[];
   ice?: RectDef[];
-  voids?: RectDef[];
   boosters?: BoosterDef[];
   ramps?: RampDef[];
   trampolines?: TrampolineDef[];
+  voids?: RectDef[];
   bumpers?: BumperDef[];
   popWalls?: PopWallDef[];
   popBumpers?: PopBumperDef[];
