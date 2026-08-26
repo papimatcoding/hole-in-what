@@ -14,6 +14,7 @@ interface AuditRow {
   id:string; target:number; twoStar:number; bestKnownStrokes:number|null; bestKnownTime:number|null;
   holeInOne:boolean; primaryMechanic:CourseMechanic|null; mechanicUsed:boolean|null;
   naiveTrapTriggered:boolean|null; trapsTriggered:string[]; solvable:boolean; bestShots:string[];
+  robustness:number|null;
   status:"OK"|"TOO_EASY_FOR_TARGET"|"MECHANIC_BYPASSED"|"NO_ROUTE_FOUND";
 }
 
@@ -21,6 +22,7 @@ const dist=(a:{x:number;y:number},b:{x:number;y:number}):number=>Math.hypot(a.x-
 const rad=(degrees:number):number=>degrees*Math.PI/180;
 const deg=(radians:number):number=>radians*180/Math.PI;
 const wrap=(angle:number):number=>{const tau=Math.PI*2;return((angle%tau)+tau)%tau;};
+const clamp=(value:number,min:number,max:number):number=>Math.max(min,Math.min(max,value));
 
 function finalLevel(mode:GameMode,index:number):LevelDefinition{return sanitizeCourse(buildCampaignCourse(mode,index));}
 function routePoints(level:LevelDefinition):Vec2[]{return level.designPath?.length?level.designPath:[level.ball,level.hole];}
@@ -83,6 +85,39 @@ function beamSolve(level:LevelDefinition,maxDepth:number):SolvedRun|null{
   return null;
 }
 
+function replay(level:LevelDefinition,shots:SimulationShot[]):boolean{
+  let state=createGolfSimulationState(level);
+  for(const shot of shots){
+    const result=simulateShotToRest(level,state,shot,10);
+    if(result.voided)return false;
+    if(result.sunk)return true;
+    if(result.state.moving)return false;
+    state=result.state;
+  }
+  return false;
+}
+
+/** Local execution tolerance around the best-known line.
+ * This does not define difficulty by itself; it tells us whether the mastery line is broad or razor-thin.
+ * Each shot is perturbed independently while the remainder of the known sequence stays unchanged. */
+function solutionRobustness(level:LevelDefinition,run:SolvedRun|null):number|null{
+  if(!run||run.shots.length===0)return null;
+  let successes=1,total=1; // baseline
+  const angleOffsets=[-4,-2,2,4];
+  const powerOffsets=[-.06,-.03,.03,.06];
+  for(let i=0;i<run.shots.length;i+=1){
+    for(const offset of angleOffsets){
+      const shots=run.shots.map(x=>({...x}));shots[i]!.angle=wrap(shots[i]!.angle+rad(offset));
+      total+=1;if(replay(level,shots))successes+=1;
+    }
+    for(const offset of powerOffsets){
+      const shots=run.shots.map(x=>({...x}));shots[i]!.power=clamp(shots[i]!.power+offset,.12,1);
+      total+=1;if(replay(level,shots))successes+=1;
+    }
+  }
+  return successes/total;
+}
+
 function hasTrollTrap(level:LevelDefinition):boolean{return (level.popWalls?.length??0)+(level.popBumpers?.length??0)+(level.popVoids?.length??0)>0;}
 
 /** The first-read probe is intentionally simple: aim at the cup or first visible route cue.
@@ -124,12 +159,12 @@ function classify(level:LevelDefinition,run:SolvedRun|null,naiveTrapTriggered:bo
 function shotLabel(shot:SimulationShot):string{return`${Math.round(deg(shot.angle))}°@${shot.power.toFixed(2)}`;}
 function audit(level:LevelDefinition):AuditRow{
   const hio=denseHoleInOne(level),maxDepth=Math.max(4,(level.twoStar.maxStrokes??4)+1),beam=beamSolve(level,maxDepth),best=hio??beam;
-  const naiveTrapTriggered=naiveTrapProbe(level),mechanicUsed=mechanicWasUsed(level,best);
+  const naiveTrapTriggered=naiveTrapProbe(level),mechanicUsed=mechanicWasUsed(level,best),robustness=solutionRobustness(level,best);
   return {
     id:level.id,target:level.threeStar.maxStrokes??0,twoStar:level.twoStar.maxStrokes??0,bestKnownStrokes:best?.strokes??null,
     bestKnownTime:best?Number(best.time.toFixed(2)):null,holeInOne:Boolean(hio)||best?.strokes===1,primaryMechanic:level.primaryMechanic??null,
     mechanicUsed,naiveTrapTriggered,trapsTriggered:best?.state.triggeredTraps??[],solvable:Boolean(best),bestShots:best?.shots.map(shotLabel)??[],
-    status:classify(level,best,naiveTrapTriggered)
+    robustness:robustness===null?null:Number(robustness.toFixed(2)),status:classify(level,best,naiveTrapTriggered)
   };
 }
 
@@ -138,15 +173,15 @@ for(const mode of["classic","troll"]as const){
   console.log(`\n=== ${mode.toUpperCase()} ===`);
   for(let index=1;index<=40;index+=1){
     const row=audit(finalLevel(mode,index));rows.push(row);
-    const best=row.bestKnownStrokes===null?"?":String(row.bestKnownStrokes),mechanic=row.primaryMechanic??"-",used=row.mechanicUsed===null?"n/a":row.mechanicUsed?"yes":"NO",naive=row.naiveTrapTriggered===null?"n/a":row.naiveTrapTriggered?"yes":"NO";
-    console.log(`${row.id.padEnd(10)} 3★=${String(row.target).padEnd(2)} best=${best.padEnd(2)} HIO=${row.holeInOne?"yes":"no "} main=${mechanic.padEnd(10)} used=${used.padEnd(3)} naiveTrap=${naive.padEnd(3)} bestShot=${(row.bestShots[0]??"-").padEnd(10)} ${row.status}`);
+    const best=row.bestKnownStrokes===null?"?":String(row.bestKnownStrokes),mechanic=row.primaryMechanic??"-",used=row.mechanicUsed===null?"n/a":row.mechanicUsed?"yes":"NO",naive=row.naiveTrapTriggered===null?"n/a":row.naiveTrapTriggered?"yes":"NO",robust=row.robustness===null?"n/a":`${Math.round(row.robustness*100)}%`;
+    console.log(`${row.id.padEnd(10)} 3★=${String(row.target).padEnd(2)} best=${best.padEnd(2)} HIO=${row.holeInOne?"yes":"no "} robust=${robust.padEnd(4)} main=${mechanic.padEnd(10)} used=${used.padEnd(3)} naiveTrap=${naive.padEnd(3)} bestShot=${(row.bestShots[0]??"-").padEnd(10)} ${row.status}`);
   }
 }
 
 for(const mode of["classic","troll"]as const){
   const section=rows.filter(x=>x.id.startsWith(mode)),clean=section.filter(x=>x.status==="OK").length,bypass=section.filter(x=>x.status==="MECHANIC_BYPASSED").length,easy=section.filter(x=>x.status==="TOO_EASY_FOR_TARGET").length,broken=section.filter(x=>x.status==="NO_ROUTE_FOUND").length;
   console.log(`\n${mode.toUpperCase()} SUMMARY: ${clean}/40 clean · ${bypass} bypass · ${easy} target mismatch · ${broken} no-route`);
-  for(const row of section.filter(x=>x.status!=="OK"))console.log(`FLAG ${row.id} ${row.status} target=${row.target} best=${row.bestKnownStrokes} shot=${row.bestShots.join(",")}`);
+  for(const row of section.filter(x=>x.status!=="OK"))console.log(`FLAG ${row.id} ${row.status} target=${row.target} best=${row.bestKnownStrokes} robust=${row.robustness} shot=${row.bestShots.join(",")}`);
 }
 console.log(`\nAUDIT_JSON=${JSON.stringify(rows)}`);
 
