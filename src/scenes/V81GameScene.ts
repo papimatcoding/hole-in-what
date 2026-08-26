@@ -13,12 +13,12 @@ export class V81GameScene extends V8GameScene {
     this.drawCoursePolish();
   }
 
-  private levelRef(): LevelDefinition {
+  private courseLevel(): LevelDefinition {
     return (this as unknown as { level: LevelDefinition }).level;
   }
 
   private drawCoursePolish(): void {
-    const level = this.levelRef();
+    const level = this.courseLevel();
     const g = this.coursePolish;
     g.clear();
 
