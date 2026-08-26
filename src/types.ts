@@ -65,6 +65,7 @@ export interface CosmeticsSave {
 
 export interface WalletSave {
   coins: number;
+  gems: number;
 }
 
 export interface SaveDataV1 {
@@ -78,8 +79,15 @@ export interface SaveDataV2 {
   cosmetics: CosmeticsSave;
 }
 
-export interface SaveData {
+export interface SaveDataV3 {
   version: 3;
+  levels: Record<string, LevelRecord>;
+  cosmetics: CosmeticsSave;
+  wallet: { coins: number };
+}
+
+export interface SaveData {
+  version: 4;
   levels: Record<string, LevelRecord>;
   cosmetics: CosmeticsSave;
   wallet: WalletSave;
@@ -89,6 +97,8 @@ export interface SubmitResult {
   record: LevelRecord;
   coinsEarned: number;
   totalCoins: number;
+  totalGems: number;
+  newlyUnlockedCosmetics: string[];
 }
 
 export interface GameSceneData {
