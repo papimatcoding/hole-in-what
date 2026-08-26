@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { DESIGN_HEIGHT, DESIGN_WIDTH, setupDesignCamera, sharpenSceneText } from "../config/display";
 import { levelsForMode } from "../data/levels";
 import { SaveSystem } from "../systems/SaveSystem";
 import type { GameMode } from "../types";
@@ -9,24 +10,24 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { width, height } = this.scale;
+    setupDesignCamera(this);
     this.cameras.main.setBackgroundColor("#0d1117");
 
-    this.add.text(width - 42, 54, `◈ ${SaveSystem.coins()}`, {
+    this.add.text(DESIGN_WIDTH - 42, 54, `◈ ${SaveSystem.coins()}`, {
       fontFamily: "system-ui, sans-serif",
       fontSize: "14px",
       fontStyle: "bold",
       color: "#d9e4ee"
     }).setOrigin(1, 0.5);
 
-    this.add.text(width / 2, 135, "TROLL GOLF", {
+    this.add.text(DESIGN_WIDTH / 2, 135, "TROLL GOLF", {
       fontFamily: "system-ui, sans-serif",
       fontSize: "48px",
       fontStyle: "bold",
       color: "#f5f7fa"
     }).setOrigin(0.5);
 
-    this.add.text(width / 2, 185, "MINIGOLF · 3 ESTRELLAS", {
+    this.add.text(DESIGN_WIDTH / 2, 185, "MINIGOLF · 3 ESTRELLAS", {
       fontFamily: "system-ui, sans-serif",
       fontSize: "13px",
       color: "#8f9dab"
@@ -39,17 +40,19 @@ export class MenuScene extends Phaser.Scene {
     });
 
     const equipped = SaveSystem.cosmetics().equipped;
-    this.add.text(width / 2, 645, `● ${equipped.ball.replace("ball-", "")}   ·   ─ ${equipped.trail.replace("trail-", "")}`, {
+    this.add.text(DESIGN_WIDTH / 2, 645, `● ${equipped.ball.replace("ball-", "")}   ·   ─ ${equipped.trail.replace("trail-", "")}`, {
       fontFamily: "system-ui, sans-serif",
       fontSize: "11px",
       color: "#667687"
     }).setOrigin(0.5);
 
-    this.add.text(width / 2, height - 70, "V5 · desarrollo", {
+    this.add.text(DESIGN_WIDTH / 2, DESIGN_HEIGHT - 70, "V5 · desarrollo", {
       fontFamily: "system-ui, sans-serif",
       fontSize: "12px",
       color: "#657282"
     }).setOrigin(0.5);
+
+    sharpenSceneText(this);
   }
 
   private makeModeButton(label: string, mode: GameMode, y: number): void {
