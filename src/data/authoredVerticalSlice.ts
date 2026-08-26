@@ -1,6 +1,7 @@
 import type { GameMode, LevelDefinition } from "../types";
 import { CLASSIC_AUTHORED } from "./authored/classic";
 import { HARD_AUTHORED } from "./authored/hard";
+import { finalizeAuthored } from "./authored/finalize";
 
 /**
  * Full authored campaign. The procedural generator remains in the repository as a prototyping
@@ -10,5 +11,5 @@ import { HARD_AUTHORED } from "./authored/hard";
 export function authoredCourse(mode:GameMode,index:number):LevelDefinition|null{
   const source=mode==="classic"?CLASSIC_AUTHORED:HARD_AUTHORED;
   const level=source[index-1];
-  return level?JSON.parse(JSON.stringify(level)) as LevelDefinition:null;
+  return level?finalizeAuthored(level):null;
 }
