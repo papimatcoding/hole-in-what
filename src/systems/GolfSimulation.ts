@@ -176,23 +176,47 @@ export function powerFromPhysicalPull(pullDistance: number): number {
 
 export type HoleInteraction = "sink" | "lip" | "pass";
 
+interface SegmentApproach {
+  distance: number;
+  q: number;
+}
+
+function segmentApproach(previous: Vec2, current: Vec2, target: Vec2): SegmentApproach {
+  const dx=current.x-previous.x,dy=current.y-previous.y,len2=dx*dx+dy*dy;
+  if(len2<0.0001)return{distance:distance(current,target),q:1};
+  const q=clamp(((target.x-previous.x)*dx+(target.y-previous.y)*dy)/len2,0,1);
+  const x=previous.x+dx*q,y=previous.y+dy*q;
+  return{distance:Math.hypot(x-target.x,y-target.y),q};
+}
+
 /**
- * Arcade cup model. A well-paced centred ball drops reliably, while a very fast ball
- * can cross the cup. Slow edge entries get a forgiving capture zone and medium/high
- * speed rim contacts can lip out instead of being magnetically absorbed.
+ * Continuous arcade cup test. It considers the whole movement segment for the frame, so a
+ * valid putt cannot tunnel over the cup between frames. Capture gets stricter as speed rises.
+ * A lip is only a genuine tangential rim graze; it is feedback, never an invisible circular
+ * wall that reflects an otherwise valid shot.
  */
-export function evaluateHoleInteraction(ball: Pick<GolfBallState,"x"|"y"|"vx"|"vy">, hole: Vec2): HoleInteraction {
-  const d = distance(ball, hole);
-  const speed = Math.hypot(ball.vx, ball.vy);
-  if (d <= 12.5 && speed <= 365) return "sink";
-  if (d <= 20 && speed <= 190) return "sink";
-  if (d >= 15 && d <= 25 && speed > 150 && speed <= 650) {
-    const nx = (ball.x - hole.x) / (d || 1);
-    const ny = (ball.y - hole.y) / (d || 1);
-    const radial = ball.vx * nx + ball.vy * ny;
-    if (radial < -45) return "lip";
+export function evaluateHoleSweep(
+  previous: Vec2,
+  ball: Pick<GolfBallState,"x"|"y"|"vx"|"vy">,
+  hole: Vec2
+): HoleInteraction {
+  const current={x:ball.x,y:ball.y};
+  const speed=Math.hypot(ball.vx,ball.vy);
+  const approach=segmentApproach(previous,current,hole);
+  const captureRadius=speed<=160?19:speed<=280?17.5:speed<=390?15:0;
+
+  if(captureRadius>0&&approach.distance<=captureRadius)return"sink";
+
+  // A fast centred shot deliberately passes through. Only a near-tangent miss can lip.
+  if(speed>=160&&speed<=520&&approach.q>0.04&&approach.q<0.96&&approach.distance>captureRadius&&approach.distance<=20.5){
+    return"lip";
   }
-  return "pass";
+  return"pass";
+}
+
+/** Point-sample compatibility helper for tooling. Runtime uses evaluateHoleSweep. */
+export function evaluateHoleInteraction(ball: Pick<GolfBallState,"x"|"y"|"vx"|"vy">, hole: Vec2): HoleInteraction {
+  return evaluateHoleSweep({x:ball.x,y:ball.y},ball,hole);
 }
 
 function pointInTriangle(p: Vec2, triangle: TriangleDef): boolean {
@@ -417,6 +441,7 @@ export class GolfSimulation {
       addUnique(s.touchedMechanics,"fan");
     }
 
+    const previousPosition={x:b.x,y:b.y};
     b.x+=b.vx*dt;b.y+=b.vy*dt;
     const friction=airborne?GOLF_PHYSICS.airFriction:onSand?GOLF_PHYSICS.sandFriction:onIce?GOLF_PHYSICS.iceFriction:GOLF_PHYSICS.baseFriction;
     const damping=Math.pow(friction,dt*60);b.vx*=damping;b.vy*=damping;
@@ -430,7 +455,7 @@ export class GolfSimulation {
     if(!this.isAirborne())this.resolveGroundCollisions(events);
     if(s.voided||s.sunk)return events;
 
-    if(!this.isAirborne())this.resolveHole(events);
+    if(!this.isAirborne())this.resolveHole(events,previousPosition);
     if(s.sunk)return events;
 
     const speed=Math.hypot(b.vx,b.vy);
@@ -482,10 +507,14 @@ export class GolfSimulation {
     const s=this.state,b=s.ball;for(let i=0;i<(this.level.popVoids??[]).length;i+=1){if(!s.popVoids[i]!.active||s.popVoids[i]!.anim<=.56)continue;if(pointInRect(b,this.level.popVoids![i]!))return true;}return false;
   }
 
-  private resolveHole(events:SimulationEvent[]):void{
-    const s=this.state,b=s.ball,interaction=evaluateHoleInteraction(b,this.level.hole);
-    if(interaction==="sink"){s.sunk=true;s.moving=false;b.vx=0;b.vy=0;events.push({kind:"hole",x:this.level.hole.x,y:this.level.hole.y});addUnique(s.touchedMechanics,"hole");return;}
-    if(interaction==="lip"&&s.holeLipCooldown<=0){const d=distance(b,this.level.hole)||1,nx=(b.x-this.level.hole.x)/d,ny=(b.y-this.level.hole.y)/d,radial=b.vx*nx+b.vy*ny;if(radial<0){b.vx=(b.vx-(1+0.38)*radial*nx)*.92;b.vy=(b.vy-(1+0.38)*radial*ny)*.92;s.holeLipCooldown=.12;events.push({kind:"hole-lip",x:b.x,y:b.y});}}
+  private resolveHole(events:SimulationEvent[],previousPosition:Vec2):void{
+    const s=this.state,b=s.ball,interaction=evaluateHoleSweep(previousPosition,b,this.level.hole);
+    if(interaction==="sink"){s.sunk=true;s.moving=false;b.x=this.level.hole.x;b.y=this.level.hole.y;b.vx=0;b.vy=0;events.push({kind:"hole",x:this.level.hole.x,y:this.level.hole.y});addUnique(s.touchedMechanics,"hole");return;}
+    if(interaction==="lip"&&s.holeLipCooldown<=0){
+      // Lip-outs are deliberately non-solid. The ball keeps its natural trajectory; the
+      // event provides sound/FX only. This avoids the old invisible circular-collider bug.
+      s.holeLipCooldown=.14;events.push({kind:"hole-lip",x:this.level.hole.x,y:this.level.hole.y});
+    }
   }
 }
 
