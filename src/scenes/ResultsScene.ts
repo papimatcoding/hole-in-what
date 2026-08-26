@@ -1,8 +1,7 @@
 import Phaser from "phaser";
 import { setupDesignCamera, sharpenSceneText } from "../config/display";
 import { cosmeticById } from "../data/cosmetics";
-import { levelsForMode } from "../data/levels";
-import { applyV81LevelPatch } from "../data/v81LevelPatches";
+import { v82LevelsForMode } from "../data/v82Course";
 import { SaveSystem } from "../systems/SaveSystem";
 import { formatRequirement, requirementMet } from "../systems/StarScoring";
 import type { ResultsSceneData } from "../types";
@@ -21,7 +20,7 @@ export class ResultsScene extends Phaser.Scene {
   create(): void {
     setupDesignCamera(this);
     this.cameras.main.setBackgroundColor("#0b0f14");
-    const levels = levelsForMode(this.resultData.mode).map(applyV81LevelPatch);
+    const levels = v82LevelsForMode(this.resultData.mode);
     const level = levels[this.resultData.levelIndex];
     const reward = SaveSystem.submit(
       this.resultData.levelId,
