@@ -1,52 +1,21 @@
-import { levelsForMode } from "./levels";
-import { applyV81LevelPatch } from "./v81LevelPatches";
+import { buildClassicCourse } from "./procedural/classicCourses";
+import { buildHardCourse } from "./procedural/hardCourses";
+import { sanitizeCourse } from "./procedural/courseUtils";
 import type { GameMode, LevelDefinition } from "../types";
 
+const CLASSIC = Array.from({ length: 20 }, (_, i) => sanitizeCourse(buildClassicCourse(i + 1)));
+const HARD = Array.from({ length: 20 }, (_, i) => sanitizeCourse(buildHardCourse(i + 1)));
+
+function indexFromId(id: string): number {
+  const value = Number(id.split("-").at(-1));
+  return Number.isFinite(value) ? Math.max(0, Math.min(19, value - 1)) : 0;
+}
+
 export function finalizeV82Level(level: LevelDefinition): LevelDefinition {
-  const next = applyV81LevelPatch(level);
-
-  switch (next.id) {
-    case "classic-13":
-      return {
-        ...next,
-        walls: [
-          {x:70,y:610,w:205,h:24},
-          {x:310,y:295,w:24,h:130}
-        ]
-      };
-
-    case "classic-19":
-      return {
-        ...next,
-        walls: [
-          {x:165,y:730,w:285,h:24},
-          {x:90,y:500,w:255,h:24},
-          {x:240,y:300,w:220,h:24}
-        ]
-      };
-
-    case "troll-13":
-      return {
-        ...next,
-        walls: [
-          {x:90,y:630,w:190,h:24},
-          {x:310,y:295,w:24,h:125}
-        ]
-      };
-
-    case "troll-20":
-      return {
-        ...next,
-        popVoids: [
-          {x:245,y:210,w:150,h:58,triggerX:335,triggerY:385,triggerRadius:100}
-        ]
-      };
-
-    default:
-      return next;
-  }
+  const source = level.mode === "troll" ? HARD : CLASSIC;
+  return source[indexFromId(level.id)] ?? source[0]!;
 }
 
 export function v82LevelsForMode(mode: GameMode): LevelDefinition[] {
-  return levelsForMode(mode).map(finalizeV82Level);
+  return mode === "troll" ? HARD : CLASSIC;
 }
