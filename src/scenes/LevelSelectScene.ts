@@ -19,8 +19,14 @@ export class LevelSelectScene extends Phaser.Scene {
 
   create(): void {
     setupDesignCamera(this);
-    const levels = levelsForMode(this.mode);
     this.cameras.main.setBackgroundColor("#0d1117");
+
+    if (this.mode === "troll" && !SaveSystem.isTrollUnlocked()) {
+      this.scene.start("menu");
+      return;
+    }
+
+    const levels = levelsForMode(this.mode);
 
     this.add.text(34, 44, "‹", {
       fontFamily: "system-ui, sans-serif",
