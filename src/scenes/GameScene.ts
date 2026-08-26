@@ -4,7 +4,7 @@ import { cosmeticById, type CosmeticDefinition } from "../data/cosmetics";
 import { levelsForMode } from "../data/levels";
 import { drawBall } from "../systems/CosmeticRenderer";
 import { SaveSystem } from "../systems/SaveSystem";
-import type { GameSceneData, LevelDefinition, PopBumperDef, PopWallDef, RectDef } from "../types";
+import type { BoosterDef, GameSceneData, LevelDefinition, PopBumperDef, PopWallDef, RectDef, TriangleDef, Vec2 } from "../types";
 
 interface BallState {
   x: number;
@@ -35,9 +35,12 @@ const MAX_PULL = 172;
 const DRAG_GAIN = 1.35;
 const POWER = 7.4;
 const BASE_FRICTION = 0.9875;
+const ICE_FRICTION = 0.9982;
+const SAND_FRICTION = 0.955;
 const WALL_BOUNCE = 0.90;
 const STOP_SPEED = 18;
 const SINK_SPEED = 430;
+const BOOST_FORCE = 650;
 
 export class GameScene extends Phaser.Scene {
   private mode: GameSceneData["mode"] = "classic";
@@ -113,7 +116,7 @@ export class GameScene extends Phaser.Scene {
     const back = this.add.text(42, 82, "‹", {
       fontFamily: "system-ui, sans-serif", fontSize: "36px", color: "#f5f7fa"
     }).setDepth(20).setInteractive({ useHandCursor: true });
-    back.on("pointerup", () => this.scene.start("level-select", { mode: this.mode }));
+    back.on("pointerup", () => this.scene.start("level-select", { mode: this.mode, page: Math.floor(this.levelIndex / 10) }));
 
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => this.onPointerDown(pointer));
     this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => this.onPointerMove(pointer));
@@ -127,13 +130,10 @@ export class GameScene extends Phaser.Scene {
     if (!this.level || this.sinking) return;
 
     this.timeText.setText(((performance.now() - this.startedAt) / 1000).toFixed(1));
-
     const dt = Math.min(deltaMs / 1000, 0.033);
     this.updateTraps(dt);
 
-    if (this.moving) {
-      this.stepPhysics(dt);
-    }
+    if (this.moving) this.stepPhysics(dt);
 
     this.updateTrail(dt);
     this.ballView.setPosition(this.ball.x, this.ball.y);
@@ -196,11 +196,11 @@ export class GameScene extends Phaser.Scene {
 
     this.aim.fillStyle(0xedf5ff, 0.72);
     for (let i = 1; i <= 8; i += 1) {
-      const t = i / 8;
+      const q = i / 8;
       this.aim.fillCircle(
-        this.ball.x + dx * pull * (0.55 + t * 0.95),
-        this.ball.y + dy * pull * (0.55 + t * 0.95),
-        3.5 - t * 1.5
+        this.ball.x + dx * pull * (0.55 + q * 0.95),
+        this.ball.y + dy * pull * (0.55 + q * 0.95),
+        3.5 - q * 1.5
       );
     }
   }
@@ -224,7 +224,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   private stepPhysics(dt: number): void {
-    const friction = this.isInAnyRect(this.level.sand ?? []) ? 0.955 : BASE_FRICTION;
+    const onSand = this.isInAnyRect(this.level.sand ?? []);
+    const onIce = this.isInAnyRect(this.level.ice ?? []);
+    const friction = onSand ? SAND_FRICTION : onIce ? ICE_FRICTION : BASE_FRICTION;
+
+    for (const booster of this.level.boosters ?? []) this.applyBooster(booster, dt);
 
     this.ball.x += this.ball.vx * dt;
     this.ball.y += this.ball.vy * dt;
@@ -243,6 +247,7 @@ export class GameScene extends Phaser.Scene {
     if (this.ball.y > bottom) { this.ball.y = bottom; this.ball.vy = -Math.abs(this.ball.vy) * WALL_BOUNCE; }
 
     for (const wall of this.level.walls ?? []) this.resolveWall(wall);
+    for (const triangle of this.level.triangles ?? []) this.resolveTriangle(triangle);
     for (const wall of this.popWalls) {
       if (wall.active && wall.anim > 0.25) this.resolveWall(this.animatedWallRect(wall));
     }
@@ -265,6 +270,14 @@ export class GameScene extends Phaser.Scene {
       this.ball.vy = 0;
       this.moving = false;
     }
+  }
+
+  private applyBooster(booster: BoosterDef, dt: number): void {
+    if (!this.pointInRect(this.ball, booster)) return;
+    const length = Math.hypot(booster.dx, booster.dy) || 1;
+    const force = BOOST_FORCE * (booster.power ?? 1);
+    this.ball.vx += booster.dx / length * force * dt;
+    this.ball.vy += booster.dy / length * force * dt;
   }
 
   private updateTrail(dt: number): void {
@@ -295,7 +308,7 @@ export class GameScene extends Phaser.Scene {
 
   private spawnTrailParticle(): void {
     const isPetal = this.trailCosmetic.id === "trail-petals";
-    const isSpark = this.trailCosmetic.id === "trail-sparks";
+    const isSpark = this.trailCosmetic.id === "trail-sparks" || this.trailCosmetic.id === "trail-stardust";
     const maxLife = isPetal ? 0.62 : isSpark ? 0.34 : 0.50;
     this.trailParticles.push({
       x: this.ball.x + Phaser.Math.FloatBetween(-3, 3),
@@ -323,14 +336,11 @@ export class GameScene extends Phaser.Scene {
         this.trailView.fillStyle(color, life * 0.72);
         const wave = Math.sin(p.phase + p.life * 12) * 3;
         this.trailView.fillTriangle(
-          p.x - p.size,
-          p.y + wave,
-          p.x + p.size * 0.8,
-          p.y - p.size * 0.65 + wave,
-          p.x + p.size,
-          p.y + p.size * 0.55 + wave
+          p.x - p.size, p.y + wave,
+          p.x + p.size * 0.8, p.y - p.size * 0.65 + wave,
+          p.x + p.size, p.y + p.size * 0.55 + wave
         );
-      } else if (this.trailCosmetic.id === "trail-sparks") {
+      } else if (this.trailCosmetic.id === "trail-sparks" || this.trailCosmetic.id === "trail-stardust") {
         this.trailView.lineStyle(Math.max(1, p.size * 0.45), color, life * 0.85);
         this.trailView.beginPath();
         this.trailView.moveTo(p.x - p.vx * 0.08 - 4, p.y - p.vy * 0.08);
@@ -427,8 +437,12 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: fx, scale: 1.45, alpha: 0, duration: 330, ease: "Cubic.easeOut" });
   }
 
+  private pointInRect(point: { x:number; y:number }, rect: RectDef): boolean {
+    return point.x > rect.x && point.x < rect.x + rect.w && point.y > rect.y && point.y < rect.y + rect.h;
+  }
+
   private isInAnyRect(rects: RectDef[]): boolean {
-    return rects.some((r) => this.ball.x > r.x && this.ball.x < r.x + r.w && this.ball.y > r.y && this.ball.y < r.y + r.h);
+    return rects.some((rect) => this.pointInRect(this.ball, rect));
   }
 
   private resolveWall(r: RectDef): void {
@@ -450,6 +464,80 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.shake(28, 0.0008);
   }
 
+  private resolveTriangle(triangle: TriangleDef): void {
+    const point = { x: this.ball.x, y: this.ball.y };
+    const inside = this.pointInTriangle(point, triangle);
+    const edges: Array<[Vec2, Vec2]> = [[triangle.a, triangle.b], [triangle.b, triangle.c], [triangle.c, triangle.a]];
+
+    let closest = { x: 0, y: 0 };
+    let edgeA = triangle.a;
+    let edgeB = triangle.b;
+    let bestDistSq = Number.POSITIVE_INFINITY;
+
+    for (const [a, b] of edges) {
+      const q = this.closestPointOnSegment(point, a, b);
+      const dx = point.x - q.x;
+      const dy = point.y - q.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < bestDistSq) {
+        bestDistSq = d2;
+        closest = q;
+        edgeA = a;
+        edgeB = b;
+      }
+    }
+
+    const distance = Math.sqrt(bestDistSq);
+    if (!inside && distance >= BALL_R) return;
+
+    let nx: number;
+    let ny: number;
+    if (distance > 0.0001) {
+      nx = (point.x - closest.x) / distance;
+      ny = (point.y - closest.y) / distance;
+      if (inside) { nx *= -1; ny *= -1; }
+    } else {
+      const ex = edgeB.x - edgeA.x;
+      const ey = edgeB.y - edgeA.y;
+      const len = Math.hypot(ex, ey) || 1;
+      nx = -ey / len;
+      ny = ex / len;
+      const centroid = {
+        x: (triangle.a.x + triangle.b.x + triangle.c.x) / 3,
+        y: (triangle.a.y + triangle.b.y + triangle.c.y) / 3
+      };
+      if ((centroid.x - closest.x) * nx + (centroid.y - closest.y) * ny > 0) { nx *= -1; ny *= -1; }
+    }
+
+    this.ball.x = closest.x + nx * (BALL_R + 0.5);
+    this.ball.y = closest.y + ny * (BALL_R + 0.5);
+    const dot = this.ball.vx * nx + this.ball.vy * ny;
+    if (dot < 0) {
+      this.ball.vx -= (1 + WALL_BOUNCE) * dot * nx;
+      this.ball.vy -= (1 + WALL_BOUNCE) * dot * ny;
+    }
+    this.cameras.main.shake(28, 0.0008);
+  }
+
+  private pointInTriangle(p: Vec2, triangle: TriangleDef): boolean {
+    const sign = (p1: Vec2, p2: Vec2, p3: Vec2): number =>
+      (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+    const d1 = sign(p, triangle.a, triangle.b);
+    const d2 = sign(p, triangle.b, triangle.c);
+    const d3 = sign(p, triangle.c, triangle.a);
+    const hasNeg = d1 < 0 || d2 < 0 || d3 < 0;
+    const hasPos = d1 > 0 || d2 > 0 || d3 > 0;
+    return !(hasNeg && hasPos);
+  }
+
+  private closestPointOnSegment(p: Vec2, a: Vec2, b: Vec2): Vec2 {
+    const abx = b.x - a.x;
+    const aby = b.y - a.y;
+    const lengthSq = abx * abx + aby * aby || 1;
+    const q = Phaser.Math.Clamp(((p.x - a.x) * abx + (p.y - a.y) * aby) / lengthSq, 0, 1);
+    return { x: a.x + abx * q, y: a.y + aby * q };
+  }
+
   private resolveBumper(x: number, y: number, r: number, multiplier: number): void {
     const d = Phaser.Math.Distance.Between(this.ball.x, this.ball.y, x, y);
     if (d >= BALL_R + r) return;
@@ -465,17 +553,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   private animatedWallRect(wall: RuntimePopWall): RectDef {
-    const t = this.easeOutBack(wall.anim);
-    if (wall.w >= wall.h) {
-      return { x: wall.x, y: wall.y + wall.h * (1 - t) / 2, w: wall.w, h: wall.h * t };
-    }
-    return { x: wall.x + wall.w * (1 - t) / 2, y: wall.y, w: wall.w * t, h: wall.h };
+    const q = this.easeOutBack(wall.anim);
+    if (wall.w >= wall.h) return { x: wall.x, y: wall.y + wall.h * (1 - q) / 2, w: wall.w, h: wall.h * q };
+    return { x: wall.x + wall.w * (1 - q) / 2, y: wall.y, w: wall.w * q, h: wall.h };
   }
 
-  private easeOutBack(t: number): number {
+  private easeOutBack(q: number): number {
     const c1 = 1.70158;
     const c3 = c1 + 1;
-    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    return 1 + c3 * Math.pow(q - 1, 3) + c1 * Math.pow(q - 1, 2);
   }
 
   private drawCourse(): void {
@@ -484,23 +570,22 @@ export class GameScene extends Phaser.Scene {
     this.course.fillRoundedRect(FIELD.x, FIELD.y, FIELD.w, FIELD.h, 22);
 
     this.course.fillStyle(0xffffff, 0.045);
-    for (let i = 0; i < 10; i += 2) {
-      this.course.fillRect(FIELD.x + i * FIELD.w / 10, FIELD.y, FIELD.w / 10, FIELD.h);
-    }
+    for (let i = 0; i < 10; i += 2) this.course.fillRect(FIELD.x + i * FIELD.w / 10, FIELD.y, FIELD.w / 10, FIELD.h);
 
-    for (const s of this.level.sand ?? []) {
+    for (const ice of this.level.ice ?? []) this.drawIce(ice);
+    for (const sand of this.level.sand ?? []) {
       this.course.fillStyle(0xd9bd79, 1);
-      this.course.fillRoundedRect(s.x, s.y, s.w, s.h, 18);
+      this.course.fillRoundedRect(sand.x, sand.y, sand.w, sand.h, 18);
     }
-
+    for (const booster of this.level.boosters ?? []) this.drawBooster(booster);
     for (const wall of this.level.walls ?? []) this.drawWall(wall);
+    for (const triangle of this.level.triangles ?? []) this.drawTriangle(triangle);
     for (const wall of this.popWalls) {
       if (wall.active) this.drawWall(this.animatedWallRect(wall), Math.min(1, wall.anim * 1.5));
     }
-
-    for (const b of this.level.bumpers ?? []) this.drawBumper(b.x, b.y, b.r);
-    for (const b of this.popBumpers) {
-      if (b.active) this.drawBumper(b.x, b.y, b.r * this.easeOutBack(b.anim));
+    for (const bumper of this.level.bumpers ?? []) this.drawBumper(bumper.x, bumper.y, bumper.r);
+    for (const bumper of this.popBumpers) {
+      if (bumper.active) this.drawBumper(bumper.x, bumper.y, bumper.r * this.easeOutBack(bumper.anim));
     }
 
     this.course.fillStyle(0x14181b, 1);
@@ -512,21 +597,64 @@ export class GameScene extends Phaser.Scene {
     this.course.strokePath();
     this.course.fillStyle(0xf2f2f2, 1);
     this.course.fillTriangle(
-      this.level.hole.x,
-      this.level.hole.y - 58,
-      this.level.hole.x + 30,
-      this.level.hole.y - 46,
-      this.level.hole.x,
-      this.level.hole.y - 34
+      this.level.hole.x, this.level.hole.y - 58,
+      this.level.hole.x + 30, this.level.hole.y - 46,
+      this.level.hole.x, this.level.hole.y - 34
     );
   }
 
-  private drawWall(r: RectDef, alpha = 1): void {
+  private drawIce(rect: RectDef): void {
+    this.course.fillStyle(0xa9dcea, 0.68);
+    this.course.fillRoundedRect(rect.x, rect.y, rect.w, rect.h, 16);
+    this.course.lineStyle(1, 0xe7f8ff, 0.3);
+    for (let x = rect.x + 20; x < rect.x + rect.w; x += 34) {
+      this.course.beginPath();
+      this.course.moveTo(x, rect.y + 10);
+      this.course.lineTo(Math.min(rect.x + rect.w - 8, x + 24), rect.y + rect.h - 10);
+      this.course.strokePath();
+    }
+  }
+
+  private drawBooster(booster: BoosterDef): void {
+    this.course.fillStyle(0x397551, 0.95);
+    this.course.fillRoundedRect(booster.x, booster.y, booster.w, booster.h, 9);
+    const cx = booster.x + booster.w / 2;
+    const cy = booster.y + booster.h / 2;
+    const length = Math.hypot(booster.dx, booster.dy) || 1;
+    const dx = booster.dx / length;
+    const dy = booster.dy / length;
+    const px = -dy;
+    const py = dx;
+    const tipX = cx + dx * 18;
+    const tipY = cy + dy * 18;
+    const backX = cx - dx * 12;
+    const backY = cy - dy * 12;
+    this.course.fillStyle(0xdff4e5, 0.9);
+    this.course.fillTriangle(
+      tipX, tipY,
+      backX + px * 10, backY + py * 10,
+      backX - px * 10, backY - py * 10
+    );
+  }
+
+  private drawWall(rect: RectDef, alpha = 1): void {
     this.course.fillStyle(0x344657, alpha);
-    this.course.fillRoundedRect(r.x, r.y, r.w, r.h, 5);
+    this.course.fillRoundedRect(rect.x, rect.y, rect.w, rect.h, 5);
     this.course.fillStyle(0x607689, alpha);
-    if (r.w >= r.h) this.course.fillRect(r.x + 4, r.y + 3, Math.max(0, r.w - 8), 4);
-    else this.course.fillRect(r.x + 3, r.y + 4, 4, Math.max(0, r.h - 8));
+    if (rect.w >= rect.h) this.course.fillRect(rect.x + 4, rect.y + 3, Math.max(0, rect.w - 8), 4);
+    else this.course.fillRect(rect.x + 3, rect.y + 4, 4, Math.max(0, rect.h - 8));
+  }
+
+  private drawTriangle(triangle: TriangleDef): void {
+    this.course.fillStyle(0x344657, 1);
+    this.course.fillTriangle(triangle.a.x, triangle.a.y, triangle.b.x, triangle.b.y, triangle.c.x, triangle.c.y);
+    this.course.lineStyle(3, 0x607689, 0.85);
+    this.course.beginPath();
+    this.course.moveTo(triangle.a.x, triangle.a.y);
+    this.course.lineTo(triangle.b.x, triangle.b.y);
+    this.course.lineTo(triangle.c.x, triangle.c.y);
+    this.course.lineTo(triangle.a.x, triangle.a.y);
+    this.course.strokePath();
   }
 
   private drawBumper(x: number, y: number, r: number): void {
