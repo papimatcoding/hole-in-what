@@ -24,6 +24,8 @@ jobs:
         run: npm run build
       - name: Check hole physics
         run: npm run test:hole
+      - name: Check authored mechanics
+        run: npm run test:mechanics
       - name: Simulate all campaign holes
         run: npm run audit:courses
       - name: Check course originality
