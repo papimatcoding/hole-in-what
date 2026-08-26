@@ -28,7 +28,7 @@ export class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.makeModeButton("CLASSIC", "classic", 285);
-    this.makeModeButton("TROLL", "troll", 400);
+    this.makeModeButton("HARD", "troll", 400);
     this.makeSimpleButton("PERSONALIZAR", 520, () => this.scene.start("cosmetics"));
     this.makeSimpleButton("TIENDA", 595, () => this.scene.start("shop"));
     this.makeSimpleButton("RECOMPENSAS", 670, () => this.scene.start("rewards"));
@@ -38,7 +38,7 @@ export class MenuScene extends Phaser.Scene {
       fontFamily: "system-ui, sans-serif", fontSize: "11px", color: "#667687"
     }).setOrigin(0.5);
 
-    this.add.text(DESIGN_WIDTH / 2, DESIGN_HEIGHT - 48, "V8 · polish & onboarding", {
+    this.add.text(DESIGN_WIDTH / 2, DESIGN_HEIGHT - 48, "V8.1 · graphics & mechanics", {
       fontFamily: "system-ui, sans-serif", fontSize: "12px", color: "#657282"
     }).setOrigin(0.5);
 
