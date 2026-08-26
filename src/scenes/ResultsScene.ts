@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { setupDesignCamera, sharpenSceneText } from "../config/display";
 import { levelsForMode } from "../data/levels";
 import { SaveSystem } from "../systems/SaveSystem";
 import type { ResultsSceneData } from "../types";
@@ -15,6 +16,7 @@ export class ResultsScene extends Phaser.Scene {
   }
 
   create(): void {
+    setupDesignCamera(this);
     this.cameras.main.setBackgroundColor("#0d1117");
     const reward = SaveSystem.submit(
       this.resultData.levelId,
@@ -86,6 +88,8 @@ export class ResultsScene extends Phaser.Scene {
       .on("pointerup", () => {
         this.scene.start("level-select", { mode: this.resultData.mode });
       });
+
+    sharpenSceneText(this);
   }
 
   private makeButton(label: string, y: number, action: () => void): void {
