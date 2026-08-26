@@ -12,7 +12,8 @@ import type {
   WalletSave
 } from "../types";
 
-const STORAGE_KEY = "troll-golf-save-v1";
+// V8.3 procedural beta intentionally starts from a clean local save.
+const STORAGE_KEY = "troll-golf-save-procedural-v1";
 const FRESH_START_COINS = 80;
 const LEGACY_DEV_GRANT = 250;
 
@@ -22,11 +23,7 @@ const DEFAULT_EQUIPPED: EquippedCosmetics = {
   holeEffect: "hole-default"
 };
 
-const DEFAULT_OWNED = [
-  "ball-classic",
-  "trail-none",
-  "hole-default"
-];
+const DEFAULT_OWNED = ["ball-classic", "trail-none", "hole-default"];
 
 const emptyRecord = (): LevelRecord => ({
   completed: false,
@@ -35,54 +32,15 @@ const emptyRecord = (): LevelRecord => ({
   bestTimeMs: null
 });
 
-const defaultCosmetics = (): CosmeticsSave => ({
-  owned: [...DEFAULT_OWNED],
-  equipped: { ...DEFAULT_EQUIPPED }
-});
-
+const defaultCosmetics = (): CosmeticsSave => ({ owned: [...DEFAULT_OWNED], equipped: { ...DEFAULT_EQUIPPED } });
 const defaultWallet = (coins = FRESH_START_COINS, gems = 0): WalletSave => ({ coins, gems });
-
-const emptySave = (): SaveData => ({
-  version: 4,
-  levels: {},
-  cosmetics: defaultCosmetics(),
-  wallet: defaultWallet()
-});
+const emptySave = (): SaveData => ({ version: 4, levels: {}, cosmetics: defaultCosmetics(), wallet: defaultWallet() });
 
 function migrate(parsed: SaveData | SaveDataV3 | SaveDataV2 | SaveDataV1): SaveData {
-  if (parsed.version === 4) {
-    return {
-      version: 4,
-      levels: parsed.levels ?? {},
-      cosmetics: parsed.cosmetics ?? defaultCosmetics(),
-      wallet: parsed.wallet ?? defaultWallet()
-    };
-  }
-
-  if (parsed.version === 3) {
-    return {
-      version: 4,
-      levels: parsed.levels ?? {},
-      cosmetics: parsed.cosmetics ?? defaultCosmetics(),
-      wallet: defaultWallet(parsed.wallet?.coins ?? FRESH_START_COINS, 0)
-    };
-  }
-
-  if (parsed.version === 2) {
-    return {
-      version: 4,
-      levels: parsed.levels ?? {},
-      cosmetics: parsed.cosmetics ?? defaultCosmetics(),
-      wallet: defaultWallet(LEGACY_DEV_GRANT, 0)
-    };
-  }
-
-  return {
-    version: 4,
-    levels: parsed.levels ?? {},
-    cosmetics: defaultCosmetics(),
-    wallet: defaultWallet(LEGACY_DEV_GRANT, 0)
-  };
+  if (parsed.version === 4) return { version: 4, levels: parsed.levels ?? {}, cosmetics: parsed.cosmetics ?? defaultCosmetics(), wallet: parsed.wallet ?? defaultWallet() };
+  if (parsed.version === 3) return { version: 4, levels: parsed.levels ?? {}, cosmetics: parsed.cosmetics ?? defaultCosmetics(), wallet: defaultWallet(parsed.wallet?.coins ?? FRESH_START_COINS, 0) };
+  if (parsed.version === 2) return { version: 4, levels: parsed.levels ?? {}, cosmetics: parsed.cosmetics ?? defaultCosmetics(), wallet: defaultWallet(LEGACY_DEV_GRANT, 0) };
+  return { version: 4, levels: parsed.levels ?? {}, cosmetics: defaultCosmetics(), wallet: defaultWallet(LEGACY_DEV_GRANT, 0) };
 }
 
 function load(): SaveData {
@@ -90,95 +48,57 @@ function load(): SaveData {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return emptySave();
     const parsed = JSON.parse(raw) as SaveData | SaveDataV3 | SaveDataV2 | SaveDataV1;
-    if (![1, 2, 3, 4].includes(parsed.version) || typeof parsed.levels !== "object") {
-      throw new Error("Invalid save");
-    }
+    if (![1, 2, 3, 4].includes(parsed.version) || typeof parsed.levels !== "object") throw new Error("Invalid save");
     return migrate(parsed);
-  } catch {
-    return emptySave();
-  }
+  } catch { return emptySave(); }
 }
 
 function persist(save: SaveData): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(save));
-  } catch {
-    // Some mobile webviews restrict storage; gameplay should still work.
-  }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(save)); } catch { /* gameplay can continue */ }
 }
 
 function unlockEligibleStarRewards(save: SaveData): string[] {
   const totalStars = totalStarsFromRecords(save.levels);
   const unlocked: string[] = [];
-
   for (const reward of STAR_REWARDS) {
     if (totalStars < reward.stars || save.cosmetics.owned.includes(reward.cosmeticId)) continue;
     save.cosmetics.owned.push(reward.cosmeticId);
     unlocked.push(reward.cosmeticId);
   }
-
   return unlocked;
 }
 
 export const SaveSystem = {
-  record(levelId: string): LevelRecord {
-    const save = load();
-    return save.levels[levelId] ?? emptyRecord();
-  },
+  record(levelId: string): LevelRecord { return load().levels[levelId] ?? emptyRecord(); },
 
   submit(levelId: string, stars: number, strokes: number, timeMs: number): SubmitResult {
     const save = load();
     const current = save.levels[levelId] ?? emptyRecord();
     const nextStars = Math.max(current.stars, stars);
     const gainedStars = Math.max(0, nextStars - current.stars);
-    const firstClearBonus = current.completed ? 0 : 10;
-    const coinsEarned = firstClearBonus + gainedStars * 20;
-
+    const coinsEarned = (current.completed ? 0 : 10) + gainedStars * 20;
     const next: LevelRecord = {
       completed: true,
       stars: nextStars,
       bestStrokes: current.bestStrokes === null ? strokes : Math.min(current.bestStrokes, strokes),
       bestTimeMs: current.bestTimeMs === null ? timeMs : Math.min(current.bestTimeMs, timeMs)
     };
-
     save.levels[levelId] = next;
     save.wallet.coins += coinsEarned;
     const newlyUnlockedCosmetics = unlockEligibleStarRewards(save);
     persist(save);
-
-    return {
-      record: next,
-      coinsEarned,
-      totalCoins: save.wallet.coins,
-      totalGems: save.wallet.gems,
-      newlyUnlockedCosmetics
-    };
+    return { record: next, coinsEarned, totalCoins: save.wallet.coins, totalGems: save.wallet.gems, newlyUnlockedCosmetics };
   },
 
   totalStars(levelIds: string[]): number {
     const save = load();
     return levelIds.reduce((sum, id) => sum + (save.levels[id]?.stars ?? 0), 0);
   },
-
-  totalStarsAll(): number {
-    return totalStarsFromRecords(load().levels);
-  },
-
-  wallet(): WalletSave {
-    return { ...load().wallet };
-  },
-
-  coins(): number {
-    return load().wallet.coins;
-  },
-
-  gems(): number {
-    return load().wallet.gems;
-  },
-
-  cosmetics(): CosmeticsSave {
-    return load().cosmetics;
-  },
+  totalStarsAll(): number { return totalStarsFromRecords(load().levels); },
+  wallet(): WalletSave { return { ...load().wallet }; },
+  coins(): number { return load().wallet.coins; },
+  gems(): number { return load().wallet.gems; },
+  cosmetics(): CosmeticsSave { return load().cosmetics; },
 
   claimEligibleStarRewards(): string[] {
     const save = load();
@@ -194,21 +114,16 @@ export const SaveSystem = {
     const completed = levels.reduce((sum, level) => sum + (save.levels[level.id]?.completed ? 1 : 0), 0);
     return { stars, completed, total: levels.length, requiredStars: TROLL_UNLOCK_STARS };
   },
-
   isTrollUnlocked(): boolean {
     const progress = this.classicProgress();
     return progress.stars >= progress.requiredStars || progress.completed >= progress.total;
   },
-
-  isOwned(cosmeticId: string): boolean {
-    return load().cosmetics.owned.includes(cosmeticId);
-  },
+  isOwned(cosmeticId: string): boolean { return load().cosmetics.owned.includes(cosmeticId); },
 
   purchase(cosmeticId: string, price: number): boolean {
     const save = load();
     if (save.cosmetics.owned.includes(cosmeticId)) return true;
     if (price < 0 || save.wallet.coins < price) return false;
-
     save.wallet.coins -= price;
     save.cosmetics.owned.push(cosmeticId);
     persist(save);
@@ -223,7 +138,5 @@ export const SaveSystem = {
     return { ...save.cosmetics.equipped };
   },
 
-  reset(): void {
-    try { localStorage.removeItem(STORAGE_KEY); } catch { /* no-op */ }
-  }
+  reset(): void { try { localStorage.removeItem(STORAGE_KEY); } catch { /* no-op */ } }
 };
