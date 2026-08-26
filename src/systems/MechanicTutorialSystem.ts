@@ -7,6 +7,8 @@ export type MechanicId =
   | "ramp"
   | "trampoline"
   | "void"
+  | "wind"
+  | "portal"
   | "trollTrap";
 
 export interface MechanicTutorial {
@@ -55,11 +57,23 @@ export const MECHANIC_TUTORIALS: Record<MechanicId, MechanicTutorial> = {
     body: "Si la bola toca el vacío estando en el suelo, vuelve al inicio del golpe. En el aire puedes cruzarlo.",
     hint: "Busca una rampa o un trampolín cuando corte el camino."
   },
+  wind: {
+    id: "wind",
+    title: "VIENTO",
+    body: "El viento empuja la bola de forma constante dentro de su zona. La dirección nunca es aleatoria.",
+    hint: "Compensa el empuje o úsalo para tomar una curva más rápido."
+  },
+  portal: {
+    id: "portal",
+    title: "PORTALES",
+    body: "Los portales siempre van por parejas. Entra por uno y saldrás por el otro conservando la velocidad y la dirección.",
+    hint: "Piensa en la línea de salida, no solo en cómo entrar."
+  },
   trollTrap: {
     id: "trollTrap",
-    title: "TRAMPA TROLL",
-    body: "En algunos hoyos el campo puede cambiar cuando la bola se acerca: paredes, bumpers o incluso vacío.",
-    hint: "Primero descubre la trampa. Después encuentra la ruta real."
+    title: "CAMPO DINÁMICO",
+    body: "Algunos elementos del campo pueden reaccionar durante una partida.",
+    hint: "Observa lo que ocurre y adapta la siguiente jugada."
   }
 };
 
@@ -91,13 +105,10 @@ export function mechanicsForLevel(level: LevelDefinition): MechanicId[] {
   if ((level.ramps?.length ?? 0) > 0) ids.push("ramp");
   if ((level.trampolines?.length ?? 0) > 0) ids.push("trampoline");
   if ((level.voids?.length ?? 0) > 0) ids.push("void");
+  if ((level.winds?.length ?? 0) > 0) ids.push("wind");
+  if ((level.portals?.length ?? 0) > 0) ids.push("portal");
 
-  const hasTrollTrap =
-    (level.popWalls?.length ?? 0) > 0 ||
-    (level.popBumpers?.length ?? 0) > 0 ||
-    (level.popVoids?.length ?? 0) > 0;
-  if (hasTrollTrap) ids.push("trollTrap");
-
+  // HARD debe conservar la sorpresa: las trampas reactivas no se anuncian antes de activarse.
   return ids;
 }
 
