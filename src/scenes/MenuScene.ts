@@ -56,7 +56,10 @@ export class MenuScene extends Phaser.Scene {
       color: "#c9d4df"
     }).setOrigin(1, 0.5);
 
-    const open = (): void => this.scene.start("level-select", { mode });
+    const open = (): void => {
+      this.scene.start("level-select", { mode });
+    };
+
     bg.on("pointerup", open);
     title.setInteractive({ useHandCursor: true }).on("pointerup", open);
     progress.setInteractive({ useHandCursor: true }).on("pointerup", open);
