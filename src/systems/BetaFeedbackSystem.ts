@@ -10,8 +10,10 @@ export interface BetaFeedbackContext {
   timeMs?: number | null;
 }
 
-export interface BetaFeedbackEntry extends BetaFeedbackContext {
+export interface BetaFeedbackEntry extends Omit<BetaFeedbackContext,"strokes"|"timeMs"> {
   id: string;
+  strokes: number | null;
+  timeMs: number | null;
   category: BetaFeedbackCategory;
   note: string;
   createdAt: string;
@@ -48,7 +50,9 @@ export const BetaFeedbackSystem={
   add(context:BetaFeedbackContext,category:BetaFeedbackCategory,note=""):BetaFeedbackEntry{
     const entries=load();
     const entry:BetaFeedbackEntry={
-      ...context,
+      levelId:context.levelId,
+      mode:context.mode,
+      levelIndex:context.levelIndex,
       strokes:context.strokes??null,
       timeMs:context.timeMs??null,
       id:`fb-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
