@@ -8,7 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
-    "audit:courses": "sed 's#../src/data/procedural/campaignGenerator#../src/data/procedural/auditedCampaign#' scripts/courseAudit.ts > scripts/.courseAuditRun.ts && tsx scripts/.courseAuditRun.ts; code=$?; rm -f scripts/.courseAuditRun.ts; exit $code"
+    "test:hole": "tsx scripts/holePhysicsCheck.ts",
+    "audit:courses": "tsx scripts/courseAudit.ts"
   },
   "dependencies": {
     "phaser": "4.2.1"
