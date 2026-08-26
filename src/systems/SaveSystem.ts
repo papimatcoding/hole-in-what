@@ -1,4 +1,4 @@
-import { levelsForMode } from "../data/levels";
+import { v82LevelsForMode } from "../data/v82Course";
 import { STAR_REWARDS, TROLL_UNLOCK_STARS, totalStarsFromRecords } from "../data/progression";
 import type {
   CosmeticsSave,
@@ -12,7 +12,7 @@ import type {
   WalletSave
 } from "../types";
 
-// V8.3 procedural beta intentionally starts from a clean local save.
+// Procedural beta save. Existing V8.x progress remains valid because level IDs are stable.
 const STORAGE_KEY = "troll-golf-save-procedural-v1";
 const FRESH_START_COINS = 80;
 const LEGACY_DEV_GRANT = 250;
@@ -109,7 +109,7 @@ export const SaveSystem = {
 
   classicProgress(): { stars: number; completed: number; total: number; requiredStars: number } {
     const save = load();
-    const levels = levelsForMode("classic");
+    const levels = v82LevelsForMode("classic");
     const stars = levels.reduce((sum, level) => sum + (save.levels[level.id]?.stars ?? 0), 0);
     const completed = levels.reduce((sum, level) => sum + (save.levels[level.id]?.completed ? 1 : 0), 0);
     return { stars, completed, total: levels.length, requiredStars: TROLL_UNLOCK_STARS };
