@@ -33,6 +33,7 @@ export class GameplayScene extends Phaser.Scene {
   private trailView!:Phaser.GameObjects.Graphics;
   private shadowView!:Phaser.GameObjects.Graphics;
   private ballView!:Phaser.GameObjects.Container;
+  private objectiveHud!:Phaser.GameObjects.Container;
   private strokeText!:Phaser.GameObjects.Text;
   private timeText!:Phaser.GameObjects.Text;
   private ballCosmetic!:CosmeticDefinition;
@@ -73,7 +74,7 @@ export class GameplayScene extends Phaser.Scene {
     this.dynamic=this.add.graphics().setDepth(5);
     this.trailView=this.add.graphics().setDepth(6);
     this.shadowView=this.add.graphics().setDepth(7);
-    this.aim=this.add.graphics().setDepth(15);
+    this.aim=this.add.graphics().setDepth(25);
     const ballGraphic=this.add.graphics();drawBall(ballGraphic,this.ballCosmetic,0,0,BALL_R);
     this.ballView=this.add.container(this.sim.state.ball.x,this.sim.state.ball.y,[ballGraphic]).setDepth(10);
 
@@ -82,7 +83,7 @@ export class GameplayScene extends Phaser.Scene {
     this.input.on("pointermove",(p:Phaser.Input.Pointer)=>this.pointerMove(p));
     this.input.on("pointerup",(p:Phaser.Input.Pointer)=>this.pointerUp(p));
 
-    drawCourse(this.course,this.level,this.sim.state);drawDynamicCourse(this.dynamic,this.level,0);this.updateBallView();
+    drawCourse(this.course,this.level,this.sim.state);drawDynamicCourse(this.dynamic,this.level,0);this.updateBallView();this.updateHudOcclusion();
     this.tutorialQueue=unseenMechanics(this.level);
     if(this.tutorialQueue.length>0)this.showMechanicTutorial();else this.showControlHintIfNeeded();
     sharpenSceneText(this);
@@ -91,20 +92,30 @@ export class GameplayScene extends Phaser.Scene {
   update(time:number,deltaMs:number):void{
     if(this.sinking)return;
     this.timeText.setText(`${((performance.now()-this.startedAt)/1000).toFixed(1)} s`);
-    if(this.tutorialCard||this.voidAnimating){drawDynamicCourse(this.dynamic,this.level,time/1000);return;}
+    if(this.tutorialCard||this.voidAnimating){this.updateHudOcclusion();drawDynamicCourse(this.dynamic,this.level,time/1000);return;}
     const dt=Math.min(deltaMs/1000,.033);
     if(this.sim.state.moving)this.consume(this.sim.step(dt));
-    this.updateTrail(dt);this.updateBallView();drawCourse(this.course,this.level,this.sim.state);drawDynamicCourse(this.dynamic,this.level,time/1000);
+    this.updateTrail(dt);this.updateBallView();this.updateHudOcclusion();drawCourse(this.course,this.level,this.sim.state);drawDynamicCourse(this.dynamic,this.level,time/1000);
   }
 
   private createHud():void{
-    this.add.rectangle(270,69,310,54,0x0a0f14,.80).setStrokeStyle(1,0x26323d,.82).setDepth(18);
+    const bg=this.add.rectangle(270,69,310,54,0x0a0f14,.80).setStrokeStyle(1,0x26323d,.82);
+    const three=this.add.text(270,58,`★★★  ${formatRequirement(this.level.threeStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#f0d37e"}).setOrigin(.5);
+    const two=this.add.text(270,80,`★★  ${formatRequirement(this.level.twoStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"11px",color:"#bcc7d0"}).setOrigin(.5);
+    this.objectiveHud=this.add.container(0,0,[bg,three,two]).setDepth(18);
     this.strokeText=this.add.text(42,42,"Golpes 0",{fontFamily:"system-ui, sans-serif",fontSize:"15px",fontStyle:"bold",color:"#f5f7fa"}).setDepth(20);
     this.timeText=this.add.text(498,42,"0.0 s",{fontFamily:"system-ui, sans-serif",fontSize:"15px",color:"#f5f7fa"}).setOrigin(1,0).setDepth(20);
-    this.add.text(270,58,`★★★  ${formatRequirement(this.level.threeStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#f0d37e"}).setOrigin(.5).setDepth(20);
-    this.add.text(270,80,`★★  ${formatRequirement(this.level.twoStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"11px",color:"#bcc7d0"}).setOrigin(.5).setDepth(20);
     this.add.text(42,84,"‹",{fontFamily:"system-ui, sans-serif",fontSize:"36px",color:"#f5f7fa"}).setDepth(20).setInteractive({useHandCursor:true})
       .on("pointerup",()=>this.scene.start("level-select",{mode:this.mode,page:Math.floor(this.levelIndex/10)}));
+  }
+
+  private updateHudOcclusion():void{
+    const b=this.sim.state.ball,visualY=b.y-Math.max(0,b.z)*AIR_VISUAL_SCALE;
+    const underObjectives=b.x>98&&b.x<442&&visualY<122;
+    const targetAlpha=underObjectives?.14:1;
+    this.objectiveHud.alpha+=(targetAlpha-this.objectiveHud.alpha)*.24;
+    const airborne=this.sim.isAirborne();
+    this.ballView.setDepth(underObjectives?24:airborne?12:10);
   }
 
   private pointerDown(pointer:Phaser.Input.Pointer):void{
@@ -150,7 +161,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private startVoidReset():void{
     if(this.voidAnimating)return;this.voidAnimating=true;this.dragPointer=null;this.aim.clear();
-    this.tweens.add({targets:this.ballView,alpha:0,scale:.12,y:this.ballView.y+10,duration:245,ease:"Cubic.easeIn",onComplete:()=>{this.sim.resetAfterVoid();const b=this.sim.state.ball;this.ballView.setPosition(b.x,b.y).setScale(1).setAlpha(1);this.time.delayedCall(110,()=>{this.voidAnimating=false;this.updateBallView();});}});
+    this.tweens.add({targets:this.ballView,alpha:0,scale:.12,y:this.ballView.y+10,duration:245,ease:"Cubic.easeIn",onComplete:()=>{this.sim.resetAfterVoid();const b=this.sim.state.ball;this.ballView.setPosition(b.x,b.y).setScale(1).setAlpha(1);this.time.delayedCall(110,()=>{this.voidAnimating=false;this.updateBallView();this.updateHudOcclusion();});}});
   }
   private finishHole():void{
     if(this.sinking)return;this.sinking=true;this.dragPointer=null;this.aim.clear();this.holeFx();const timeMs=Math.round(performance.now()-this.startedAt),stars=starsForRun(this.level,this.strokes,timeMs);
