@@ -31,6 +31,17 @@ function bumper(g:Phaser.GameObjects.Graphics,x:number,y:number,r:number):void{
 function zone(g:Phaser.GameObjects.Graphics,r:RectDef,fill:number,line:number):void{
   g.fillStyle(fill,.86);g.fillRoundedRect(r.x,r.y,r.w,r.h,15);g.lineStyle(2,line,.35);g.strokeRoundedRect(r.x+1,r.y+1,r.w-2,r.h-2,14);
 }
+function iceZone(g:Phaser.GameObjects.Graphics,r:RectDef):void{
+  g.fillStyle(0x9eddeb,.92);g.fillRoundedRect(r.x,r.y,r.w,r.h,15);
+  g.lineStyle(2,0xeaffff,.72);g.strokeRoundedRect(r.x+1,r.y+1,r.w-2,r.h-2,14);
+  g.fillStyle(0xffffff,.16);g.fillRoundedRect(r.x+10,r.y+9,Math.max(24,r.w*.42),8,4);
+  g.lineStyle(2,0xffffff,.22);
+  const left=r.x+14,right=r.x+r.w-14;
+  for(let y=r.y+32;y<r.y+r.h-10;y+=34){
+    const x1=left+(((y-r.y)/34)%2)*18,x2=Math.min(right,x1+42);
+    g.beginPath();g.moveTo(x1,y);g.lineTo(x2,y-14);g.strokePath();
+  }
+}
 function voidZone(g:Phaser.GameObjects.Graphics,r:RectDef,alpha:number):void{
   if(r.w<2||r.h<2)return;g.fillStyle(0x03080d,.92*alpha);g.fillRoundedRect(r.x,r.y,r.w,r.h,Math.min(16,r.w/4,r.h/4));
   g.lineStyle(2,0x3a5365,.7*alpha);g.strokeRoundedRect(r.x+2,r.y+2,Math.max(1,r.w-4),Math.max(1,r.h-4),12);
@@ -71,7 +82,7 @@ export function drawCourse(g:Phaser.GameObjects.Graphics,level:LevelDefinition,s
   g.fillStyle(0xffffff,.035);for(let i=0;i<12;i+=2)g.fillRect(FIELD.x+i*FIELD.w/12,FIELD.y+2,FIELD.w/12,FIELD.h-4);
   for(const x of level.voids??[])voidZone(g,x,1);
   for(let i=0;i<(level.popVoids??[]).length;i+=1){const rt=state.popVoids[i];if(rt?.active)voidZone(g,animatedRect(level.popVoids![i]!,rt.anim,false),Math.min(1,rt.anim*1.25));}
-  for(const x of level.ice??[])zone(g,x,0xa7ddea,0xe8fbff);for(const x of level.sand??[])zone(g,x,0xd9bd79,0xf0dca6);for(const x of level.boosters??[])booster(g,x);for(const x of level.ramps??[])ramp(g,x);for(const x of level.trampolines??[])trampoline(g,x);
+  for(const x of level.ice??[])iceZone(g,x);for(const x of level.sand??[])zone(g,x,0xd9bd79,0xf0dca6);for(const x of level.boosters??[])booster(g,x);for(const x of level.ramps??[])ramp(g,x);for(const x of level.trampolines??[])trampoline(g,x);
   for(const x of level.walls??[])wall(g,x);for(const x of level.triangles??[])triangle(g,x);
   for(let i=0;i<(level.popWalls??[]).length;i+=1){const rt=state.popWalls[i];if(rt?.active)wall(g,animatedRect(level.popWalls![i]!,rt.anim,true),Math.min(1,rt.anim*1.5));}
   for(const x of level.bumpers??[])bumper(g,x.x,x.y,x.r);for(let i=0;i<(level.popBumpers??[]).length;i+=1){const rt=state.popBumpers[i],def=level.popBumpers![i];if(rt?.active&&def)bumper(g,def.x,def.y,def.r*easeOutBack(rt.anim));}
