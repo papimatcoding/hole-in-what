@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { setupDesignCamera, sharpenSceneText } from "../config/display";
 import { levelsForMode } from "../data/levels";
 import { SaveSystem } from "../systems/SaveSystem";
 import type { GameMode } from "../types";
@@ -17,6 +18,7 @@ export class LevelSelectScene extends Phaser.Scene {
   }
 
   create(): void {
+    setupDesignCamera(this);
     const levels = levelsForMode(this.mode);
     this.cameras.main.setBackgroundColor("#0d1117");
 
@@ -77,5 +79,7 @@ export class LevelSelectScene extends Phaser.Scene {
       card.on("pointerover", () => card.setFillStyle(0x202b36));
       card.on("pointerout", () => card.setFillStyle(0x18212a));
     });
+
+    sharpenSceneText(this);
   }
 }
