@@ -163,7 +163,17 @@ export class GameplayScene extends Phaser.Scene {
   }
   private updateTrail(dt:number):void{
     for(let i=this.trail.length-1;i>=0;i-=1){const p=this.trail[i]!;p.life-=dt;if(p.life<=0)this.trail.splice(i,1);}
-    if(this.sim.state.moving&&this.trailCosmetic.id!=="trail-none"&&Math.hypot(this.sim.state.ball.vx,this.sim.state.ball.vy)>70){this.trailClock+=dt;const interval=this.trailCosmetic.id==="trail-sparks"?.024:.034;while(this.trailClock>=interval){this.trailClock-=interval;const b=this.sim.state.ball,maxLife=this.trailCosmetic.id==="trail-petals"?.58:.42;this.trail.push({x:b.x,y:b.y-b.z*AIR_VISUAL_SCALE,life:maxLife,maxLife,size:Phaser.Math.FloatBetween(2.5,5)});if(this.trail.length>70)this.trail.shift();}}else this.trailClock=0;
+    if(this.sim.state.moving&&this.trailCosmetic.id!=="trail-none"&&Math.hypot(this.sim.state.ball.vx,this.sim.state.ball.vy)>70){
+      this.trailClock+=dt;
+      const interval=this.trailCosmetic.id==="trail-sparks" ? 0.024 : 0.034;
+      while(this.trailClock>=interval){
+        this.trailClock-=interval;
+        const b=this.sim.state.ball;
+        const maxLife=this.trailCosmetic.id==="trail-petals" ? 0.58 : 0.42;
+        this.trail.push({x:b.x,y:b.y-b.z*AIR_VISUAL_SCALE,life:maxLife,maxLife,size:Phaser.Math.FloatBetween(2.5,5)});
+        if(this.trail.length>70)this.trail.shift();
+      }
+    }else this.trailClock=0;
     this.trailView.clear();const secondary=this.trailCosmetic.secondary??this.trailCosmetic.primary;for(let i=0;i<this.trail.length;i+=1){const p=this.trail[i]!,life=p.life/p.maxLife,color=i%2?secondary:this.trailCosmetic.primary;this.trailView.fillStyle(color,life*.46);this.trailView.fillCircle(p.x,p.y,p.size*(.5+life*.5));}
   }
 
