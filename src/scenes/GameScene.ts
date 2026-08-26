@@ -17,6 +17,7 @@ const FIELD = { x: 28, y: 28, w: 484, h: 904 };
 const BALL_R = 13;
 const HOLE_R = 17;
 const MAX_PULL = 172;
+const DRAG_GAIN = 1.35;
 const POWER = 7.4;
 const BASE_FRICTION = 0.9875;
 const WALL_BOUNCE = 0.90;
@@ -106,7 +107,7 @@ export class GameScene extends Phaser.Scene {
 
   private onPointerDown(pointer: Phaser.Input.Pointer): void {
     if (this.moving || this.sinking) return;
-    if (Phaser.Math.Distance.Between(pointer.x, pointer.y, this.ball.x, this.ball.y) <= 50) {
+    if (Phaser.Math.Distance.Between(pointer.x, pointer.y, this.ball.x, this.ball.y) <= 60) {
       this.dragPointer = pointer;
       this.drawAim(pointer.x, pointer.y);
     }
@@ -128,7 +129,7 @@ export class GameScene extends Phaser.Scene {
 
     if (len < 12) return;
 
-    const pull = Math.min(len, MAX_PULL);
+    const pull = Math.min(len * DRAG_GAIN, MAX_PULL);
     dx /= len;
     dy /= len;
 
@@ -143,7 +144,8 @@ export class GameScene extends Phaser.Scene {
     let dx = this.ball.x - pointerX;
     let dy = this.ball.y - pointerY;
     const len = Math.hypot(dx, dy) || 1;
-    const pull = Math.min(len, MAX_PULL);
+    const pull = Math.min(len * DRAG_GAIN, MAX_PULL);
+    const visualPull = Math.min(len, MAX_PULL / DRAG_GAIN);
     dx /= len;
     dy /= len;
 
@@ -151,7 +153,7 @@ export class GameScene extends Phaser.Scene {
     this.aim.lineStyle(5, 0x83b9ff, 0.95);
     this.aim.beginPath();
     this.aim.moveTo(this.ball.x, this.ball.y);
-    this.aim.lineTo(this.ball.x - dx * pull, this.ball.y - dy * pull);
+    this.aim.lineTo(this.ball.x - dx * visualPull, this.ball.y - dy * visualPull);
     this.aim.strokePath();
 
     this.aim.fillStyle(0xedf5ff, 0.72);
