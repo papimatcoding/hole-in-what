@@ -26,3 +26,5 @@ jobs:
         run: npm run test:hole
       - name: Simulate all campaign holes
         run: npm run audit:courses
+      - name: Check course originality
+        run: npm run audit:originality
