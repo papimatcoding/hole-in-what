@@ -1,6 +1,17 @@
-import type { CosmeticsSave, EquippedCosmetics, LevelRecord, SaveData, SaveDataV1 } from "../types";
+import type {
+  CosmeticsSave,
+  EquippedCosmetics,
+  LevelRecord,
+  SaveData,
+  SaveDataV1,
+  SaveDataV2,
+  SubmitResult,
+  WalletSave
+} from "../types";
 
 const STORAGE_KEY = "troll-golf-save-v1";
+const FRESH_START_COINS = 80;
+const LEGACY_DEV_GRANT = 250;
 
 const DEFAULT_EQUIPPED: EquippedCosmetics = {
   ball: "ball-classic",
@@ -10,14 +21,8 @@ const DEFAULT_EQUIPPED: EquippedCosmetics = {
 
 const DEFAULT_OWNED = [
   "ball-classic",
-  "ball-midnight",
-  "ball-spirit",
   "trail-none",
-  "trail-mist",
-  "trail-petals",
-  "hole-default",
-  "hole-pulse",
-  "hole-bloom"
+  "hole-default"
 ];
 
 const emptyRecord = (): LevelRecord => ({
@@ -32,25 +37,39 @@ const defaultCosmetics = (): CosmeticsSave => ({
   equipped: { ...DEFAULT_EQUIPPED }
 });
 
+const defaultWallet = (coins = FRESH_START_COINS): WalletSave => ({ coins });
+
 const emptySave = (): SaveData => ({
-  version: 2,
+  version: 3,
   levels: {},
-  cosmetics: defaultCosmetics()
+  cosmetics: defaultCosmetics(),
+  wallet: defaultWallet()
 });
 
-function migrate(parsed: SaveData | SaveDataV1): SaveData {
+function migrate(parsed: SaveData | SaveDataV2 | SaveDataV1): SaveData {
+  if (parsed.version === 3) {
+    return {
+      version: 3,
+      levels: parsed.levels ?? {},
+      cosmetics: parsed.cosmetics ?? defaultCosmetics(),
+      wallet: parsed.wallet ?? defaultWallet()
+    };
+  }
+
   if (parsed.version === 2) {
     return {
-      version: 2,
+      version: 3,
       levels: parsed.levels ?? {},
-      cosmetics: parsed.cosmetics ?? defaultCosmetics()
+      cosmetics: parsed.cosmetics ?? defaultCosmetics(),
+      wallet: defaultWallet(LEGACY_DEV_GRANT)
     };
   }
 
   return {
-    version: 2,
+    version: 3,
     levels: parsed.levels ?? {},
-    cosmetics: defaultCosmetics()
+    cosmetics: defaultCosmetics(),
+    wallet: defaultWallet(LEGACY_DEV_GRANT)
   };
 }
 
@@ -58,8 +77,8 @@ function load(): SaveData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return emptySave();
-    const parsed = JSON.parse(raw) as SaveData | SaveDataV1;
-    if ((parsed.version !== 1 && parsed.version !== 2) || typeof parsed.levels !== "object") {
+    const parsed = JSON.parse(raw) as SaveData | SaveDataV2 | SaveDataV1;
+    if (![1, 2, 3].includes(parsed.version) || typeof parsed.levels !== "object") {
       throw new Error("Invalid save");
     }
     return migrate(parsed);
@@ -82,23 +101,39 @@ export const SaveSystem = {
     return save.levels[levelId] ?? emptyRecord();
   },
 
-  submit(levelId: string, stars: number, strokes: number, timeMs: number): LevelRecord {
+  submit(levelId: string, stars: number, strokes: number, timeMs: number): SubmitResult {
     const save = load();
     const current = save.levels[levelId] ?? emptyRecord();
+    const nextStars = Math.max(current.stars, stars);
+    const gainedStars = Math.max(0, nextStars - current.stars);
+    const firstClearBonus = current.completed ? 0 : 10;
+    const coinsEarned = firstClearBonus + gainedStars * 20;
+
     const next: LevelRecord = {
       completed: true,
-      stars: Math.max(current.stars, stars),
+      stars: nextStars,
       bestStrokes: current.bestStrokes === null ? strokes : Math.min(current.bestStrokes, strokes),
       bestTimeMs: current.bestTimeMs === null ? timeMs : Math.min(current.bestTimeMs, timeMs)
     };
+
     save.levels[levelId] = next;
+    save.wallet.coins += coinsEarned;
     persist(save);
-    return next;
+
+    return {
+      record: next,
+      coinsEarned,
+      totalCoins: save.wallet.coins
+    };
   },
 
   totalStars(levelIds: string[]): number {
     const save = load();
     return levelIds.reduce((sum, id) => sum + (save.levels[id]?.stars ?? 0), 0);
+  },
+
+  coins(): number {
+    return load().wallet.coins;
   },
 
   cosmetics(): CosmeticsSave {
@@ -107,6 +142,17 @@ export const SaveSystem = {
 
   isOwned(cosmeticId: string): boolean {
     return load().cosmetics.owned.includes(cosmeticId);
+  },
+
+  purchase(cosmeticId: string, price: number): boolean {
+    const save = load();
+    if (save.cosmetics.owned.includes(cosmeticId)) return true;
+    if (price < 0 || save.wallet.coins < price) return false;
+
+    save.wallet.coins -= price;
+    save.cosmetics.owned.push(cosmeticId);
+    persist(save);
+    return true;
   },
 
   equip(slot: keyof EquippedCosmetics, cosmeticId: string): EquippedCosmetics {
