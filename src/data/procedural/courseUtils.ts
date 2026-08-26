@@ -57,13 +57,6 @@ function overlap(a:RectDef,b:RectDef,margin=0):boolean {
 function pointInRect(x:number,y:number,rect:RectDef,margin=0):boolean {
   return x > rect.x-margin && x < rect.x+rect.w+margin && y > rect.y-margin && y < rect.y+rect.h+margin;
 }
-function lineHitsRect(ax:number,ay:number,bx:number,by:number,rect:RectDef):boolean {
-  for(let i=0;i<=56;i+=1){
-    const q=i/56;
-    if(pointInRect(ax+(bx-ax)*q,ay+(by-ay)*q,rect,13)) return true;
-  }
-  return false;
-}
 function clamp(value:number,min:number,max:number):number { return Math.max(min,Math.min(max,value)); }
 
 function path(level:LevelDefinition):Vec2[] {
@@ -102,26 +95,6 @@ function circleTouchesPath(level:LevelDefinition,x:number,y:number,radius:number
   return distanceToPath(level,{x,y}) <= radius+margin;
 }
 
-function pathPoint(level:LevelDefinition,fraction:number):Vec2 {
-  const pts=path(level);
-  const lengths:number[]=[];
-  let total=0;
-  for(let i=0;i<pts.length-1;i+=1){
-    const len=Math.hypot(pts[i+1]!.x-pts[i]!.x,pts[i+1]!.y-pts[i]!.y);
-    lengths.push(len); total+=len;
-  }
-  let remaining=total*clamp(fraction,0,1);
-  for(let i=0;i<lengths.length;i+=1){
-    const len=lengths[i]!;
-    if(remaining<=len){
-      const q=len>0?remaining/len:0;
-      return {x:pts[i]!.x+(pts[i+1]!.x-pts[i]!.x)*q,y:pts[i]!.y+(pts[i+1]!.y-pts[i]!.y)*q};
-    }
-    remaining-=len;
-  }
-  return {...pts[pts.length-1]!};
-}
-
 function cleanRects(level:LevelDefinition,key:"voids"|"sand"|"ice"|"fans"|"ramps"):void {
   const walls=level.walls ?? [];
   const list=(level[key] ?? []) as RectDef[];
@@ -136,15 +109,6 @@ function normalizePhysics(level:LevelDefinition):void {
   level.trampolines=(level.trampolines ?? []).map(t=>({...t,power:clamp(t.power ?? 440,415,465)}));
   level.movingWalls=(level.movingWalls ?? []).map(m=>({...m,amplitude:clamp(m.amplitude,35,86),speed:clamp(m.speed ?? 1.05,0.82,1.24)}));
   level.movingBumpers=(level.movingBumpers ?? []).map(m=>({...m,amplitude:clamp(m.amplitude,35,90),speed:clamp(m.speed ?? 1.1,0.88,1.28)}));
-}
-
-function ensureDirectLineBlocked(level:LevelDefinition):void {
-  if(level.id==="classic-01") return;
-  if((level.walls ?? []).some(w=>lineHitsRect(level.ball.x,level.ball.y,level.hole.x,level.hole.y,w))) return;
-  const p=pathPoint(level,0.52);
-  const width=150;
-  const x=Math.max(FIELD.left+18,Math.min(FIELD.right-width-18,p.x-width/2));
-  level.walls=[...(level.walls ?? []),r(x,p.y-12,width,WALL)];
 }
 
 function keepPurposefulMechanics(level:LevelDefinition):void {
@@ -177,11 +141,15 @@ function keepPurposefulMechanics(level:LevelDefinition):void {
 function ensureHardTrap(level:LevelDefinition):void {
   const count=(level.popWalls?.length ?? 0)+(level.popBumpers?.length ?? 0)+(level.popVoids?.length ?? 0);
   if(level.mode!=="troll" || count>0) return;
-  const hit=pathPoint(level,0.56);
-  const trigger=pathPoint(level,0.44);
+  const pts=path(level),hit=pts[Math.max(1,Math.floor((pts.length-1)*.58))]??level.hole,trigger=pts[Math.max(0,Math.floor((pts.length-1)*.42))]??level.ball;
   level.popBumpers=[{x:hit.x,y:hit.y,r:34,triggerX:trigger.x,triggerY:trigger.y,triggerRadius:92}];
 }
 
+/**
+ * Sanitising is defensive only: remove impossible overlaps and clamp physics. It deliberately
+ * does NOT invent geometry. Difficulty and direct-line blocking belong to the course author /
+ * generator, otherwise every level converges toward the same generic wall pattern.
+ */
 export function sanitizeCourse(level:LevelDefinition):LevelDefinition {
   const next:LevelDefinition=JSON.parse(JSON.stringify(level)) as LevelDefinition;
   const spawn=[next.ball,next.hole];
@@ -194,9 +162,6 @@ export function sanitizeCourse(level:LevelDefinition):LevelDefinition {
   next.portals=(next.portals ?? []).filter(pair=>[pair.a,pair.b].every(p=>
     !(next.walls ?? []).some(w=>pointInRect(p.x,p.y,w,36)) && !(next.voids ?? []).some(v=>pointInRect(p.x,p.y,v,34))
   ));
-
-  ensureDirectLineBlocked(next);
-  for(const key of ["voids","sand","ice","fans","ramps"] as const) cleanRects(next,key);
 
   if((next.voids?.length ?? 0)===0){ next.ramps=[]; next.trampolines=[]; }
   keepPurposefulMechanics(next);
