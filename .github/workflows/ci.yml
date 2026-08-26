@@ -20,3 +20,5 @@ jobs:
         run: npm install
       - name: Typecheck and build
         run: npm run build
+      - name: Simulate all campaign holes
+        run: npm run audit:courses
