@@ -118,6 +118,8 @@ export interface LevelDefinition {
   hole: Vec2;
   threeStar: StarRequirement;
   twoStar: StarRequirement;
+  /** Intended route used only by the deterministic course generator/validator. */
+  designPath?: Vec2[];
   fairways?: RectDef[];
   walls?: RectDef[];
   triangles?: TriangleDef[];
