@@ -1,7 +1,6 @@
 import type { LevelDefinition } from "../../types";
-import { buildCampaignCourse } from "./campaignGenerator";
-import { applyPostAuditBalance } from "./postAuditBalance";
+import { buildCampaignCourse } from "./auditedCampaign";
 
 export function buildClassicCourse(index:number):LevelDefinition {
-  return applyPostAuditBalance(buildCampaignCourse("classic",index),index);
+  return buildCampaignCourse("classic",index);
 }
