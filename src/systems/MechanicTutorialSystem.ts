@@ -20,21 +20,22 @@ export interface MechanicTutorial {
   hint: string;
 }
 
-// New key so beta testers experience the redesigned mechanic cadence from scratch.
-const STORAGE_KEY = "troll-golf-mechanics-seen-curriculum-v2";
+// New onboarding generation: curated vertical slice + compact explanatory cards.
+// Bumping the key deliberately lets current beta testers see the explanations again once.
+const STORAGE_KEY = "troll-golf-mechanics-seen-curated-v3";
 
 export const MECHANIC_TUTORIALS: Record<MechanicId, MechanicTutorial> = {
-  bumper: { id:"bumper", title:"BUMPER", body:"Los bumpers rebotan la bola con energía extra y pueden convertir un impacto en un cambio fuerte de dirección.", hint:"Úsalos como parte de la trayectoria, no como una pared más." },
-  sand: { id:"sand", title:"ARENA", body:"La arena frena mucho la bola. Puede convertir una buena línea en un tiro corto.", hint:"Evítala cuando necesites conservar velocidad." },
-  ice: { id:"ice", title:"HIELO", body:"Sobre hielo la bola apenas pierde velocidad y cualquier rebote se prolonga mucho más.", hint:"Piensa en dónde terminarás, no solo en atravesarlo." },
-  booster: { id:"booster", title:"IMPULSO", body:"Las placas de impulso aceleran la bola en la dirección de la flecha.", hint:"Úsalas para alimentar una ruta, no luches contra ellas." },
-  ramp: { id:"ramp", title:"RAMPA", body:"Las rampas levantan la bola y permiten pasar por encima de paredes o vacío.", hint:"Entra alineado y con velocidad suficiente." },
-  trampoline: { id:"trampoline", title:"TRAMPOLÍN", body:"El trampolín da un salto más alto que una rampa mientras mantiene la trayectoria horizontal.", hint:"Apunta primero; el trampolín no corrige tu dirección." },
-  void: { id:"void", title:"VACÍO", body:"Tocar el vacío desde el suelo devuelve la bola al inicio del golpe. En el aire puedes cruzarlo.", hint:"Busca una ruta segura o una forma de saltarlo." },
-  fan: { id:"fan", title:"VENTILADOR", body:"Los ventiladores generan una corriente visible que empuja la bola mientras está dentro de su alcance.", hint:"La fuerza es constante: compénsala o aprovéchala." },
-  portal: { id:"portal", title:"PORTALES", body:"Los portales van por parejas. Conservas velocidad y dirección al salir por el otro extremo.", hint:"La línea de salida importa tanto como la entrada." },
-  curve: { id:"curve", title:"PARED CURVA", body:"Las paredes curvas cambian el ángulo de rebote de forma continua según el punto de impacto.", hint:"Úsalas para redirigir tiros que una pared recta no permitiría." },
-  moving: { id:"moving", title:"OBSTÁCULOS MÓVILES", body:"Algunas paredes y bumpers recorren una trayectoria fija y repetible durante el hoyo.", hint:"Observa el ritmo antes de tirar. El timing también cuenta." }
+  bumper: { id:"bumper", title:"BUMPER", body:"Rebota la bola con energía extra y cambia mucho su dirección.", hint:"Puedes esquivarlo o convertirlo en un atajo." },
+  sand: { id:"sand", title:"ARENA", body:"Frena la bola con rapidez mientras la atraviesas.", hint:"Úsala para controlar una llegada o evita perder velocidad." },
+  ice: { id:"ice", title:"HIELO", body:"La bola conserva casi toda su velocidad y se desliza mucho más.", hint:"Piensa también en dónde terminará después del rebote." },
+  booster: { id:"booster", title:"IMPULSO", body:"Acelera la bola en la dirección marcada por la flecha.", hint:"Entra bien orientado y deja que haga parte del trabajo." },
+  ramp: { id:"ramp", title:"RAMPA", body:"Levanta la bola para pasar por encima de paredes o vacío.", hint:"Necesitas entrar alineado y con suficiente velocidad." },
+  trampoline: { id:"trampoline", title:"TRAMPOLÍN", body:"Da un salto alto manteniendo prácticamente tu dirección horizontal.", hint:"Elige la trayectoria antes de tocarlo." },
+  void: { id:"void", title:"VACÍO", body:"Si caes desde el suelo vuelves al inicio del golpe; en el aire puedes cruzarlo.", hint:"Busca una ruta segura o una forma de saltar." },
+  fan: { id:"fan", title:"VENTILADOR", body:"Su corriente empuja la bola de forma constante dentro de su alcance.", hint:"Compensa el empuje o úsalo para curvar la trayectoria." },
+  portal: { id:"portal", title:"PORTALES", body:"Entras por uno y sales por su pareja conservando velocidad y dirección.", hint:"La orientación de entrada decide la línea de salida." },
+  curve: { id:"curve", title:"PARED CURVA", body:"El rebote cambia según el punto exacto donde golpees la curva.", hint:"Permite ángulos imposibles con una pared recta." },
+  moving: { id:"moving", title:"OBSTÁCULOS MÓVILES", body:"Se mueven con un patrón fijo y repetible durante el hoyo.", hint:"Observa el ritmo: aquí también importa cuándo tiras." }
 };
 
 function readSeen(): Set<MechanicId> {
