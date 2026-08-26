@@ -87,7 +87,57 @@ export function drawBall(
     return;
   }
 
-  // Classic golf ball: subtle dimples keep it readable at gameplay size.
+  if (item.id === "ball-ace") {
+    const gold = item.secondary ?? 0xe5c66b;
+    g.fillStyle(item.primary, alpha);
+    g.fillCircle(x, y, r);
+    g.lineStyle(Math.max(2, r * 0.10), gold, 0.95 * alpha);
+    g.strokeCircle(x, y, r * 0.93);
+
+    g.fillStyle(gold, 0.92 * alpha);
+    g.fillTriangle(
+      x - r * 0.58, y + r * 0.28,
+      x, y - r * 0.58,
+      x + r * 0.58, y + r * 0.28
+    );
+    g.fillStyle(item.primary, alpha);
+    g.fillTriangle(
+      x - r * 0.32, y + r * 0.18,
+      x, y - r * 0.30,
+      x + r * 0.32, y + r * 0.18
+    );
+    g.fillStyle(gold, 0.9 * alpha);
+    g.fillCircle(x, y + r * 0.38, r * 0.12);
+    return;
+  }
+
+  if (item.id === "ball-prism") {
+    const violet = item.secondary ?? 0xc8a8ff;
+    g.fillStyle(item.primary, alpha);
+    g.fillCircle(x, y, r);
+    g.lineStyle(Math.max(2, r * 0.09), violet, 0.95 * alpha);
+    g.strokeCircle(x, y, r * 0.94);
+
+    const facets = [
+      [0, -0.72, 0.62, -0.18, 0.10, 0.08],
+      [0.10, 0.08, 0.62, -0.18, 0.52, 0.55],
+      [0.10, 0.08, 0.52, 0.55, -0.34, 0.62],
+      [0, -0.72, 0.10, 0.08, -0.58, -0.08]
+    ] as const;
+
+    facets.forEach((facet, index) => {
+      g.fillStyle(index % 2 === 0 ? violet : 0x9edfff, 0.28 * alpha);
+      g.fillTriangle(
+        x + facet[0] * r, y + facet[1] * r,
+        x + facet[2] * r, y + facet[3] * r,
+        x + facet[4] * r, y + facet[5] * r
+      );
+    });
+    g.fillStyle(0xffffff, 0.55 * alpha);
+    g.fillCircle(x - r * 0.28, y - r * 0.32, r * 0.14);
+    return;
+  }
+
   g.fillStyle(item.primary, alpha);
   g.fillCircle(x, y, r);
   g.lineStyle(Math.max(1.5, r * 0.075), item.secondary ?? 0xbac4ce, 0.95 * alpha);
