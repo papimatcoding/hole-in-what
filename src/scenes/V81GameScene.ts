@@ -48,7 +48,7 @@ export class V81GameScene extends V8GameScene {
   update(time: number, deltaMs: number): void {
     super.update(time, deltaMs);
 
-    if (this.tutorialActive()) return;
+    if (this.tutorialActiveV81()) return;
 
     const dt = Math.min(deltaMs / 1000, 0.033);
     this.mechanicPhase += dt;
@@ -63,19 +63,19 @@ export class V81GameScene extends V8GameScene {
     return (this as unknown as { level: LevelDefinition }).level;
   }
 
-  private ballRef(): RuntimeBall {
+  private sceneBall(): RuntimeBall {
     return (this as unknown as { ball: RuntimeBall }).ball;
   }
 
-  private ballViewRef(): Phaser.GameObjects.Container {
+  private sceneBallView(): Phaser.GameObjects.Container {
     return (this as unknown as { ballView: Phaser.GameObjects.Container }).ballView;
   }
 
-  private tutorialActive(): boolean {
+  private tutorialActiveV81(): boolean {
     return Boolean((this as unknown as { tutorialOverlay: Phaser.GameObjects.Container | null }).tutorialOverlay);
   }
 
-  private isMoving(): boolean {
+  private isMovingV81(): boolean {
     return Boolean((this as unknown as { moving: boolean }).moving);
   }
 
@@ -189,11 +189,11 @@ export class V81GameScene extends V8GameScene {
   }
 
   private applyWind(dt: number): void {
-    if (!this.isMoving() || this.mechanicsBlocked()) return;
+    if (!this.isMovingV81() || this.mechanicsBlocked()) return;
 
-    const ball = this.ballRef();
+    const ball = this.sceneBall();
     for (const zone of this.courseLevel().winds ?? []) {
-      if (!this.pointInRect(ball, zone)) continue;
+      if (!this.pointInRectV81(ball, zone)) continue;
 
       const length = Math.hypot(zone.dx, zone.dy) || 1;
       const strength = zone.strength ?? 155;
@@ -204,9 +204,9 @@ export class V81GameScene extends V8GameScene {
   }
 
   private tryPortals(): void {
-    if (this.portalCooldown > 0 || this.mechanicsBlocked() || !this.isMoving()) return;
+    if (this.portalCooldown > 0 || this.mechanicsBlocked() || !this.isMovingV81()) return;
 
-    const ball = this.ballRef();
+    const ball = this.sceneBall();
     for (const pair of this.courseLevel().portals ?? []) {
       if (this.ballInsidePortal(ball, pair.a)) {
         this.teleport(pair.a, pair.b);
@@ -225,7 +225,7 @@ export class V81GameScene extends V8GameScene {
   }
 
   private teleport(from: PortalPointDef, to: PortalPointDef): void {
-    const ball = this.ballRef();
+    const ball = this.sceneBall();
     const speed = Math.hypot(ball.vx, ball.vy);
 
     let dx = speed > 1 ? ball.vx / speed : to.x - from.x;
@@ -241,7 +241,7 @@ export class V81GameScene extends V8GameScene {
     ball.y = to.y + dy * exitRadius;
     this.portalCooldown = 0.34;
 
-    const view = this.ballViewRef();
+    const view = this.sceneBallView();
     view.x = ball.x;
     view.y = ball.y - ball.z * 0.28;
 
@@ -249,7 +249,7 @@ export class V81GameScene extends V8GameScene {
     this.cameras.main.shake(35, 0.0009);
   }
 
-  private pointInRect(point: {x:number;y:number}, rect: RectDef): boolean {
+  private pointInRectV81(point: {x:number;y:number}, rect: RectDef): boolean {
     return point.x > rect.x && point.x < rect.x + rect.w && point.y > rect.y && point.y < rect.y + rect.h;
   }
 
