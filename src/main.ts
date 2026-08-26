@@ -6,6 +6,7 @@ import { LevelSelectScene } from "./scenes/LevelSelectScene";
 import { GameScene } from "./scenes/GameScene";
 import { ResultsScene } from "./scenes/ResultsScene";
 import { CosmeticsScene } from "./scenes/CosmeticsScene";
+import { RewardsScene } from "./scenes/RewardsScene";
 
 const renderWidth = Math.round(DESIGN_WIDTH * RENDER_SCALE);
 const renderHeight = Math.round(DESIGN_HEIGHT * RENDER_SCALE);
@@ -16,7 +17,7 @@ const config: Phaser.Types.Core.GameConfig = {
   width: renderWidth,
   height: renderHeight,
   backgroundColor: "#0d1117",
-  scene: [MenuScene, LevelSelectScene, GameScene, ResultsScene, CosmeticsScene],
+  scene: [MenuScene, LevelSelectScene, GameScene, ResultsScene, CosmeticsScene, RewardsScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
