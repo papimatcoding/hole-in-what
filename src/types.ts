@@ -12,6 +12,18 @@ export interface RectDef {
   h: number;
 }
 
+export interface TriangleDef {
+  a: Vec2;
+  b: Vec2;
+  c: Vec2;
+}
+
+export interface BoosterDef extends RectDef {
+  dx: number;
+  dy: number;
+  power?: number;
+}
+
 export interface BumperDef {
   x: number;
   y: number;
@@ -39,7 +51,10 @@ export interface LevelDefinition {
   threeStars: number;
   twoStars: number;
   walls?: RectDef[];
+  triangles?: TriangleDef[];
   sand?: RectDef[];
+  ice?: RectDef[];
+  boosters?: BoosterDef[];
   bumpers?: BumperDef[];
   popWalls?: PopWallDef[];
   popBumpers?: PopBumperDef[];
