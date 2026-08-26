@@ -60,7 +60,7 @@ export class MenuScene extends Phaser.Scene {
     const progress=this.add.text(435,y+16,`★ ${stars} / ${levels.length*3}`,{
       fontFamily:"system-ui, sans-serif",fontSize:"14px",color:"#c9d4df"
     }).setOrigin(1,.5);
-    const open=():void=>this.scene.start("level-select",{mode});
+    const open=():void=>{this.scene.start("level-select",{mode});};
     bg.setInteractive({useHandCursor:true}).on("pointerup",open);
     title.setInteractive({useHandCursor:true}).on("pointerup",open);
     progress.setInteractive({useHandCursor:true}).on("pointerup",open);
