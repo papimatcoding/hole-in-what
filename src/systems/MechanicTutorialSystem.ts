@@ -25,17 +25,17 @@ export interface MechanicTutorial {
 const STORAGE_KEY = "troll-golf-mechanics-seen-curated-v3";
 
 export const MECHANIC_TUTORIALS: Record<MechanicId, MechanicTutorial> = {
-  bumper: { id:"bumper", title:"BUMPER", body:"Rebota la bola con energía extra y cambia mucho su dirección.", hint:"Puedes esquivarlo o convertirlo en un atajo." },
-  sand: { id:"sand", title:"ARENA", body:"Frena la bola con rapidez mientras la atraviesas.", hint:"Úsala para controlar una llegada o evita perder velocidad." },
-  ice: { id:"ice", title:"HIELO", body:"La bola conserva casi toda su velocidad y se desliza mucho más.", hint:"Piensa también en dónde terminará después del rebote." },
-  booster: { id:"booster", title:"IMPULSO", body:"Acelera la bola en la dirección marcada por la flecha.", hint:"Entra bien orientado y deja que haga parte del trabajo." },
-  ramp: { id:"ramp", title:"RAMPA", body:"Levanta la bola para pasar por encima de paredes o vacío.", hint:"Necesitas entrar alineado y con suficiente velocidad." },
-  trampoline: { id:"trampoline", title:"TRAMPOLÍN", body:"Da un salto alto manteniendo prácticamente tu dirección horizontal.", hint:"Elige la trayectoria antes de tocarlo." },
-  void: { id:"void", title:"VACÍO", body:"Si caes desde el suelo vuelves al inicio del golpe; en el aire puedes cruzarlo.", hint:"Busca una ruta segura o una forma de saltar." },
-  fan: { id:"fan", title:"VENTILADOR", body:"Su corriente empuja la bola de forma constante dentro de su alcance.", hint:"Compensa el empuje o úsalo para curvar la trayectoria." },
-  portal: { id:"portal", title:"PORTALES", body:"Entras por uno y sales por su pareja conservando velocidad y dirección.", hint:"La orientación de entrada decide la línea de salida." },
-  curve: { id:"curve", title:"PARED CURVA", body:"El rebote cambia según el punto exacto donde golpees la curva.", hint:"Permite ángulos imposibles con una pared recta." },
-  moving: { id:"moving", title:"OBSTÁCULOS MÓVILES", body:"Se mueven con un patrón fijo y repetible durante el hoyo.", hint:"Observa el ritmo: aquí también importa cuándo tiras." }
+  bumper: { id:"bumper", title:"BUMPER", body:"Rebota la bola con energía extra y cambia mucho su dirección.", hint:"Rebota con fuerza extra. Esquívalo o úsalo para redirigir el tiro." },
+  sand: { id:"sand", title:"ARENA", body:"Frena la bola con rapidez mientras la atraviesas.", hint:"La arena frena mucho. Rodéala o úsala para controlar la llegada." },
+  ice: { id:"ice", title:"HIELO", body:"La bola conserva casi toda su velocidad y se desliza mucho más.", hint:"Casi no frena: calcula también dónde acabará después del rebote." },
+  booster: { id:"booster", title:"IMPULSO", body:"Acelera la bola en la dirección marcada por la flecha.", hint:"Te acelera en la dirección de la flecha. Entra bien orientado." },
+  ramp: { id:"ramp", title:"RAMPA", body:"Levanta la bola para pasar por encima de paredes o vacío.", hint:"Te eleva sobre obstáculos. Necesitas entrar alineado y con velocidad." },
+  trampoline: { id:"trampoline", title:"TRAMPOLÍN", body:"Da un salto alto manteniendo prácticamente tu dirección horizontal.", hint:"Salta muy alto sin corregir tu rumbo. Apunta antes de tocarlo." },
+  void: { id:"void", title:"VACÍO", body:"Si caes desde el suelo vuelves al inicio del golpe; en el aire puedes cruzarlo.", hint:"Desde el suelo caes; en el aire lo cruzas. Busca cómo salvarlo." },
+  fan: { id:"fan", title:"VENTILADOR", body:"Su corriente empuja la bola de forma constante dentro de su alcance.", hint:"Su corriente empuja constantemente. Compénsala o úsala a tu favor." },
+  portal: { id:"portal", title:"PORTALES", body:"Entras por uno y sales por su pareja conservando velocidad y dirección.", hint:"Conservas velocidad y dirección. La entrada decide la línea de salida." },
+  curve: { id:"curve", title:"PARED CURVA", body:"El rebote cambia según el punto exacto donde golpees la curva.", hint:"El punto de impacto cambia el ángulo. Busca el rebote que necesitas." },
+  moving: { id:"moving", title:"OBSTÁCULOS MÓVILES", body:"Se mueven con un patrón fijo y repetible durante el hoyo.", hint:"Su patrón se repite. Observa el ritmo y elige cuándo disparar." }
 };
 
 function readSeen(): Set<MechanicId> {
