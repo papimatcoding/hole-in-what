@@ -6,11 +6,14 @@ import { GameScene } from "./scenes/GameScene";
 import { ResultsScene } from "./scenes/ResultsScene";
 import { CosmeticsScene } from "./scenes/CosmeticsScene";
 
+const resolution = Math.min(window.devicePixelRatio || 1, 2.5);
+
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: "game",
   width: 540,
   height: 960,
+  resolution,
   backgroundColor: "#0d1117",
   scene: [MenuScene, LevelSelectScene, GameScene, ResultsScene, CosmeticsScene],
   scale: {
