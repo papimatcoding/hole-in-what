@@ -63,15 +63,32 @@ export interface CosmeticsSave {
   equipped: EquippedCosmetics;
 }
 
+export interface WalletSave {
+  coins: number;
+}
+
 export interface SaveDataV1 {
   version: 1;
   levels: Record<string, LevelRecord>;
 }
 
-export interface SaveData {
+export interface SaveDataV2 {
   version: 2;
   levels: Record<string, LevelRecord>;
   cosmetics: CosmeticsSave;
+}
+
+export interface SaveData {
+  version: 3;
+  levels: Record<string, LevelRecord>;
+  cosmetics: CosmeticsSave;
+  wallet: WalletSave;
+}
+
+export interface SubmitResult {
+  record: LevelRecord;
+  coinsEarned: number;
+  totalCoins: number;
 }
 
 export interface GameSceneData {
