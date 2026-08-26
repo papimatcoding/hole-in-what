@@ -5,7 +5,7 @@ export interface StarRewardDefinition {
   cosmeticId: string;
 }
 
-export const TROLL_UNLOCK_STARS = 20;
+export const TROLL_UNLOCK_STARS = 30;
 
 export const STAR_REWARDS: StarRewardDefinition[] = [
   { stars: 10, cosmeticId: "trail-stardust" },
