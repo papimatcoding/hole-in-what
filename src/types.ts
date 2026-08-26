@@ -52,9 +52,26 @@ export interface LevelRecord {
   bestTimeMs: number | null;
 }
 
-export interface SaveData {
+export interface EquippedCosmetics {
+  ball: string;
+  trail: string;
+  holeEffect: string;
+}
+
+export interface CosmeticsSave {
+  owned: string[];
+  equipped: EquippedCosmetics;
+}
+
+export interface SaveDataV1 {
   version: 1;
   levels: Record<string, LevelRecord>;
+}
+
+export interface SaveData {
+  version: 2;
+  levels: Record<string, LevelRecord>;
+  cosmetics: CosmeticsSave;
 }
 
 export interface GameSceneData {
