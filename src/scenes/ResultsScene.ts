@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { setupDesignCamera, sharpenSceneText } from "../config/display";
+import { cosmeticById } from "../data/cosmetics";
 import { levelsForMode } from "../data/levels";
 import { SaveSystem } from "../systems/SaveSystem";
 import type { ResultsSceneData } from "../types";
@@ -25,7 +26,7 @@ export class ResultsScene extends Phaser.Scene {
       this.resultData.timeMs
     );
 
-    this.add.text(498, 54, `◈ ${reward.totalCoins}`, {
+    this.add.text(498, 54, `◈ ${reward.totalCoins}   ◆ ${reward.totalGems}`, {
       fontFamily: "system-ui, sans-serif",
       fontSize: "14px",
       fontStyle: "bold",
@@ -33,36 +34,51 @@ export class ResultsScene extends Phaser.Scene {
     }).setOrigin(1, 0.5);
 
     const stars = "★".repeat(this.resultData.stars) + "☆".repeat(3 - this.resultData.stars);
-    this.add.text(270, 245, stars, {
+    this.add.text(270, 235, stars, {
       fontFamily: "system-ui, sans-serif",
       fontSize: "56px",
       color: "#f1d07a"
     }).setOrigin(0.5);
 
-    this.add.text(270, 340, `${this.resultData.strokes} golpes`, {
+    this.add.text(270, 330, `${this.resultData.strokes} golpes`, {
       fontFamily: "system-ui, sans-serif",
       fontSize: "28px",
       fontStyle: "bold",
       color: "#f5f7fa"
     }).setOrigin(0.5);
 
-    this.add.text(270, 382, `${(this.resultData.timeMs / 1000).toFixed(1)} s`, {
+    this.add.text(270, 372, `${(this.resultData.timeMs / 1000).toFixed(1)} s`, {
       fontFamily: "system-ui, sans-serif",
       fontSize: "18px",
       color: "#9eabb9"
     }).setOrigin(0.5);
 
     if (reward.coinsEarned > 0) {
-      const rewardText = this.add.text(270, 430, `+${reward.coinsEarned} ◈`, {
+      const rewardText = this.add.text(270, 418, `+${reward.coinsEarned} ◈`, {
         fontFamily: "system-ui, sans-serif",
         fontSize: "16px",
         fontStyle: "bold",
         color: "#e4d29d"
       }).setOrigin(0.5).setAlpha(0);
-      this.tweens.add({ targets: rewardText, alpha: 1, y: 422, duration: 260, ease: "Cubic.easeOut" });
+      this.tweens.add({ targets: rewardText, alpha: 1, y: 410, duration: 260, ease: "Cubic.easeOut" });
     }
 
-    this.makeButton("REPETIR", 535, () => {
+    if (reward.newlyUnlockedCosmetics.length > 0) {
+      const names = reward.newlyUnlockedCosmetics
+        .map((id) => cosmeticById(id)?.name)
+        .filter((name): name is string => Boolean(name));
+
+      const unlockText = this.add.text(270, 460, `HITO DESBLOQUEADO\n${names.join(" · ")}`, {
+        fontFamily: "system-ui, sans-serif",
+        fontSize: "12px",
+        fontStyle: "bold",
+        align: "center",
+        color: "#f1d07a"
+      }).setOrigin(0.5).setAlpha(0);
+      this.tweens.add({ targets: unlockText, alpha: 1, scale: { from: 0.94, to: 1 }, duration: 300, ease: "Back.easeOut" });
+    }
+
+    this.makeButton("REPETIR", 545, () => {
       this.scene.start("game", {
         mode: this.resultData.mode,
         levelIndex: this.resultData.levelIndex
@@ -71,7 +87,7 @@ export class ResultsScene extends Phaser.Scene {
 
     const levels = levelsForMode(this.resultData.mode);
     if (this.resultData.levelIndex < levels.length - 1) {
-      this.makeButton("SIGUIENTE", 635, () => {
+      this.makeButton("SIGUIENTE", 645, () => {
         this.scene.start("game", {
           mode: this.resultData.mode,
           levelIndex: this.resultData.levelIndex + 1
@@ -79,7 +95,7 @@ export class ResultsScene extends Phaser.Scene {
       });
     }
 
-    this.add.text(270, 755, "NIVELES", {
+    this.add.text(270, 760, "NIVELES", {
       fontFamily: "system-ui, sans-serif",
       fontSize: "15px",
       fontStyle: "bold",
