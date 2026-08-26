@@ -1,4 +1,5 @@
 import type {
+  CourseMechanic,
   CurveDef,
   FanDef,
   GameMode,
@@ -7,6 +8,7 @@ import type {
   MovingWallDef,
   PortalPairDef,
   TriangleDef,
+  TrollTrapArchetype,
   Vec2
 } from "../../types";
 import { blank, goal, mirrorX, r, seeded, setDesignPath, WALL, type Rng } from "./courseUtils";
@@ -14,23 +16,23 @@ import { buildGateCourse } from "./gateGrammar";
 
 type LayoutKind =
   | "straight" | "bank" | "corner" | "island" | "dogleg" | "split" | "stagger"
-  | "channel" | "offset" | "portal" | "moving" | "void" | "ramp" | "trampoline";
+  | "channel" | "offset" | "slalom" | "portal" | "moving" | "void" | "ramp" | "trampoline";
 type MechanicKind = "bumper" | "sand" | "ice" | "booster" | "fan" | "curve" | "portal" | "moving" | "void" | null;
 interface PlanEntry { layout: LayoutKind; mechanic: MechanicKind; }
 
-// Difficulty is a curriculum, not a mechanic checklist. New mechanics are separated by practice holes,
-// and layout families do not repeat back-to-back.
+// Each ten-hole chapter should feel like a curriculum rather than the same board with a modifier.
+// In particular, the first ten deliberately use ten different silhouettes.
 const CLASSIC_PLAN: PlanEntry[] = [
   {layout:"straight",mechanic:null},
   {layout:"bank",mechanic:null},
   {layout:"dogleg",mechanic:null},
-  {layout:"corner",mechanic:null},
-  {layout:"split",mechanic:null},
   {layout:"island",mechanic:null},
-  {layout:"bank",mechanic:"bumper"},
+  {layout:"split",mechanic:null},
+  {layout:"corner",mechanic:null},
+  {layout:"stagger",mechanic:"bumper"},
   {layout:"channel",mechanic:null},
-  {layout:"dogleg",mechanic:"bumper"},
-  {layout:"stagger",mechanic:null},
+  {layout:"offset",mechanic:"bumper"},
+  {layout:"slalom",mechanic:null},
 
   {layout:"corner",mechanic:"sand"},
   {layout:"split",mechanic:null},
@@ -38,19 +40,19 @@ const CLASSIC_PLAN: PlanEntry[] = [
   {layout:"dogleg",mechanic:"sand"},
   {layout:"channel",mechanic:"ice"},
   {layout:"offset",mechanic:null},
-  {layout:"bank",mechanic:"ice"},
+  {layout:"slalom",mechanic:"ice"},
   {layout:"stagger",mechanic:"sand"},
-  {layout:"offset",mechanic:"booster"},
+  {layout:"bank",mechanic:"booster"},
   {layout:"island",mechanic:"bumper"},
 
-  {layout:"stagger",mechanic:"booster"},
+  {layout:"slalom",mechanic:"booster"},
   {layout:"channel",mechanic:"ice"},
   {layout:"split",mechanic:"fan"},
   {layout:"offset",mechanic:"bumper"},
   {layout:"dogleg",mechanic:"fan"},
   {layout:"stagger",mechanic:"booster"},
   {layout:"corner",mechanic:"curve"},
-  {layout:"channel",mechanic:"fan"},
+  {layout:"slalom",mechanic:"fan"},
   {layout:"offset",mechanic:"curve"},
   {layout:"island",mechanic:"ice"},
 
@@ -58,7 +60,7 @@ const CLASSIC_PLAN: PlanEntry[] = [
   {layout:"stagger",mechanic:"fan"},
   {layout:"split",mechanic:"curve"},
   {layout:"moving",mechanic:"moving"},
-  {layout:"offset",mechanic:"bumper"},
+  {layout:"slalom",mechanic:"bumper"},
   {layout:"void",mechanic:"void"},
   {layout:"moving",mechanic:"ice"},
   {layout:"ramp",mechanic:null},
@@ -67,10 +69,10 @@ const CLASSIC_PLAN: PlanEntry[] = [
 ];
 
 const HARD_LAYOUTS: LayoutKind[] = [
-  "stagger","dogleg","channel","island","offset","split","corner","stagger","moving","offset",
-  "portal","dogleg","channel","island","stagger","split","corner","moving","offset","stagger",
+  "stagger","dogleg","channel","island","offset","split","corner","slalom","moving","bank",
+  "portal","dogleg","channel","island","stagger","split","corner","moving","offset","slalom",
   "void","channel","portal","dogleg","island","offset","moving","split","corner","stagger",
-  "channel","portal","moving","dogleg","stagger","void","island","ramp","moving","trampoline"
+  "slalom","portal","moving","dogleg","stagger","void","island","ramp","moving","trampoline"
 ];
 const HARD_MECHANICS: MechanicKind[] = [
   "bumper","fan","curve","bumper","sand","moving","ice","fan","moving","curve",
@@ -148,6 +150,22 @@ function baseOffset(mode:GameMode,index:number,rng:Rng,difficulty:number):LevelD
   if(!mirror){level.walls=[r(28,y1,484-gap,WALL),r(28+upper,y2,484-upper,WALL)];setDesignPath(level,[{x:512-gap/2,y:y1+45},{x:28+upper/2,y:y2+45}]);}
   else{level.walls=[r(28+gap,y1,484-gap,WALL),r(28,y2,484-upper,WALL)];setDesignPath(level,[{x:28+gap/2,y:y1+45},{x:512-upper/2,y:y2+45}]);}return level;
 }
+function baseSlalom(mode:GameMode,index:number,rng:Rng,difficulty:number):LevelDefinition {
+  const mirror=rng.bool(),level=blank(mode,index,mx(120,mirror),mx(405,mirror));
+  const bite=mode==="classic"?205+Math.round(difficulty*34):235+Math.round(difficulty*34);
+  const y1=650+rng.int(-12,12),y2=470+rng.int(-12,12),y3=300+rng.int(-10,10);
+  const leftFirst=!mirror;
+  const fromLeft=(y:number,w:number)=>r(28,y,w,WALL);
+  const fromRight=(y:number,w:number)=>r(512-w,y,w,WALL);
+  level.walls=[leftFirst?fromLeft(y1,bite):fromRight(y1,bite),leftFirst?fromRight(y2,bite-12):fromLeft(y2,bite-12),leftFirst?fromLeft(y3,bite-25):fromRight(y3,bite-25)];
+  const pad=62;
+  setDesignPath(level,[
+    {x:leftFirst?512-bite-pad:28+bite+pad,y:y1+48},
+    {x:leftFirst?28+bite+pad:512-bite-pad,y:y2+48},
+    {x:leftFirst?512-(bite-25)-pad:28+(bite-25)+pad,y:y3+44}
+  ]);
+  return level;
+}
 function basePortal(mode:GameMode,index:number,rng:Rng,difficulty:number):LevelDefinition {
   const mirror=rng.bool(),level=blank(mode,index,mx(110,mirror),mx(420,mirror)),a={x:mx(150,mirror),y:610},b={x:mx(390,mirror),y:355};
   level.walls=[r(28,475,484,WALL)];level.portals=[portal(a.x,a.y,b.x,b.y,30)];setDesignPath(level,[a,b,{x:b.x,y:285}]);if(difficulty>.76)level.walls.push(r(mx(250,mirror),265,WALL,105));return level;
@@ -169,26 +187,8 @@ function buildBase(mode:GameMode,index:number,rng:Rng,layout:LayoutKind,difficul
   if(layout==="straight")return baseStraight(mode,index);if(layout==="bank")return baseBank(mode,index,rng,difficulty);if(layout==="corner")return baseCorner(mode,index,rng,difficulty);
   if(layout==="island")return baseIsland(mode,index,rng,difficulty);if(layout==="dogleg")return baseDogleg(mode,index,rng,difficulty);if(layout==="split")return baseSplit(mode,index,rng,difficulty);
   if(layout==="stagger")return baseStagger(mode,index,rng,difficulty);if(layout==="channel")return baseChannel(mode,index,rng,difficulty);if(layout==="offset")return baseOffset(mode,index,rng,difficulty);
-  if(layout==="portal")return basePortal(mode,index,rng,difficulty);if(layout==="moving")return baseMoving(mode,index,rng,difficulty);if(layout==="void")return baseVoid(mode,index,rng,difficulty);
-  return baseJump(mode,index,rng,layout==="trampoline");
-}
-
-function addRouteGate(level:LevelDefinition,fraction:number,gapWidth:number,offset:number):void {
-  const p=sampleRoute(level,fraction),y=clamp(p.y,245,735),half=gapWidth/2,center=clamp(p.x+offset,28+half+18,512-half-18),left=center-half,right=center+half;
-  // Existing horizontal structures already act as a checkpoint; don't stack another line on top.
-  if((level.walls??[]).some(w=>w.w>w.h*2&&Math.abs((w.y+w.h/2)-y)<42))return;
-  if(left>42)level.walls=[...(level.walls??[]),r(28,y,left-28,WALL)];if(right<498)level.walls=[...(level.walls??[]),r(right,y,512-right,WALL)];
-}
-function augmentProgression(level:LevelDefinition,mode:GameMode,index:number,layout:LayoutKind,rng:Rng):void {
-  if(layout==="stagger"||layout==="moving"||layout==="ramp"||layout==="trampoline")return;
-  if(mode==="classic"){
-    if(index>=21&&index<=30)addRouteGate(level,.66,172-Math.round((index-21)*1.8),rng.bool()?28:-28);
-    if(index>=31){addRouteGate(level,.35,154-Math.round((index-31)*1.6),rng.bool()?34:-34);if(index>=35)addRouteGate(level,.70,146-Math.round((index-35)*2),rng.bool()?42:-42);}
-  }else{
-    addRouteGate(level,.32,index<=10?142:index<=25?128:114,rng.bool()?34:-34);
-    if(index>=11)addRouteGate(level,.68,index<=25?124:108,rng.bool()?42:-42);
-    if(index>=29)addRouteGate(level,.50,102,rng.bool()?48:-48);
-  }
+  if(layout==="slalom")return baseSlalom(mode,index,rng,difficulty);if(layout==="portal")return basePortal(mode,index,rng,difficulty);if(layout==="moving")return baseMoving(mode,index,rng,difficulty);
+  if(layout==="void")return baseVoid(mode,index,rng,difficulty);return baseJump(mode,index,rng,layout==="trampoline");
 }
 
 function applyMechanic(level:LevelDefinition,mechanic:MechanicKind,rng:Rng,difficulty:number,index:number):void {
@@ -200,21 +200,72 @@ function applyMechanic(level:LevelDefinition,mechanic:MechanicKind,rng:Rng,diffi
   if(mechanic==="fan"){level.fans=[...(level.fans??[]),fan(p.x-62,p.y-52,124,104,normal.x,normal.y,245+difficulty*55)];return;}
   if(mechanic==="curve"){const side=rng.bool()?1:-1;level.curves=[...(level.curves??[]),curve(p.x+normal.x*60*side,p.y+normal.y*60*side,72,side>0?70:250,side>0?185:365,20)];}
 }
-function addHardTrap(level:LevelDefinition,index:number):void {
-  const kind=(index-1)%3,anchor=sampleRoute(level,.60),trigger=sampleRoute(level,.46);
-  if(kind===0)level.popWalls=[{x:anchor.x-58,y:anchor.y-11,w:116,h:22,triggerX:trigger.x,triggerY:trigger.y,triggerRadius:88}];
-  else if(kind===1)level.popBumpers=[{x:anchor.x,y:anchor.y,r:32,triggerX:trigger.x,triggerY:trigger.y,triggerRadius:92}];
-  else level.popVoids=[{x:anchor.x-44,y:anchor.y-23,w:88,h:46,triggerX:trigger.x,triggerY:trigger.y,triggerRadius:94}];
+
+function addHardTrap(level:LevelDefinition,index:number,rng:Rng):void {
+  const archetypes:TrollTrapArchetype[]=["gate-pop","bumper-ambush","floor-drop","cross-gate","safe-lane-collapse","rebound-punish","late-combo"];
+  const archetype=archetypes[(index-1)%archetypes.length]!;
+  level.trollArchetype=archetype;
+  const anchor=sampleRoute(level,.61),trigger=sampleRoute(level,.45),dir=tangent(level,.61),normal={x:-dir.y,y:dir.x};
+  const side=rng.bool()?1:-1;
+  const triggerBase={triggerX:trigger.x,triggerY:trigger.y,triggerRadius:90};
+
+  if(archetype==="gate-pop"){
+    level.popWalls=[{x:anchor.x-56,y:anchor.y-11,w:112,h:22,...triggerBase}];
+    return;
+  }
+  if(archetype==="bumper-ambush"){
+    level.popBumpers=[{x:anchor.x+normal.x*34*side,y:anchor.y+normal.y*34*side,r:31,...triggerBase,triggerRadius:94}];
+    return;
+  }
+  if(archetype==="floor-drop"){
+    const p=sampleRoute(level,.68);
+    level.popVoids=[{x:p.x-48,y:p.y-25,w:96,h:50,...triggerBase,triggerRadius:96}];
+    return;
+  }
+  if(archetype==="cross-gate"){
+    const vertical=Math.abs(dir.y)>=Math.abs(dir.x);
+    level.popWalls=[vertical
+      ? {x:anchor.x+normal.x*42*side-11,y:anchor.y-62,w:22,h:124,...triggerBase}
+      : {x:anchor.x-62,y:anchor.y+normal.y*42*side-11,w:124,h:22,...triggerBase}];
+    return;
+  }
+  if(archetype==="safe-lane-collapse"){
+    const p=sampleRoute(level,.64);
+    level.popVoids=[{x:p.x-52+normal.x*24*side,y:p.y-24+normal.y*24*side,w:104,h:48,...triggerBase,triggerRadius:100}];
+    return;
+  }
+  if(archetype==="rebound-punish"){
+    const p=sampleRoute(level,.73);
+    level.popBumpers=[{x:p.x+normal.x*28*side,y:p.y+normal.y*28*side,r:34,...triggerBase,triggerRadius:98}];
+    return;
+  }
+
+  // Late-combo is a familiar two-beat joke rather than a new rule. Before hole 15 it stays
+  // deliberately light; later it combines two already-learned reactions with breathing room.
+  const p1=sampleRoute(level,.58),p2=sampleRoute(level,.75);
+  level.popWalls=[{x:p1.x-48,y:p1.y-10,w:96,h:20,...triggerBase,triggerRadius:92}];
+  if(index>=15){
+    level.popBumpers=[{x:p2.x+normal.x*30*side,y:p2.y+normal.y*30*side,r:30,triggerX:p1.x,triggerY:p1.y,triggerRadius:82}];
+  }
 }
+
+function primaryFor(plan:PlanEntry):CourseMechanic {
+  if(plan.mechanic)return plan.mechanic;
+  if(plan.layout==="portal")return "portal";
+  if(plan.layout==="moving")return "moving";
+  if(plan.layout==="void")return "void";
+  if(plan.layout==="ramp")return "ramp";
+  if(plan.layout==="trampoline")return "trampoline";
+  return "wall";
+}
+
 function setClassicGoals(level:LevelDefinition,index:number):void {
   const strokes=index<=3?1:index<=20?2:index<=30?3:4;
-  const timed=index>=18&&(index%4===0||index>=36),seconds=timed?Math.round(13+strokes*5+index*.28):undefined;
-  level.threeStar=goal(strokes,seconds);level.twoStar=goal(strokes+2);level.group=Math.ceil(index/10);
+  level.threeStar=goal(strokes);level.twoStar=goal(strokes+1);level.group=Math.ceil(index/10);
 }
 function setHardGoals(level:LevelDefinition,index:number):void {
-  const strokes=index<=10?3:index<=20?4:index<=30?5:6;
-  const timed=index>=10&&(index%3===0||index>=34),seconds=timed?Math.round(14+strokes*5+index*.30):undefined;
-  level.threeStar=goal(strokes,seconds);level.twoStar=goal(strokes+3);level.group=Math.ceil(index/10);
+  const strokes=index<=10?3:index<=24?4:5;
+  level.threeStar=goal(strokes);level.twoStar=goal(strokes+1);level.group=Math.ceil(index/10);
 }
 
 export function buildCampaignCourse(mode:GameMode,index:number):LevelDefinition {
@@ -222,15 +273,17 @@ export function buildCampaignCourse(mode:GameMode,index:number):LevelDefinition 
   const difficulty=mode==="classic"?(clamped-1)/39:.52+(clamped-1)/39*.48;
   const plan:PlanEntry=mode==="classic"?CLASSIC_PLAN[clamped-1]!:{layout:HARD_LAYOUTS[clamped-1]!,mechanic:HARD_MECHANICS[clamped-1]!};
   const level=buildBase(mode,clamped,rng,plan.layout,difficulty);
-  augmentProgression(level,mode,clamped,plan.layout,rng);
+  level.primaryMechanic=primaryFor(plan);
   applyMechanic(level,plan.mechanic,rng,difficulty,clamped);
+
   if(mode==="troll"){
-    if(clamped>=15&&plan.layout!=="ramp"&&plan.layout!=="trampoline"){
+    // Extra visible mechanics arrive only after the player has learned the vocabulary.
+    if(clamped>=18&&plan.layout!=="ramp"&&plan.layout!=="trampoline"){
       const extras:[MechanicKind,MechanicKind,MechanicKind,MechanicKind]=["bumper","fan","ice","moving"],extra=extras[(clamped+2)%4]!;
-      if(extra==="moving"){const p=sampleRoute(level,.38);level.movingBumpers=[...(level.movingBumpers??[]),movingBumper(p.x,p.y,29,"x",38+Math.round(difficulty*14),1+difficulty*.15,rng.next()*Math.PI)];}
+      if(extra==="moving"){const p=sampleRoute(level,.36);level.movingBumpers=[...(level.movingBumpers??[]),movingBumper(p.x,p.y,29,"x",38+Math.round(difficulty*14),1+difficulty*.15,rng.next()*Math.PI)];}
       else applyMechanic(level,extra,rng,difficulty*.9,clamped+1);
     }
-    addHardTrap(level,clamped);setHardGoals(level,clamped);
+    addHardTrap(level,clamped,rng);setHardGoals(level,clamped);
   }else setClassicGoals(level,clamped);
   return level;
 }
