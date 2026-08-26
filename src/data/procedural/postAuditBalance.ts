@@ -34,31 +34,22 @@ function protectPortals(level:LevelDefinition):void {
 
 function tuneClassicMeaning(level:LevelDefinition,index:number):void {
   if(index===7){
-    // First bumper lesson: place a single generous bumper directly on the authored gate
-    // route. It becomes a tool the player can read and bank from, not a decorative pin.
     const p=sampleDesignRoute(level,.56);
     level.bumpers=[{x:p.x,y:p.y,r:34}];
     level.primaryMechanic="bumper";
   }
 
   if(index===9||index===20){
-    // These bumpers were completely ignored by the best audited route and duplicated an
-    // earlier lesson. Keep the stronger offset/island silhouette instead of pretending a
-    // non-contributing modifier makes a new hole.
     level.bumpers=[];
     level.primaryMechanic="wall";
   }
 
   if(index===25){
-    // The previous fan sat on the design path but left a clean straight HIO outside its
-    // influence. Put a broad transverse stream on that tempting line: no extra corridor,
-    // just a route choice between compensating for wind or taking the dogleg.
     const p=directPoint(level,.54),{normal}=directFrame(level);
     level.fans=[{x:p.x-88,y:p.y-58,w:176,h:116,dx:normal.x,dy:normal.y,strength:315}];
     level.primaryMechanic="fan";
   }
 
-  // Classic 39's HIO genuinely uses the portal while its curve was decorative noise.
   if(index===39&&level.portals?.length){level.curves=[];level.primaryMechanic="portal";}
 }
 
@@ -71,17 +62,17 @@ function trapTriggerFraction(archetype:TrollTrapArchetype):number {
   }
 }
 
-/**
- * The learned designPath is the solution. The surprise layer is calibrated against the
- * tempting first read (ball→hole), with enough lead time to actually materialise before a
- * max-power shot reaches it. The trap still appears late in the shot, but no longer loses
- * the race against its own animation.
- */
+/** Six late layouts deflect the ball before the generic direct-line trigger. Their troll beat
+ * is intentionally pulled into the first clean segment instead of enlarging the trigger to
+ * half the board, which would make the reveal feel arbitrary. */
+const EARLY_TROLL_BEAT=new Set([15,18,27,30,35,39]);
+
 function calibrateHardTrap(level:LevelDefinition,index:number):void {
-  const archetype:TrollTrapArchetype=level.trollArchetype??"gate-pop";
-  const trigger=directPoint(level,trapTriggerFraction(archetype)),anchor=directPoint(level,.64),late=directPoint(level,.77);
+  const archetype:TrollTrapArchetype=level.trollArchetype??"gate-pop",early=EARLY_TROLL_BEAT.has(index);
+  const trigger=directPoint(level,early?.22:trapTriggerFraction(archetype));
+  const anchor=directPoint(level,early?.46:.64),late=directPoint(level,early?.58:.77);
   const {dir,normal}=directFrame(level),side=index%2===0?1:-1;
-  const triggerBase={triggerX:trigger.x,triggerY:trigger.y,triggerRadius:112};
+  const triggerBase={triggerX:trigger.x,triggerY:trigger.y,triggerRadius:early?104:112};
 
   level.popWalls=[];level.popBumpers=[];level.popVoids=[];
   const routeMostlyVertical=Math.abs(dir.y)>=Math.abs(dir.x);
@@ -91,7 +82,7 @@ function calibrateHardTrap(level:LevelDefinition,index:number):void {
     return;
   }
   if(archetype==="bumper-ambush"){
-    level.popBumpers=[{x:anchor.x+normal.x*24*side,y:anchor.y+normal.y*24*side,r:33,...triggerBase,triggerRadius:114}];
+    level.popBumpers=[{x:anchor.x+normal.x*24*side,y:anchor.y+normal.y*24*side,r:33,...triggerBase,triggerRadius:early?108:114}];
     return;
   }
   if(archetype==="floor-drop"){
@@ -99,7 +90,6 @@ function calibrateHardTrap(level:LevelDefinition,index:number):void {
     return;
   }
   if(archetype==="cross-gate"){
-    // A half-gate steals the obvious lane without sealing the board into a corridor.
     level.popWalls=[routeMostlyVertical?{x:anchor.x-12+normal.x*34*side,y:anchor.y-60,w:24,h:120,...triggerBase}:{x:anchor.x-60,y:anchor.y-12+normal.y*34*side,w:120,h:24,...triggerBase}];
     return;
   }
@@ -108,18 +98,15 @@ function calibrateHardTrap(level:LevelDefinition,index:number):void {
     return;
   }
   if(archetype==="rebound-punish"){
-    level.popBumpers=[{x:late.x+normal.x*30*side,y:late.y+normal.y*30*side,r:35,...triggerBase,triggerRadius:116}];
+    level.popBumpers=[{x:late.x+normal.x*30*side,y:late.y+normal.y*30*side,r:35,...triggerBase,triggerRadius:early?108:116}];
     return;
   }
 
-  const first=directPoint(level,.59);
-  level.popWalls=[routeMostlyVertical?{x:first.x-55,y:first.y-10,w:110,h:20,...triggerBase,triggerRadius:114}:{x:first.x-10,y:first.y-55,w:20,h:110,...triggerBase,triggerRadius:114}];
+  const first=directPoint(level,early?.44:.59);
+  level.popWalls=[routeMostlyVertical?{x:first.x-55,y:first.y-10,w:110,h:20,...triggerBase,triggerRadius:early?108:114}:{x:first.x-10,y:first.y-55,w:20,h:110,...triggerBase,triggerRadius:early?108:114}];
   if(index>=15){level.popBumpers=[{x:late.x+normal.x*28*side,y:late.y+normal.y*28*side,r:31,triggerX:first.x,triggerY:first.y,triggerRadius:88}];}
 }
 
-// Temporary stroke-only goals. They are replaced by explicit per-hole mastery values after
-// the geometry audit in this same balance pass; keeping them here makes the intermediate
-// audit comparable to the previous campaign.
 function classicGoals(level:LevelDefinition,index:number):void {
   let strokes=index<=3?1:index<=20?2:3;if(index===31||index===38||index===40)strokes=2;
   level.threeStar=goal(strokes);level.twoStar=goal(strokes+1);level.group=Math.ceil(index/10);
