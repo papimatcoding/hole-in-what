@@ -166,7 +166,9 @@ export function sanitizeCourse(level:LevelDefinition):LevelDefinition {
   ));
 
   if((next.voids?.length ?? 0)===0){ next.ramps=[]; next.trampolines=[]; }
-  keepPurposefulMechanics(next);
+  // Purpose pruning is a generator heuristic. Authored courses are curated intentionally and
+  // should not have their mechanics removed just because an approximate designPath misses them.
+  if(!next.authored)keepPurposefulMechanics(next);
   ensureHardTrap(next);
   normalizePhysics(next);
   return next;
