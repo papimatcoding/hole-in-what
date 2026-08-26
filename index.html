@@ -5,9 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#0d1117" />
     <title>Troll Golf</title>
+    <style>
+      html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0d1117;
+        color: #f5f7fa;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      #boot-status {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+        background: #0d1117;
+        color: #8190a0;
+        text-align: center;
+        font-size: 13px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+      }
+      #boot-status.error {
+        color: #efb0b0;
+      }
+    </style>
   </head>
   <body>
+    <div id="boot-status">Cargando Troll Golf…</div>
     <div id="game"></div>
+
+    <script>
+      (() => {
+        const status = document.getElementById("boot-status");
+        let booted = false;
+
+        const showError = (message) => {
+          if (!status || booted) return;
+          status.classList.add("error");
+          status.textContent = `No se pudo iniciar Troll Golf.\n\n${message}`;
+        };
+
+        const observer = new MutationObserver(() => {
+          if (document.querySelector("#game canvas")) {
+            booted = true;
+            observer.disconnect();
+            status?.remove();
+          }
+        });
+        observer.observe(document.getElementById("game"), { childList: true, subtree: true });
+
+        window.addEventListener("error", (event) => {
+          const target = event.target;
+          if (target && target !== window && (target.src || target.href)) {
+            showError(`No se pudo cargar: ${target.src || target.href}`);
+            return;
+          }
+          showError(event.message || "Error de JavaScript desconocido");
+        }, true);
+
+        window.addEventListener("unhandledrejection", (event) => {
+          const reason = event.reason;
+          showError(reason?.message || String(reason || "Promesa rechazada sin detalle"));
+        });
+
+        window.setTimeout(() => {
+          if (!booted) showError("El motor no creó el canvas tras 8 segundos.");
+        }, 8000);
+      })();
+    </script>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
