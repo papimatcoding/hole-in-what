@@ -24,8 +24,9 @@ function c03():LevelDefinition{const l=base("classic",3,{x:120,y:820},{x:405,y:1
 function c04():LevelDefinition{const l=base("classic",4,{x:105,y:820},{x:420,y:180},2,3,"wall");l.walls=[r(248,370,W,360),r(248,370,142,W)];l.triangles=[tri({x:248,y:370},{x:306,y:370},{x:248,y:428})];return path(l,{x:420,y:690},{x:420,y:320});}
 function c05():LevelDefinition{
   const l=base("classic",5,{x:270,y:820},{x:270,y:170},2,3,"wall");
-  l.walls=[r(210,445,120,W),r(210,565,120,W),r(210,445,W,144),r(306,445,W,144)];
-  return path(l,{x:390,y:625},{x:390,y:385});
+  // Small central island: obvious left/right decision with generous recovery space.
+  l.walls=[r(225,465,90,W),r(225,555,90,W),r(225,465,W,114),r(291,465,W,114)];
+  return path(l,{x:390,y:610},{x:390,y:405});
 }
 function c06():LevelDefinition{const l=base("classic",6,{x:410,y:820},{x:135,y:185},2,3,"wall");l.walls=[r(345,440,W,260),r(185,420,160,W)];l.triangles=[tri({x:345,y:440},{x:285,y:440},{x:345,y:500}),tri({x:185,y:420},{x:245,y:420},{x:185,y:360})];return path(l,{x:270,y:700},{x:120,y:500},{x:120,y:300});}
 
@@ -46,8 +47,9 @@ function c09():LevelDefinition{
 }
 function c10():LevelDefinition{
   const l=base("classic",10,{x:115,y:820},{x:420,y:165},3,4,"wall");
-  l.walls=[r(28,650,315,W),r(200,485,312,W),r(28,320,315,W)];
-  return path(l,{x:425,y:705},{x:115,y:540},{x:425,y:375},{x:420,y:235});
+  // Three alternating 150px lanes: still fair on mobile, but no broad diagonal skips.
+  l.walls=[r(28,650,334,W),r(178,485,334,W),r(28,320,334,W)];
+  return path(l,{x:430,y:705},{x:105,y:540},{x:430,y:375},{x:420,y:235});
 }
 
 // 11: sand tutorial is a deliberate small breather, but its route is still more involved than early Classic.
@@ -77,10 +79,11 @@ function h03():LevelDefinition{
 }
 function h04():LevelDefinition{
   const l=trap(base("troll",4,{x:130,y:820},{x:385,y:175},3,4,"bumper"),"rebound-punish");
-  l.walls=[r(28,610,250,W)];
+  // Alternating gates force a genuine second decision before the surprise bumper near the cup.
+  l.walls=[r(28,610,250,W),r(300,500,212,W)];
   l.triangles=[tri({x:160,y:440},{x:255,y:440},{x:160,y:345}),tri({x:380,y:315},{x:285,y:315},{x:380,y:410})];
   l.popBumpers=[{x:355,y:255,r:33,triggerX:320,triggerY:405,triggerRadius:110}];
-  return path(l,{x:380,y:660},{x:210,y:500},{x:315,y:365},{x:330,y:245},{x:385,y:205});
+  return path(l,{x:380,y:660},{x:210,y:545},{x:210,y:430},{x:315,y:365},{x:330,y:245},{x:385,y:205});
 }
 function h05():LevelDefinition{const l=trap(base("troll",5,{x:420,y:820},{x:115,y:170},3,4,"moving"),"late-combo");l.walls=[r(28,610,160,W),r(350,610,162,W),r(28,300,220,W)];l.movingWalls=[{x:245,y:480,w:24,h:105,axis:"x",amplitude:70,speed:1.02,phase:.6}];l.popWalls=[{x:235,y:330,w:150,h:22,triggerX:270,triggerY:455,triggerRadius:105}];l.popBumpers=[{x:125,y:255,r:30,triggerX:235,triggerY:330,triggerRadius:92}];return path(l,{x:265,y:660},{x:270,y:520},{x:410,y:390},{x:115,y:220});}
 
