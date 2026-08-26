@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { DESIGN_HEIGHT, DESIGN_WIDTH, setupDesignCamera, sharpenSceneText } from "../config/display";
 import { levelsForMode } from "../data/campaign";
+import { BetaFeedbackSystem } from "../systems/BetaFeedbackSystem";
 import { SaveSystem } from "../systems/SaveSystem";
 import type { GameMode } from "../types";
 
@@ -34,6 +35,13 @@ export class MenuScene extends Phaser.Scene {
     this.add.text(DESIGN_WIDTH/2,748,`● ${equipped.ball.replace("ball-","")}   ·   ─ ${equipped.trail.replace("trail-","")}`,{
       fontFamily:"system-ui, sans-serif",fontSize:"12px",color:"#718090"
     }).setOrigin(.5);
+
+    const beta=this.add.rectangle(270,818,390,50,0x111922).setStrokeStyle(1,0x334554).setInteractive({useHandCursor:true});
+    const betaText=this.add.text(270,818,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{
+      fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#b9c9d4"
+    }).setOrigin(.5).setInteractive({useHandCursor:true});
+    const openBeta=()=>this.scene.start("editor");beta.on("pointerup",openBeta);betaText.on("pointerup",openBeta);
+    beta.on("pointerover",()=>beta.setFillStyle(0x1a2631));beta.on("pointerout",()=>beta.setFillStyle(0x111922));
 
     this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-48,"CAMPAÑA BETA · CORE SLICE",{
       fontFamily:"system-ui, sans-serif",fontSize:"12px",color:"#657282"
