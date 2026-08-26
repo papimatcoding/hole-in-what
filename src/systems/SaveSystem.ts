@@ -1,3 +1,5 @@
+import { levelsForMode } from "../data/levels";
+import { STAR_REWARDS, TROLL_UNLOCK_STARS, totalStarsFromRecords } from "../data/progression";
 import type {
   CosmeticsSave,
   EquippedCosmetics,
@@ -5,6 +7,7 @@ import type {
   SaveData,
   SaveDataV1,
   SaveDataV2,
+  SaveDataV3,
   SubmitResult,
   WalletSave
 } from "../types";
@@ -37,39 +40,48 @@ const defaultCosmetics = (): CosmeticsSave => ({
   equipped: { ...DEFAULT_EQUIPPED }
 });
 
-const defaultWallet = (coins = FRESH_START_COINS): WalletSave => ({ coins });
+const defaultWallet = (coins = FRESH_START_COINS, gems = 0): WalletSave => ({ coins, gems });
 
 const emptySave = (): SaveData => ({
-  version: 3,
+  version: 4,
   levels: {},
   cosmetics: defaultCosmetics(),
   wallet: defaultWallet()
 });
 
-function migrate(parsed: SaveData | SaveDataV2 | SaveDataV1): SaveData {
-  if (parsed.version === 3) {
+function migrate(parsed: SaveData | SaveDataV3 | SaveDataV2 | SaveDataV1): SaveData {
+  if (parsed.version === 4) {
     return {
-      version: 3,
+      version: 4,
       levels: parsed.levels ?? {},
       cosmetics: parsed.cosmetics ?? defaultCosmetics(),
       wallet: parsed.wallet ?? defaultWallet()
     };
   }
 
-  if (parsed.version === 2) {
+  if (parsed.version === 3) {
     return {
-      version: 3,
+      version: 4,
       levels: parsed.levels ?? {},
       cosmetics: parsed.cosmetics ?? defaultCosmetics(),
-      wallet: defaultWallet(LEGACY_DEV_GRANT)
+      wallet: defaultWallet(parsed.wallet?.coins ?? FRESH_START_COINS, 0)
+    };
+  }
+
+  if (parsed.version === 2) {
+    return {
+      version: 4,
+      levels: parsed.levels ?? {},
+      cosmetics: parsed.cosmetics ?? defaultCosmetics(),
+      wallet: defaultWallet(LEGACY_DEV_GRANT, 0)
     };
   }
 
   return {
-    version: 3,
+    version: 4,
     levels: parsed.levels ?? {},
     cosmetics: defaultCosmetics(),
-    wallet: defaultWallet(LEGACY_DEV_GRANT)
+    wallet: defaultWallet(LEGACY_DEV_GRANT, 0)
   };
 }
 
@@ -77,8 +89,8 @@ function load(): SaveData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return emptySave();
-    const parsed = JSON.parse(raw) as SaveData | SaveDataV2 | SaveDataV1;
-    if (![1, 2, 3].includes(parsed.version) || typeof parsed.levels !== "object") {
+    const parsed = JSON.parse(raw) as SaveData | SaveDataV3 | SaveDataV2 | SaveDataV1;
+    if (![1, 2, 3, 4].includes(parsed.version) || typeof parsed.levels !== "object") {
       throw new Error("Invalid save");
     }
     return migrate(parsed);
@@ -93,6 +105,19 @@ function persist(save: SaveData): void {
   } catch {
     // Some mobile webviews restrict storage; gameplay should still work.
   }
+}
+
+function unlockEligibleStarRewards(save: SaveData): string[] {
+  const totalStars = totalStarsFromRecords(save.levels);
+  const unlocked: string[] = [];
+
+  for (const reward of STAR_REWARDS) {
+    if (totalStars < reward.stars || save.cosmetics.owned.includes(reward.cosmeticId)) continue;
+    save.cosmetics.owned.push(reward.cosmeticId);
+    unlocked.push(reward.cosmeticId);
+  }
+
+  return unlocked;
 }
 
 export const SaveSystem = {
@@ -118,12 +143,15 @@ export const SaveSystem = {
 
     save.levels[levelId] = next;
     save.wallet.coins += coinsEarned;
+    const newlyUnlockedCosmetics = unlockEligibleStarRewards(save);
     persist(save);
 
     return {
       record: next,
       coinsEarned,
-      totalCoins: save.wallet.coins
+      totalCoins: save.wallet.coins,
+      totalGems: save.wallet.gems,
+      newlyUnlockedCosmetics
     };
   },
 
@@ -132,12 +160,44 @@ export const SaveSystem = {
     return levelIds.reduce((sum, id) => sum + (save.levels[id]?.stars ?? 0), 0);
   },
 
+  totalStarsAll(): number {
+    return totalStarsFromRecords(load().levels);
+  },
+
+  wallet(): WalletSave {
+    return { ...load().wallet };
+  },
+
   coins(): number {
     return load().wallet.coins;
   },
 
+  gems(): number {
+    return load().wallet.gems;
+  },
+
   cosmetics(): CosmeticsSave {
     return load().cosmetics;
+  },
+
+  claimEligibleStarRewards(): string[] {
+    const save = load();
+    const unlocked = unlockEligibleStarRewards(save);
+    if (unlocked.length > 0) persist(save);
+    return unlocked;
+  },
+
+  classicProgress(): { stars: number; completed: number; total: number; requiredStars: number } {
+    const save = load();
+    const levels = levelsForMode("classic");
+    const stars = levels.reduce((sum, level) => sum + (save.levels[level.id]?.stars ?? 0), 0);
+    const completed = levels.reduce((sum, level) => sum + (save.levels[level.id]?.completed ? 1 : 0), 0);
+    return { stars, completed, total: levels.length, requiredStars: TROLL_UNLOCK_STARS };
+  },
+
+  isTrollUnlocked(): boolean {
+    const progress = this.classicProgress();
+    return progress.stars >= progress.requiredStars || progress.completed >= progress.total;
   },
 
   isOwned(cosmeticId: string): boolean {
