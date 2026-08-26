@@ -131,8 +131,8 @@ export class GameplayScene extends Phaser.Scene {
     for(const e of events){
       if(e.kind==="wall-hit")this.feedback(e,"wall",0xb7cad8,18,.00055);
       else if(e.kind==="bumper-hit")this.feedback(e,"bumper",0xffcf78,27,.00115);
-      else if(e.kind==="surface-sand")this.sound("sand",120);
-      else if(e.kind==="surface-ice")this.sound("ice",120);
+      else if(e.kind==="surface-sand")this.playFeedbackSound("sand",120);
+      else if(e.kind==="surface-ice")this.playFeedbackSound("ice",120);
       else if(e.kind==="portal")this.feedback(e,"portal",0xaecbff,31,.00075);
       else if(e.kind==="curve-hit")this.feedback(e,"wall",0x9fb9c8,20,.0006);
       else if(e.kind==="moving-hit")this.feedback(e,"bumper",0xbdd7e5,25,.0009);
@@ -141,11 +141,11 @@ export class GameplayScene extends Phaser.Scene {
       else if(e.kind==="void"){this.feedback(e,"void",0x5a7182,34,.00145);this.startVoidReset();}
       else if(e.kind==="trap-wall"||e.kind==="trap-bumper"||e.kind==="trap-void")this.feedback(e,"trap",0xf0b869,36,.00165);
       else if(e.kind==="hole-lip")this.feedback(e,"lip",0xf1e7b7,22,.0005);
-      else if(e.kind==="hole"){this.sound("hole",0);this.finishHole();}
+      else if(e.kind==="hole"){this.playFeedbackSound("hole",0);this.finishHole();}
     }
   }
-  private feedback(e:SimulationEvent,sound:FeedbackSound,color:number,radius:number,shake:number):void{this.sound(sound,sound==="wall"?65:95);this.impact(e.x,e.y,color,radius,.62);this.cameras.main.shake(32,shake);}
-  private sound(sound:FeedbackSound,cooldownMs:number):void{const now=performance.now(),until=this.soundCooldown.get(sound)??0;if(now<until)return;AudioFeedback.play(sound);if(cooldownMs>0)this.soundCooldown.set(sound,now+cooldownMs);}
+  private feedback(e:SimulationEvent,sound:FeedbackSound,color:number,radius:number,shake:number):void{this.playFeedbackSound(sound,sound==="wall"?65:95);this.impact(e.x,e.y,color,radius,.62);this.cameras.main.shake(32,shake);}
+  private playFeedbackSound(sound:FeedbackSound,cooldownMs:number):void{const now=performance.now(),until=this.soundCooldown.get(sound)??0;if(now<until)return;AudioFeedback.play(sound);if(cooldownMs>0)this.soundCooldown.set(sound,now+cooldownMs);}
   private impact(x:number,y:number,color:number,radius:number,alpha:number):void{const ring=this.add.circle(x,y,Math.max(5,radius*.42),0xffffff,0).setStrokeStyle(2,color,alpha).setDepth(13);this.tweens.add({targets:ring,scale:2.1,alpha:0,duration:220,ease:"Cubic.easeOut",onComplete:()=>ring.destroy()});}
 
   private startVoidReset():void{
