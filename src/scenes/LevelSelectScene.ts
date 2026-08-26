@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { setupDesignCamera, sharpenSceneText } from "../config/display";
 import { levelsForMode } from "../data/levels";
+import { applyV81LevelPatch } from "../data/v81LevelPatches";
 import { SaveSystem } from "../systems/SaveSystem";
 import { formatRequirement } from "../systems/StarScoring";
 import type { GameMode } from "../types";
@@ -29,7 +30,7 @@ export class LevelSelectScene extends Phaser.Scene {
       return;
     }
 
-    const levels = levelsForMode(this.mode);
+    const levels = levelsForMode(this.mode).map(applyV81LevelPatch);
     const pageCount = Math.max(1, Math.ceil(levels.length / PAGE_SIZE));
     this.page = Phaser.Math.Clamp(this.page, 0, pageCount - 1);
     const pageStart = this.page * PAGE_SIZE;
