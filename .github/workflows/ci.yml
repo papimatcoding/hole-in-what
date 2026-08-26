@@ -18,7 +18,11 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
-      - name: Typecheck and build
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build
         run: npm run build
+      - name: Check hole physics
+        run: npm run test:hole
       - name: Simulate all campaign holes
         run: npm run audit:courses
