@@ -38,7 +38,7 @@ export class MenuScene extends Phaser.Scene {
       fontFamily: "system-ui, sans-serif", fontSize: "11px", color: "#667687"
     }).setOrigin(0.5);
 
-    this.add.text(DESIGN_WIDTH / 2, DESIGN_HEIGHT - 48, "V7 · balance & depth", {
+    this.add.text(DESIGN_WIDTH / 2, DESIGN_HEIGHT - 48, "V8 · polish & onboarding", {
       fontFamily: "system-ui, sans-serif", fontSize: "12px", color: "#657282"
     }).setOrigin(0.5);
 
