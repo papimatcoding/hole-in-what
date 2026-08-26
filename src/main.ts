@@ -3,7 +3,7 @@ import "./styles.css";
 import { DESIGN_HEIGHT, DESIGN_WIDTH, RENDER_SCALE } from "./config/display";
 import { MenuScene } from "./scenes/MenuScene";
 import { LevelSelectScene } from "./scenes/LevelSelectScene";
-import { V81GameScene } from "./scenes/V81GameScene";
+import { V82GameScene } from "./scenes/V82GameScene";
 import { ResultsScene } from "./scenes/ResultsScene";
 import { CosmeticsScene } from "./scenes/CosmeticsScene";
 import { ShopScene } from "./scenes/ShopScene";
@@ -18,7 +18,7 @@ const config: Phaser.Types.Core.GameConfig = {
   width: renderWidth,
   height: renderHeight,
   backgroundColor: "#0d1117",
-  scene: [MenuScene, LevelSelectScene, V81GameScene, ResultsScene, CosmeticsScene, ShopScene, RewardsScene],
+  scene: [MenuScene, LevelSelectScene, V82GameScene, ResultsScene, CosmeticsScene, ShopScene, RewardsScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
