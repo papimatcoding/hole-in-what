@@ -3,12 +3,14 @@ import { setupDesignCamera, sharpenSceneText } from "../config/display";
 import { cosmeticById } from "../data/cosmetics";
 import { levelsForMode } from "../data/campaign";
 import { AudioFeedback } from "../systems/AudioFeedback";
+import { BetaFeedbackSystem, type BetaFeedbackCategory } from "../systems/BetaFeedbackSystem";
 import { SaveSystem } from "../systems/SaveSystem";
 import { formatRequirement, requirementMet } from "../systems/StarScoring";
 import type { ResultsSceneData } from "../types";
 
 export class ResultsScene extends Phaser.Scene {
   private resultData!:ResultsSceneData;
+  private feedbackPanel:Phaser.GameObjects.Container|null=null;
   constructor(){super("results");}
   init(data:ResultsSceneData):void{this.resultData=data;}
 
@@ -60,7 +62,8 @@ export class ResultsScene extends Phaser.Scene {
     if(this.resultData.stars<3){this.makeButton("REINTENTAR",640,retry,true);if(canNext)this.makeButton("SIGUIENTE",718,next,false);}
     else{if(canNext)this.makeButton("SIGUIENTE",640,next,true);this.makeButton("REINTENTAR",718,retry,false);}
 
-    this.add.text(270,815,"NIVELES",{fontFamily:"system-ui, sans-serif",fontSize:"16px",fontStyle:"bold",color:"#aeb9c5"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(this.resultData.levelIndex/10)}));
+    this.add.text(270,810,"NIVELES",{fontFamily:"system-ui, sans-serif",fontSize:"15px",fontStyle:"bold",color:"#aeb9c5"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(this.resultData.levelIndex/10)}));
+    this.add.text(270,858,`FEEDBACK BETA · ${BetaFeedbackSystem.count()} guardados`,{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#8fb8cf"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.openFeedback());
     sharpenSceneText(this);
   }
 
@@ -69,4 +72,31 @@ export class ResultsScene extends Phaser.Scene {
     const text=this.add.text(270,y,label,{fontFamily:"system-ui, sans-serif",fontSize:"18px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5).setInteractive({useHandCursor:true});
     bg.on("pointerup",action);text.on("pointerup",action);bg.on("pointerover",()=>bg.setFillStyle(primary?0x30485a:0x22303b));bg.on("pointerout",()=>bg.setFillStyle(primary?0x253847:0x172129));
   }
+
+  private openFeedback():void{
+    if(this.feedbackPanel)return;
+    const blocker=this.add.rectangle(270,480,540,960,0x05080b,.82).setInteractive();
+    const panel=this.add.rectangle(270,480,430,500,0x111a22,.99).setStrokeStyle(2,0x405668);
+    const title=this.add.text(270,285,`FEEDBACK · ${this.resultData.levelId.toUpperCase()}`,{fontFamily:"system-ui, sans-serif",fontSize:"18px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
+    const sub=this.add.text(270,322,"¿Qué has notado en este hoyo?",{fontFamily:"system-ui, sans-serif",fontSize:"13px",color:"#aebbc6"}).setOrigin(.5);
+    const children:Phaser.GameObjects.GameObject[]=[blocker,panel,title,sub];
+    const choices:[string,BetaFeedbackCategory][]=[["BUG","bug"],["MUY FÁCIL","too-easy"],["MUY DIFÍCIL","too-hard"],["REPETITIVO","repetitive"],["OBJETO / MAPA","object"],["OTRO","other"]];
+    choices.forEach(([label,category],i)=>{
+      const col=i%2,row=Math.floor(i/2),x=170+col*200,y=382+row*76;
+      const bg=this.add.rectangle(x,y,170,56,0x1a2731).setStrokeStyle(1,0x496173).setInteractive({useHandCursor:true});
+      const text=this.add.text(x,y,label,{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#dfe9ef"}).setOrigin(.5).setInteractive({useHandCursor:true});
+      const choose=()=>this.saveFeedback(category);bg.on("pointerup",choose);text.on("pointerup",choose);children.push(bg,text);
+    });
+    const close=this.add.text(270,672,"CERRAR",{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#8596a4"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.closeFeedback());children.push(close);
+    this.feedbackPanel=this.add.container(0,0,children).setDepth(200);
+  }
+
+  private saveFeedback(category:BetaFeedbackCategory):void{
+    const note=window.prompt("Nota opcional. Ej: 'el bumper no sirve para nada'","")??"";
+    BetaFeedbackSystem.add({levelId:this.resultData.levelId,mode:this.resultData.mode,levelIndex:this.resultData.levelIndex,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs},category,note);
+    this.closeFeedback();
+    const toast=this.add.text(270,860,"FEEDBACK GUARDADO",{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#e8f5ea",backgroundColor:"#14231a",padding:{x:12,y:8}}).setOrigin(.5).setDepth(220);
+    this.tweens.add({targets:toast,alpha:0,y:850,delay:850,duration:250,onComplete:()=>toast.destroy()});
+  }
+  private closeFeedback():void{this.feedbackPanel?.destroy(true);this.feedbackPanel=null;}
 }
