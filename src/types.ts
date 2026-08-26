@@ -141,6 +141,8 @@ export interface LevelDefinition {
   hole: Vec2;
   threeStar: StarRequirement;
   twoStar: StarRequirement;
+  /** Hand-authored courses bypass procedural geometry patches but still use common sanitising/auditing. */
+  authored?: boolean;
   /** Intended route used by deterministic generation, auditing and bot research. */
   designPath?: Vec2[];
   /** Mechanic the authored mastery route is expected to engage with. */
