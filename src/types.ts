@@ -1,0 +1,70 @@
+export type GameMode = "classic" | "troll";
+
+export interface Vec2 {
+  x: number;
+  y: number;
+}
+
+export interface RectDef {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface BumperDef {
+  x: number;
+  y: number;
+  r: number;
+}
+
+export interface PopWallDef extends RectDef {
+  triggerX: number;
+  triggerY: number;
+  triggerRadius: number;
+}
+
+export interface PopBumperDef extends BumperDef {
+  triggerX: number;
+  triggerY: number;
+  triggerRadius: number;
+}
+
+export interface LevelDefinition {
+  id: string;
+  mode: GameMode;
+  group: number;
+  ball: Vec2;
+  hole: Vec2;
+  threeStars: number;
+  twoStars: number;
+  walls?: RectDef[];
+  sand?: RectDef[];
+  bumpers?: BumperDef[];
+  popWalls?: PopWallDef[];
+  popBumpers?: PopBumperDef[];
+}
+
+export interface LevelRecord {
+  completed: boolean;
+  stars: number;
+  bestStrokes: number | null;
+  bestTimeMs: number | null;
+}
+
+export interface SaveData {
+  version: 1;
+  levels: Record<string, LevelRecord>;
+}
+
+export interface GameSceneData {
+  mode: GameMode;
+  levelIndex: number;
+}
+
+export interface ResultsSceneData extends GameSceneData {
+  levelId: string;
+  strokes: number;
+  timeMs: number;
+  stars: number;
+}
