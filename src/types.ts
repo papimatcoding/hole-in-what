@@ -24,11 +24,14 @@ export interface BoosterDef extends RectDef {
   power?: number;
 }
 
-export interface WindDef extends RectDef {
+export interface FanDef extends RectDef {
   dx: number;
   dy: number;
   strength?: number;
 }
+
+// Kept for compatibility with earlier V8.1 level data.
+export type WindDef = FanDef;
 
 export interface PortalPointDef {
   x: number;
@@ -59,6 +62,29 @@ export interface BumperDef {
   x: number;
   y: number;
   r: number;
+}
+
+export interface MovingWallDef extends RectDef {
+  axis: "x" | "y";
+  amplitude: number;
+  speed?: number;
+  phase?: number;
+}
+
+export interface MovingBumperDef extends BumperDef {
+  axis: "x" | "y";
+  amplitude: number;
+  speed?: number;
+  phase?: number;
+}
+
+export interface CurveDef {
+  x: number;
+  y: number;
+  r: number;
+  startAngle: number;
+  endAngle: number;
+  thickness?: number;
 }
 
 export interface PopWallDef extends RectDef {
@@ -95,9 +121,13 @@ export interface LevelDefinition {
   fairways?: RectDef[];
   walls?: RectDef[];
   triangles?: TriangleDef[];
+  curves?: CurveDef[];
+  movingWalls?: MovingWallDef[];
+  movingBumpers?: MovingBumperDef[];
   sand?: RectDef[];
   ice?: RectDef[];
   boosters?: BoosterDef[];
+  fans?: FanDef[];
   winds?: WindDef[];
   portals?: PortalPairDef[];
   ramps?: RampDef[];
