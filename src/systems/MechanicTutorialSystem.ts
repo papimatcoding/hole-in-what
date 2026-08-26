@@ -1,6 +1,7 @@
 import type { LevelDefinition } from "../types";
 
 export type MechanicId =
+  | "bumper"
   | "sand"
   | "ice"
   | "booster"
@@ -22,6 +23,7 @@ export interface MechanicTutorial {
 const STORAGE_KEY = "troll-golf-mechanics-seen-procedural-v1";
 
 export const MECHANIC_TUTORIALS: Record<MechanicId, MechanicTutorial> = {
+  bumper: { id:"bumper", title:"BUMPER", body:"Los bumpers rebotan la bola con energía extra y pueden convertir un impacto en un cambio fuerte de dirección.", hint:"Úsalos como parte de la trayectoria, no como una pared más." },
   sand: { id:"sand", title:"ARENA", body:"La arena frena mucho la bola. Puede convertir una buena línea en un tiro corto.", hint:"Evítala cuando necesites conservar velocidad." },
   ice: { id:"ice", title:"HIELO", body:"Sobre hielo la bola apenas pierde velocidad y cualquier rebote se prolonga mucho más.", hint:"Piensa en dónde terminarás, no solo en atravesarlo." },
   booster: { id:"booster", title:"IMPULSO", body:"Las placas de impulso aceleran la bola en la dirección de la flecha.", hint:"Úsalas para alimentar una ruta, no luches contra ellas." },
@@ -51,6 +53,7 @@ function writeSeen(seen: Set<MechanicId>): void {
 
 export function mechanicsForLevel(level: LevelDefinition): MechanicId[] {
   const ids: MechanicId[] = [];
+  if ((level.bumpers?.length ?? 0) > 0) ids.push("bumper");
   if ((level.sand?.length ?? 0) > 0) ids.push("sand");
   if ((level.ice?.length ?? 0) > 0) ids.push("ice");
   if ((level.boosters?.length ?? 0) > 0) ids.push("booster");
