@@ -102,7 +102,7 @@ function replay(level:LevelDefinition,shots:SimulationShot[]):boolean{
  * Each shot is perturbed independently while the remainder of the known sequence stays unchanged. */
 function solutionRobustness(level:LevelDefinition,run:SolvedRun|null):number|null{
   if(!run||run.shots.length===0)return null;
-  let successes=1,total=1; // baseline
+  let successes=1,total=1;
   const angleOffsets=[-4,-2,2,4];
   const powerOffsets=[-.06,-.03,.03,.06];
   for(let i=0;i<run.shots.length;i+=1){
@@ -120,11 +120,12 @@ function solutionRobustness(level:LevelDefinition,run:SolvedRun|null):number|nul
 
 function hasTrollTrap(level:LevelDefinition):boolean{return (level.popWalls?.length??0)+(level.popBumpers?.length??0)+(level.popVoids?.length??0)>0;}
 
-/** The first-read probe is intentionally simple: aim at the cup or first visible route cue.
- * A HARD trap is a real bypass only when none of those obvious attempts wakes it up. */
+/** First-read probe: aim at the cup or the first actual route cue after the ball.
+ * Authored designPath includes the spawn as item zero, so item one is the first meaningful cue. */
 function naiveTrapProbe(level:LevelDefinition):boolean|null{
   if(level.mode!=="troll"||!hasTrollTrap(level))return null;
-  const start=createGolfSimulationState(level),targets=[level.hole,level.designPath?.[0]??level.hole],powers=[.52,.68,.84,1];
+  const start=createGolfSimulationState(level),firstCue=level.designPath?.[1]??level.hole;
+  const targets=[level.hole,firstCue].filter((p,i,a)=>a.findIndex(q=>dist(p,q)<8)===i),powers=[.52,.68,.84,1];
   for(const target of targets){
     const base=Math.atan2(target.y-level.ball.y,target.x-level.ball.x);
     for(const offset of[-8,-4,0,4,8])for(const power of powers){
