@@ -11,7 +11,7 @@ export class MenuScene extends Phaser.Scene {
 
   create(): void {
     setupDesignCamera(this);
-    this.cameras.main.setBackgroundColor("#0d1117");
+    this.cameras.main.setBackgroundColor("#0b0f14");
     SaveSystem.claimEligibleStarRewards();
 
     const wallet = SaveSystem.wallet();
@@ -38,7 +38,7 @@ export class MenuScene extends Phaser.Scene {
       fontFamily: "system-ui, sans-serif", fontSize: "11px", color: "#667687"
     }).setOrigin(0.5);
 
-    this.add.text(DESIGN_WIDTH / 2, DESIGN_HEIGHT - 48, "V6 · content pass", {
+    this.add.text(DESIGN_WIDTH / 2, DESIGN_HEIGHT - 48, "V7 · balance & depth", {
       fontFamily: "system-ui, sans-serif", fontSize: "12px", color: "#657282"
     }).setOrigin(0.5);
 
