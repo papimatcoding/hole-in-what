@@ -9,6 +9,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
     "test:hole": "tsx scripts/holePhysicsCheck.ts",
+    "test:mechanics": "tsx scripts/mechanicIntegrityCheck.ts",
     "audit:courses": "tsx scripts/courseAudit.ts",
     "audit:originality": "tsx scripts/courseOriginalityAudit.ts"
   },
