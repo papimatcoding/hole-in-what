@@ -5,16 +5,22 @@ const clamp=(v:number,min:number,max:number):number=>Math.max(min,Math.min(max,v
 
 function directPoint(level:LevelDefinition,fraction:number):Vec2 {
   const q=clamp(fraction,0,1);
-  return {
-    x:level.ball.x+(level.hole.x-level.ball.x)*q,
-    y:level.ball.y+(level.hole.y-level.ball.y)*q
-  };
+  return {x:level.ball.x+(level.hole.x-level.ball.x)*q,y:level.ball.y+(level.hole.y-level.ball.y)*q};
 }
 
 function directFrame(level:LevelDefinition):{dir:Vec2;normal:Vec2} {
   const dx=level.hole.x-level.ball.x,dy=level.hole.y-level.ball.y,len=Math.hypot(dx,dy)||1;
   const dir={x:dx/len,y:dy/len};
   return {dir,normal:{x:-dir.y,y:dir.x}};
+}
+
+function sampleDesignRoute(level:LevelDefinition,fraction:number):Vec2 {
+  const pts=level.designPath?.length?[level.ball,...level.designPath,level.hole]:[level.ball,level.hole];
+  const lengths:number[]=[];let total=0;
+  for(let i=0;i<pts.length-1;i+=1){const len=Math.hypot(pts[i+1]!.x-pts[i]!.x,pts[i+1]!.y-pts[i]!.y);lengths.push(len);total+=len;}
+  let remaining=total*clamp(fraction,0,1);
+  for(let i=0;i<lengths.length;i+=1){const len=lengths[i]!;if(remaining<=len){const q=len?remaining/len:0;return{x:pts[i]!.x+(pts[i+1]!.x-pts[i]!.x)*q,y:pts[i]!.y+(pts[i+1]!.y-pts[i]!.y)*q};}remaining-=len;}
+  return {...pts[pts.length-1]!};
 }
 
 function protectPortals(level:LevelDefinition):void {
@@ -26,127 +32,105 @@ function protectPortals(level:LevelDefinition):void {
   });
 }
 
+function tuneClassicMeaning(level:LevelDefinition,index:number):void {
+  if(index===7){
+    // First bumper lesson: place a single generous bumper directly on the authored gate
+    // route. It becomes a tool the player can read and bank from, not a decorative pin.
+    const p=sampleDesignRoute(level,.56);
+    level.bumpers=[{x:p.x,y:p.y,r:34}];
+    level.primaryMechanic="bumper";
+  }
+
+  if(index===9||index===20){
+    // These bumpers were completely ignored by the best audited route and duplicated an
+    // earlier lesson. Keep the stronger offset/island silhouette instead of pretending a
+    // non-contributing modifier makes a new hole.
+    level.bumpers=[];
+    level.primaryMechanic="wall";
+  }
+
+  if(index===25){
+    // The previous fan sat on the design path but left a clean straight HIO outside its
+    // influence. Put a broad transverse stream on that tempting line: no extra corridor,
+    // just a route choice between compensating for wind or taking the dogleg.
+    const p=directPoint(level,.54),{normal}=directFrame(level);
+    level.fans=[{x:p.x-88,y:p.y-58,w:176,h:116,dx:normal.x,dy:normal.y,strength:315}];
+    level.primaryMechanic="fan";
+  }
+
+  // Classic 39's HIO genuinely uses the portal while its curve was decorative noise.
+  if(index===39&&level.portals?.length){level.curves=[];level.primaryMechanic="portal";}
+}
+
+function trapTriggerFraction(archetype:TrollTrapArchetype):number {
+  switch(archetype){
+    case "floor-drop":case "safe-lane-collapse":return .30;
+    case "gate-pop":case "cross-gate":case "late-combo":return .33;
+    case "bumper-ambush":return .36;
+    case "rebound-punish":return .46;
+  }
+}
+
 /**
- * The generated designPath describes the learned route. A troll trap should instead
- * react to the tempting first-attempt line. Reframing only the surprise layer around
- * ball→hole keeps each base silhouette intact while making the joke readable.
+ * The learned designPath is the solution. The surprise layer is calibrated against the
+ * tempting first read (ball→hole), with enough lead time to actually materialise before a
+ * max-power shot reaches it. The trap still appears late in the shot, but no longer loses
+ * the race against its own animation.
  */
 function calibrateHardTrap(level:LevelDefinition,index:number):void {
-  const archetype: TrollTrapArchetype = level.trollArchetype ?? "gate-pop";
-  const trigger=directPoint(level,.43),anchor=directPoint(level,.64),late=directPoint(level,.77);
-  const {dir,normal}=directFrame(level);
-  const side=index%2===0?1:-1;
-  const triggerBase={triggerX:trigger.x,triggerY:trigger.y,triggerRadius:108};
+  const archetype:TrollTrapArchetype=level.trollArchetype??"gate-pop";
+  const trigger=directPoint(level,trapTriggerFraction(archetype)),anchor=directPoint(level,.64),late=directPoint(level,.77);
+  const {dir,normal}=directFrame(level),side=index%2===0?1:-1;
+  const triggerBase={triggerX:trigger.x,triggerY:trigger.y,triggerRadius:112};
 
-  level.popWalls=[];
-  level.popBumpers=[];
-  level.popVoids=[];
-
+  level.popWalls=[];level.popBumpers=[];level.popVoids=[];
   const routeMostlyVertical=Math.abs(dir.y)>=Math.abs(dir.x);
+
   if(archetype==="gate-pop"){
-    level.popWalls=[routeMostlyVertical
-      ? {x:anchor.x-66,y:anchor.y-11,w:132,h:22,...triggerBase}
-      : {x:anchor.x-11,y:anchor.y-66,w:22,h:132,...triggerBase}];
+    level.popWalls=[routeMostlyVertical?{x:anchor.x-66,y:anchor.y-11,w:132,h:22,...triggerBase}:{x:anchor.x-11,y:anchor.y-66,w:22,h:132,...triggerBase}];
     return;
   }
-
   if(archetype==="bumper-ambush"){
-    level.popBumpers=[{
-      x:anchor.x+normal.x*24*side,
-      y:anchor.y+normal.y*24*side,
-      r:33,
-      ...triggerBase,
-      triggerRadius:112
-    }];
+    level.popBumpers=[{x:anchor.x+normal.x*24*side,y:anchor.y+normal.y*24*side,r:33,...triggerBase,triggerRadius:114}];
     return;
   }
-
   if(archetype==="floor-drop"){
-    level.popVoids=[{x:anchor.x-52,y:anchor.y-27,w:104,h:54,...triggerBase,triggerRadius:112}];
+    level.popVoids=[{x:anchor.x-54,y:anchor.y-28,w:108,h:56,...triggerBase,triggerRadius:116}];
     return;
   }
-
   if(archetype==="cross-gate"){
     // A half-gate steals the obvious lane without sealing the board into a corridor.
-    level.popWalls=[routeMostlyVertical
-      ? {x:anchor.x-12+normal.x*34*side,y:anchor.y-60,w:24,h:120,...triggerBase}
-      : {x:anchor.x-60,y:anchor.y-12+normal.y*34*side,w:120,h:24,...triggerBase}];
+    level.popWalls=[routeMostlyVertical?{x:anchor.x-12+normal.x*34*side,y:anchor.y-60,w:24,h:120,...triggerBase}:{x:anchor.x-60,y:anchor.y-12+normal.y*34*side,w:120,h:24,...triggerBase}];
     return;
   }
-
   if(archetype==="safe-lane-collapse"){
-    // Offset hazard: after the reveal there are still two readable choices around it.
-    level.popVoids=[{
-      x:anchor.x-53+normal.x*22*side,
-      y:anchor.y-27+normal.y*22*side,
-      w:106,
-      h:54,
-      ...triggerBase,
-      triggerRadius:116
-    }];
+    level.popVoids=[{x:anchor.x-54+normal.x*22*side,y:anchor.y-28+normal.y*22*side,w:108,h:56,...triggerBase,triggerRadius:118}];
     return;
   }
-
   if(archetype==="rebound-punish"){
-    level.popBumpers=[{
-      x:late.x+normal.x*30*side,
-      y:late.y+normal.y*30*side,
-      r:35,
-      ...triggerBase,
-      triggerRadius:114
-    }];
+    level.popBumpers=[{x:late.x+normal.x*30*side,y:late.y+normal.y*30*side,r:35,...triggerBase,triggerRadius:116}];
     return;
   }
 
-  // The late combo uses two familiar beats, separated enough to remain readable.
   const first=directPoint(level,.59);
-  level.popWalls=[routeMostlyVertical
-    ? {x:first.x-55,y:first.y-10,w:110,h:20,...triggerBase,triggerRadius:108}
-    : {x:first.x-10,y:first.y-55,w:20,h:110,...triggerBase,triggerRadius:108}];
-  if(index>=15){
-    level.popBumpers=[{
-      x:late.x+normal.x*28*side,
-      y:late.y+normal.y*28*side,
-      r:31,
-      triggerX:first.x,
-      triggerY:first.y,
-      triggerRadius:88
-    }];
-  }
+  level.popWalls=[routeMostlyVertical?{x:first.x-55,y:first.y-10,w:110,h:20,...triggerBase,triggerRadius:114}:{x:first.x-10,y:first.y-55,w:20,h:110,...triggerBase,triggerRadius:114}];
+  if(index>=15){level.popBumpers=[{x:late.x+normal.x*28*side,y:late.y+normal.y*28*side,r:31,triggerX:first.x,triggerY:first.y,triggerRadius:88}];}
 }
 
+// Temporary stroke-only goals. They are replaced by explicit per-hole mastery values after
+// the geometry audit in this same balance pass; keeping them here makes the intermediate
+// audit comparable to the previous campaign.
 function classicGoals(level:LevelDefinition,index:number):void {
-  let strokes=index<=3?1:index<=20?2:3;
-  if(index===31||index===38||index===40)strokes=2;
-  level.threeStar=goal(strokes);
-  level.twoStar=goal(strokes+1);
-  level.group=Math.ceil(index/10);
+  let strokes=index<=3?1:index<=20?2:3;if(index===31||index===38||index===40)strokes=2;
+  level.threeStar=goal(strokes);level.twoStar=goal(strokes+1);level.group=Math.ceil(index/10);
 }
-
 function hardGoals(level:LevelDefinition,index:number):void {
-  const strokes=index<=10?3:4;
-  level.threeStar=goal(strokes);
-  level.twoStar=goal(strokes+1);
-  level.group=Math.ceil(index/10);
-}
-
-function cleanMeaninglessLateModifier(level:LevelDefinition,index:number):void {
-  // Classic 39's audited HIO used the portal and completely ignored its decorative
-  // curve. A late modifier that contributes nothing is worse than a clear advanced
-  // portal hole, so remove the noise instead of pretending it is extra difficulty.
-  if(level.mode==="classic"&&index===39&&level.portals?.length){
-    level.curves=[];
-    level.primaryMechanic="portal";
-  }
+  const strokes=index<=10?3:4;level.threeStar=goal(strokes);level.twoStar=goal(strokes+1);level.group=Math.ceil(index/10);
 }
 
 export function applyPostAuditBalance(level:LevelDefinition,index:number):LevelDefinition {
   protectPortals(level);
-  cleanMeaninglessLateModifier(level,index);
-  if(level.mode==="classic")classicGoals(level,index);
-  else{
-    calibrateHardTrap(level,index);
-    hardGoals(level,index);
-  }
+  if(level.mode==="classic"){tuneClassicMeaning(level,index);classicGoals(level,index);}
+  else{calibrateHardTrap(level,index);hardGoals(level,index);}
   return level;
 }
