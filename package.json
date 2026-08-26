@@ -8,12 +8,13 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
-    "audit:courses": "rm -rf .audit && tsc --ignoreConfig --outDir .audit --module commonjs --target ES2022 --skipLibCheck --esModuleInterop --noEmit false scripts/courseAudit.ts src/data/procedural/campaignGenerator.ts src/data/procedural/courseUtils.ts src/data/procedural/gateGrammar.ts src/types.ts && node -e \"require('fs').writeFileSync('.audit/package.json','{\\\"type\\\":\\\"commonjs\\\"}')\" && node .audit/scripts/courseAudit.js"
+    "audit:courses": "tsx scripts/courseAudit.ts"
   },
   "dependencies": {
     "phaser": "4.2.1"
   },
   "devDependencies": {
+    "tsx": "4.20.3",
     "typescript": "7.0.2",
     "vite": "8.2.2"
   }
