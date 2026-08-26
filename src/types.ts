@@ -24,6 +24,23 @@ export interface BoosterDef extends RectDef {
   power?: number;
 }
 
+export interface WindDef extends RectDef {
+  dx: number;
+  dy: number;
+  strength?: number;
+}
+
+export interface PortalPointDef {
+  x: number;
+  y: number;
+  r?: number;
+}
+
+export interface PortalPairDef {
+  a: PortalPointDef;
+  b: PortalPointDef;
+}
+
 export interface RampDef extends RectDef {
   dx: number;
   dy: number;
@@ -81,6 +98,8 @@ export interface LevelDefinition {
   sand?: RectDef[];
   ice?: RectDef[];
   boosters?: BoosterDef[];
+  winds?: WindDef[];
+  portals?: PortalPairDef[];
   ramps?: RampDef[];
   trampolines?: TrampolineDef[];
   voids?: RectDef[];
