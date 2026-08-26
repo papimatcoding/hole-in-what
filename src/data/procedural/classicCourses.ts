@@ -1,180 +1,176 @@
-import type { CurveDef, FanDef, GameMode, LevelDefinition, MovingBumperDef, MovingWallDef, PortalPairDef, Vec2 } from "../../types";
-import { WALL, blank, mirrorRect, mirrorX, r, seeded, setDesignPath, type Rng } from "./courseUtils";
+import type { CurveDef, FanDef, LevelDefinition, MovingBumperDef, MovingWallDef, PortalPairDef, Vec2 } from "../../types";
+import { blank, goal, mirrorX, r, seeded, setDesignPath, WALL, type Rng } from "./courseUtils";
+import { buildGateCourse, gateApproach, gateExit, type GateSpec } from "./gateGrammar";
 
-interface Ctx { index:number; difficulty:number; mirror:boolean; rng:Rng; }
-type Builder = (ctx:Ctx,mode:GameMode)=>LevelDefinition;
-
-const fan=(x:number,y:number,w:number,h:number,dx:number,dy:number,strength=250):FanDef=>({x,y,w,h,dx,dy,strength});
+const fan=(x:number,y:number,w:number,h:number,dx:number,dy:number,strength=270):FanDef=>({x,y,w,h,dx,dy,strength});
 const portal=(ax:number,ay:number,bx:number,by:number,rad=29):PortalPairDef=>({a:{x:ax,y:ay,r:rad},b:{x:bx,y:by,r:rad}});
 const movingWall=(x:number,y:number,w:number,h:number,axis:"x"|"y",amplitude:number,speed=1.05,phase=0):MovingWallDef=>({x,y,w,h,axis,amplitude,speed,phase});
-const movingBumper=(x:number,y:number,rad:number,axis:"x"|"y",amplitude:number,speed=1.15,phase=0):MovingBumperDef=>({x,y,r:rad,axis,amplitude,speed,phase});
+const movingBumper=(x:number,y:number,rad:number,axis:"x"|"y",amplitude:number,speed=1.12,phase=0):MovingBumperDef=>({x,y,r:rad,axis,amplitude,speed,phase});
 const curve=(x:number,y:number,rad:number,startDeg:number,endDeg:number,thickness=22):CurveDef=>({x,y,r:rad,startAngle:startDeg*Math.PI/180,endAngle:endDeg*Math.PI/180,thickness});
-const mx=(p:Vec2,mirror:boolean):Vec2=>({x:mirrorX(p.x,mirror),y:p.y});
+const mcenters=(values:number[],mirror:boolean):number[]=>values.map(x=>mirrorX(x,mirror));
 
-function dogleg(ctx:Ctx,mode:GameMode):LevelDefinition{
-  const left=!ctx.mirror;
-  const mirror=!left;
-  const level=blank(mode,ctx.index,left?105:435,left?420:120);
-  level.walls=[mirrorRect(r(245,390,WALL,385),mirror)];
-  if(ctx.difficulty>0.15) level.walls.push(mirrorRect(r(269,390,145,WALL),mirror));
-  return setDesignPath(level,[mx({x:390,y:795},mirror),mx({x:405,y:330},mirror)]);
+function straight(index:number):LevelDefinition {
+  return blank("classic",index,270,270);
 }
 
-function gates(ctx:Ctx,mode:GameMode,count:number):LevelDefinition{
-  const level=blank(mode,ctx.index,mirrorX(105,ctx.mirror),mirrorX(420,ctx.mirror));
-  const ys=count===1?[475]:count===2?[590,365]:[650,475,300];
-  const pathPoints:Vec2[]=[];
-  ys.forEach((y,i)=>{
-    const gapLeft=(i+(ctx.mirror?1:0))%2===0;
-    const gapW=Math.round(142-ctx.difficulty*38);
-    if(gapLeft){
-      const wallX=95+gapW;
-      level.walls!.push(r(wallX,y,512-wallX,WALL));
-      pathPoints.push({x:(28+wallX)/2,y:y+38});
-    }else{
-      level.walls!.push(r(28,y,350-28,WALL));
-      pathPoints.push({x:(350+512)/2,y:y+38});
-    }
-  });
-  return setDesignPath(level,pathPoints);
-}
-
-function bumperCourse(ctx:Ctx,mode:GameMode):LevelDefinition{
-  const mirror=ctx.mirror;
-  const level=blank(mode,ctx.index,mirrorX(105,mirror),mirrorX(420,mirror));
-  const bumper={x:mirrorX(414,mirror),y:610,r:34};
-  level.walls=[
-    mirrorRect(r(155,650,235,WALL),mirror),
-    mirrorRect(r(245,385,WALL,265),mirror),
-    mirrorRect(r(245,385,155,WALL),mirror)
-  ];
-  level.bumpers=[bumper];
-  return setDesignPath(level,[
-    mx({x:405,y:720},mirror),
-    {x:bumper.x,y:bumper.y},
-    mx({x:420,y:330},mirror)
-  ]);
-}
-
-function surfaceCourse(ctx:Ctx,mode:GameMode,surface:"sand"|"ice"):LevelDefinition{
-  const level=gates(ctx,mode,2);
-  const route=level.designPath!;
-  const target=route[1] ?? {x:270,y:610};
-  const zone=r(target.x-58,target.y-112,116,98);
-  if(surface==="sand") level.sand=[zone]; else level.ice=[zone];
-  return level;
-}
-
-function fanCourse(ctx:Ctx,mode:GameMode):LevelDefinition{
-  const level=dogleg(ctx,mode);
-  const route=level.designPath!;
-  const p=route[1] ?? {x:390,y:795};
-  const z=r(p.x-68,p.y-118,136,112);
-  const towardHoleX=Math.sign(level.hole.x-p.x) || 1;
-  level.fans=[fan(z.x,z.y,z.w,z.h,towardHoleX*0.82,-0.34,235+ctx.difficulty*55)];
-  return level;
-}
-
-function curveCourse(ctx:Ctx,mode:GameMode):LevelDefinition{
-  const level=blank(mode,ctx.index,mirrorX(420,ctx.mirror),mirrorX(105,ctx.mirror));
-  level.walls=[mirrorRect(r(270,565,WALL,230),ctx.mirror)];
-  level.curves=ctx.mirror?[curve(300,365,130,80,175,22)]:[curve(240,365,130,5,100,22)];
-  return setDesignPath(level,[mx({x:175,y:610},ctx.mirror),mx({x:160,y:410},ctx.mirror),mx({x:170,y:300},ctx.mirror)]);
-}
-
-function portalCourse(ctx:Ctx,mode:GameMode):LevelDefinition{
-  const level=blank(mode,ctx.index,mirrorX(105,ctx.mirror),mirrorX(420,ctx.mirror));
-  const a={x:mirrorX(155,ctx.mirror),y:610};
-  const b={x:mirrorX(385,ctx.mirror),y:350};
-  level.walls=[r(28,470,484,WALL)];
-  level.portals=[portal(a.x,a.y,b.x,b.y,30)];
-  return setDesignPath(level,[a,b]);
-}
-
-function movingGate(ctx:Ctx,mode:GameMode):LevelDefinition{
-  const level=gates(ctx,mode,2);
-  const route=level.designPath!;
-  const p=route[2] ?? {x:270,y:500};
-  level.movingWalls=[movingWall(p.x-12,p.y-80,WALL,120,"x",56+ctx.difficulty*18,0.88+ctx.difficulty*0.22,ctx.rng.next()*Math.PI)];
-  return level;
-}
-
-function movingBumperCourse(ctx:Ctx,mode:GameMode):LevelDefinition{
-  const level=gates(ctx,mode,2);
-  const route=level.designPath!;
-  const p=route[2] ?? {x:270,y:480};
-  level.movingBumpers=[movingBumper(270,p.y-20,30,"x",72+ctx.difficulty*18,0.98+ctx.difficulty*0.24,ctx.rng.next()*Math.PI)];
-  return level;
-}
-
-function bridge(ctx:Ctx,mode:GameMode,trampoline:boolean):LevelDefinition{
-  const level=blank(mode,ctx.index,mirrorX(105,ctx.mirror),mirrorX(420,ctx.mirror));
-  const launchX=mirrorX(165,ctx.mirror);
-  level.voids=[r(55,430,430,72)];
-  level.walls=[mirrorRect(r(220,600,WALL,165),ctx.mirror),mirrorRect(r(310,245,WALL,145),ctx.mirror)];
-  if(trampoline){
-    level.trampolines=[{x:launchX,y:555,r:36,power:425+ctx.difficulty*18}];
-  }else{
-    level.ramps=[{x:launchX-55,y:530,w:110,h:72,dx:0,dy:-1,lift:335+ctx.difficulty*22,boost:35+ctx.difficulty*10}];
+function fundamentals(index:number,rng:Rng):LevelDefinition {
+  const difficulty=(index-1)/19;
+  const mirror=rng.bool();
+  const count=index===2?1:index===3?2:2;
+  const centers=index===2?[mirrorX(165,mirror)]:index===3?mcenters([155,390],mirror):mcenters([390,145],mirror);
+  const {level}=buildGateCourse("classic",index,rng,{gateCount:count,difficulty,forceCenters:centers,minGap:150,maxGap:180});
+  if(index===4){
+    const p=level.designPath?.[1] ?? {x:270,y:600};
+    level.walls!.push(r(p.x+(mirror?-95:70),470,WALL,125));
   }
-  return setDesignPath(level,[{x:launchX,y:565},{x:launchX,y:390},mx({x:405,y:300},ctx.mirror)]);
-}
-
-function fanCurve(ctx:Ctx,mode:GameMode):LevelDefinition{
-  const level=curveCourse(ctx,mode);
-  const p=level.designPath![1] ?? {x:175,y:610};
-  const z=r(p.x-62,p.y-82,124,108);
-  level.fans=[fan(z.x,z.y,z.w,z.h,ctx.mirror?-0.72:0.72,-0.42,235+ctx.difficulty*45)];
   return level;
 }
 
-function portalSlalom(ctx:Ctx,mode:GameMode):LevelDefinition{
-  const level=gates(ctx,mode,3);
-  const a={x:mirrorX(390,ctx.mirror),y:590};
-  const b={x:mirrorX(145,ctx.mirror),y:335};
-  level.portals=[portal(a.x,a.y,b.x,b.y,28)];
-  const base=level.designPath!;
-  level.designPath=[level.ball,base[1] ?? a,a,b,base[base.length-2] ?? b,level.hole];
+function bumperDecision(index:number,rng:Rng):LevelDefinition {
+  const mirror=rng.bool();
+  const centers=mcenters([150,395],mirror);
+  const {level,gates}=buildGateCourse("classic",index,rng,{
+    gateCount:2,difficulty:0.24,forceCenters:centers,minGap:146,maxGap:154,
+    ballX:mirrorX(420,mirror),holeX:mirrorX(110,mirror)
+  });
+  const lower=gates[0]!;
+  const bumperX=lower.x + (mirror?18:-18);
+  const bumperY=lower.y-54;
+  level.bumpers=[{x:bumperX,y:bumperY,r:34}];
+  // Safe line can squeeze around it; the aggressive line uses the kick to attack the second gate.
+  level.designPath=[level.ball,gateApproach(lower,70),{x:bumperX,y:bumperY},gateExit(lower,75),gateApproach(gates[1]!,70),level.hole];
+  level.threeStar=goal(2,16);
+  level.twoStar=goal(4);
   return level;
 }
 
-function moverCurve(ctx:Ctx,mode:GameMode):LevelDefinition{
-  const level=curveCourse(ctx,mode);
-  const p=level.designPath![1] ?? {x:190,y:505};
-  level.movingBumpers=[movingBumper(p.x,p.y-40,30,"y",52+ctx.difficulty*18,1.05,ctx.rng.next()*Math.PI)];
-  level.walls!.push(mirrorRect(r(95,275,245,WALL),ctx.mirror));
+function surfaceDecision(index:number,rng:Rng,kind:"sand"|"ice"):LevelDefinition {
+  const mirror=rng.bool();
+  const {level,gates}=buildGateCourse("classic",index,rng,{
+    gateCount:2,difficulty:0.30+(index-6)*0.03,forceCenters:mcenters([155,390],mirror),minGap:138,maxGap:150
+  });
+  const gate=gates[0]!;
+  const zone={x:gate.x-gate.width/2+8,y:gate.y-122,w:gate.width-16,h:92};
+  if(kind==="sand") level.sand=[zone]; else level.ice=[zone];
   return level;
 }
 
-function mastery(ctx:Ctx,mode:GameMode):LevelDefinition{
-  const level=gates(ctx,mode,3);
-  const route=level.designPath!;
-  const p=route[2] ?? {x:350,y:560};
-  const z=r(p.x-58,p.y-90,116,104);
-  level.fans=[fan(z.x,z.y,z.w,z.h,ctx.mirror?-0.65:0.65,-0.34,245+ctx.difficulty*35)];
-  const q=route[3] ?? {x:180,y:420};
-  level.curves=[curve(q.x,q.y-70,82,ctx.mirror?350:95,ctx.mirror?85:190,20)];
+function boosterDecision(index:number,rng:Rng):LevelDefinition {
+  const mirror=rng.bool();
+  const {level,gates}=buildGateCourse("classic",index,rng,{gateCount:2,difficulty:0.38,forceCenters:mcenters([390,145],mirror),minGap:134,maxGap:146});
+  const gate=gates[0]!;
+  const dir=level.designPath?.[2] ?? level.hole;
+  const dx=dir.x-gate.x;
+  level.boosters=[{x:gate.x-gate.width/2+12,y:gate.y-112,w:gate.width-24,h:72,dx,dy:-1,power:0.95}];
   return level;
 }
 
-function finalCourse(ctx:Ctx,mode:GameMode):LevelDefinition{
-  const level=mastery(ctx,mode);
-  const route=level.designPath!;
-  const p=route[route.length-2] ?? {x:270,y:300};
-  level.movingWalls=[movingWall(p.x-12,p.y-55,WALL,90,"y",48,1.08,ctx.rng.next()*Math.PI)];
+function fanDecision(index:number,rng:Rng):LevelDefinition {
+  const mirror=rng.bool();
+  const {level,gates}=buildGateCourse("classic",index,rng,{gateCount:2,difficulty:0.44,forceCenters:mcenters([155,390],mirror),minGap:128,maxGap:140});
+  const gate=gates[0]!;
+  level.fans=[fan(gate.x-gate.width/2+4,gate.y-132,gate.width-8,98,mirror?0.82:-0.82,-0.20,265)];
   return level;
 }
 
-const BUILDERS:Builder[]=[
-  dogleg,(c,m)=>gates(c,m,1),(c,m)=>gates(c,m,2),bumperCourse,
-  (c,m)=>surfaceCourse(c,m,"sand"),(c,m)=>surfaceCourse(c,m,"ice"),fanCourse,curveCourse,portalCourse,
-  movingGate,movingBumperCourse,(c,m)=>bridge(c,m,false),(c,m)=>bridge(c,m,true),fanCurve,portalSlalom,moverCurve,
-  (c,m)=>gates(c,m,3),mastery,finalCourse
-];
+function curveDecision(index:number,rng:Rng):LevelDefinition {
+  const mirror=rng.bool();
+  const {level,gates}=buildGateCourse("classic",index,rng,{gateCount:2,difficulty:0.48,forceCenters:mcenters([390,150],mirror),minGap:126,maxGap:138});
+  const lower=gates[0]!;
+  const cx=lower.x+(mirror?-58:58);
+  level.curves=[mirror?curve(cx,lower.y-105,76,5,105,22):curve(cx,lower.y-105,76,75,175,22)];
+  return level;
+}
 
-export function buildClassicCourse(index:number):LevelDefinition{
-  if(index===1) return blank("classic",1,270,270);
+function portalDecision(index:number,rng:Rng):LevelDefinition {
+  const mirror=rng.bool();
+  const level=blank("classic",index,mirrorX(110,mirror),mirrorX(420,mirror));
+  const a={x:mirrorX(155,mirror),y:610};
+  const b={x:mirrorX(390,mirror),y:365};
+  level.walls=[r(28,470,484,WALL),r(mirrorX(255,mirror),265,WALL,115)];
+  level.portals=[portal(a.x,a.y,b.x,b.y,30)];
+  setDesignPath(level,[a,b,{x:b.x,y:285}]);
+  level.threeStar=goal(3,18);
+  level.twoStar=goal(5);
+  return level;
+}
+
+function movingDecision(index:number,rng:Rng,bumper:boolean):LevelDefinition {
+  const mirror=rng.bool();
+  const {level,gates}=buildGateCourse("classic",index,rng,{gateCount:3,difficulty:0.56+(index-12)*0.04,forceCenters:mcenters([150,390,155],mirror),minGap:118,maxGap:132});
+  const gate=gates[1]!;
+  if(bumper){
+    level.movingBumpers=[movingBumper(gate.x,gate.y-46,30,"x",Math.max(42,gate.width/2-30),1.02,rng.next()*Math.PI)];
+  }else{
+    level.movingWalls=[movingWall(gate.x-12,gate.y-92,WALL,86,"x",Math.max(40,gate.width/2-26),0.96,rng.next()*Math.PI)];
+  }
+  return level;
+}
+
+function jumpDecision(index:number,rng:Rng,trampoline:boolean):LevelDefinition {
+  const mirror=rng.bool();
+  const launchX=mirrorX(165,mirror);
+  const level=blank("classic",index,mirrorX(110,mirror),mirrorX(420,mirror));
+  level.voids=[r(55,430,430,76)];
+  level.walls=[r(28,650,mirror?300:110,WALL),r(mirror?405:245,650,mirror?107:267,WALL),r(mirrorX(285,mirror),255,WALL,135)];
+  if(trampoline) level.trampolines=[{x:launchX,y:560,r:37,power:435}];
+  else level.ramps=[{x:launchX-55,y:525,w:110,h:76,dx:0,dy:-1,lift:350,boost:40}];
+  setDesignPath(level,[{x:launchX,y:600},{x:launchX,y:390},{x:mirrorX(400,mirror),y:300}]);
+  level.threeStar=goal(4,21);
+  level.twoStar=goal(6);
+  return level;
+}
+
+function advanced(index:number,rng:Rng):LevelDefinition {
+  const mirror=rng.bool();
+  const difficulty=(index-1)/19;
+  const patterns=[[145,395,150],[390,150,395],[150,390,150,390]];
+  const centers=mcenters(patterns[(index-16)%patterns.length]!,mirror);
+  const {level,gates}=buildGateCourse("classic",index,rng,{gateCount:centers.length,difficulty,forceCenters:centers,minGap:104,maxGap:122});
+  const mid=gates[Math.floor(gates.length/2)]!;
+
+  if(index===16){
+    level.fans=[fan(mid.x-mid.width/2+5,mid.y-125,mid.width-10,92,mirror?0.75:-0.75,-0.22,285)];
+    level.curves=[mirror?curve(mid.x-55,mid.y-160,70,350,95,20):curve(mid.x+55,mid.y-160,70,85,190,20)];
+  }else if(index===17){
+    const a={x:gates[0]!.x,y:gates[0]!.y-70};
+    const b={x:gates[2]!.x,y:gates[2]!.y+65};
+    level.portals=[portal(a.x,a.y,b.x,b.y,27)];
+    level.movingWalls=[movingWall(gates[1]!.x-12,gates[1]!.y-88,WALL,82,"x",48,1.04,rng.next()*Math.PI)];
+  }else if(index===18){
+    const g=gates[1]!;
+    level.ice=[{x:g.x-g.width/2+8,y:g.y-120,w:g.width-16,h:90}];
+    level.movingBumpers=[movingBumper(g.x,g.y-45,29,"x",45,1.12,rng.next()*Math.PI)];
+  }else if(index===19){
+    const g=gates[0]!;
+    level.fans=[fan(g.x-g.width/2+6,g.y-120,g.width-12,88,mirror?0.72:-0.72,-0.25,295)];
+    level.bumpers=[{x:g.x+(mirror?-18:18),y:g.y-54,r:32}];
+  }else{
+    const g=gates[1]!;
+    level.fans=[fan(g.x-g.width/2+4,g.y-120,g.width-8,88,mirror?0.70:-0.70,-0.25,300)];
+    level.movingBumpers=[movingBumper(g.x,g.y-45,30,"x",44,1.15,rng.next()*Math.PI)];
+    const q=gates[gates.length-1]!;
+    level.curves=[mirror?curve(q.x-50,q.y-145,68,350,95,20):curve(q.x+50,q.y-145,68,85,190,20)];
+  }
+  level.threeStar=goal(index<19?4:5,18+index*0.32);
+  level.twoStar=goal(index<19?6:7);
+  return level;
+}
+
+export function buildClassicCourse(index:number):LevelDefinition {
   const rng=seeded(0x51f15e+index*7919);
-  const ctx:Ctx={index,difficulty:(index-1)/19,mirror:rng.bool(),rng};
-  return BUILDERS[index-2]!(ctx,"classic");
+  if(index===1) return straight(index);
+  if(index<=4) return fundamentals(index,rng);
+  if(index===5) return bumperDecision(index,rng);
+  if(index===6) return surfaceDecision(index,rng,"sand");
+  if(index===7) return surfaceDecision(index,rng,"ice");
+  if(index===8) return boosterDecision(index,rng);
+  if(index===9) return fanDecision(index,rng);
+  if(index===10) return curveDecision(index,rng);
+  if(index===11) return portalDecision(index,rng);
+  if(index===12) return movingDecision(index,rng,false);
+  if(index===13) return movingDecision(index,rng,true);
+  if(index===14) return jumpDecision(index,rng,false);
+  if(index===15) return jumpDecision(index,rng,true);
+  return advanced(index,rng);
 }
