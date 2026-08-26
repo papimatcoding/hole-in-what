@@ -33,7 +33,7 @@ function gateYs(count:number):number[] {
 }
 
 function chooseCenter(rng:Rng, previous:number | null, difficulty:number):number {
-  const candidates = previous === null
+  const candidates:number[] = previous === null
     ? [...CENTERS]
     : CENTERS.filter(x => Math.abs(x - previous) >= (difficulty > 0.45 ? 140 : 90));
   return candidates[rng.int(0, candidates.length - 1)] ?? CENTERS[1]!;
@@ -51,12 +51,12 @@ export function buildGateCourse(mode:GameMode,index:number,rng:Rng,options:GateC
   const maxGap = options.maxGap ?? 174;
   const baseGap = Math.round(maxGap - (maxGap - minGap) * clamp(options.difficulty,0,1));
   const ys = gateYs(options.gateCount);
-  const forced = options.forceCenters ?? [];
+  const forced:number[] = options.forceCenters ?? [];
 
   const centers:number[] = [];
   let previous:number | null = null;
   for (let i = 0; i < options.gateCount; i += 1) {
-    const center = forced[i] ?? chooseCenter(rng, previous, options.difficulty);
+    const center:number = forced[i] ?? chooseCenter(rng, previous, options.difficulty);
     centers.push(center);
     previous = center;
   }
@@ -65,7 +65,7 @@ export function buildGateCourse(mode:GameMode,index:number,rng:Rng,options:GateC
   const holeX = options.holeX ?? (centers[centers.length - 1]! < 270 ? 420 : 120);
   const level = blank(mode,index,ballX,holeX);
 
-  const gates = ys.map((y,i):GateSpec => ({
+  const gates:GateSpec[] = ys.map((y,i):GateSpec => ({
     y,
     x: centers[i]!,
     width: clamp(baseGap + rng.int(-8,8), minGap, maxGap)
@@ -75,8 +75,6 @@ export function buildGateCourse(mode:GameMode,index:number,rng:Rng,options:GateC
   const route:Vec2[] = gates.map(gate => ({ x: gate.x, y: gate.y + 34 }));
   setDesignPath(level,route);
 
-  // From the second half onward, add one purposeful side rail between some gates.
-  // It prevents lazy diagonal cheesing without turning the field into a maze.
   if (options.difficulty >= 0.48 && gates.length >= 2) {
     for (let i = 0; i < gates.length - 1; i += 2) {
       const lower = gates[i]!;
