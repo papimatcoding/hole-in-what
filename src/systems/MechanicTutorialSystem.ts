@@ -20,7 +20,8 @@ export interface MechanicTutorial {
   hint: string;
 }
 
-const STORAGE_KEY = "troll-golf-mechanics-seen-procedural-v1";
+// New key so beta testers experience the redesigned mechanic cadence from scratch.
+const STORAGE_KEY = "troll-golf-mechanics-seen-curriculum-v2";
 
 export const MECHANIC_TUTORIALS: Record<MechanicId, MechanicTutorial> = {
   bumper: { id:"bumper", title:"BUMPER", body:"Los bumpers rebotan la bola con energía extra y pueden convertir un impacto en un cambio fuerte de dirección.", hint:"Úsalos como parte de la trayectoria, no como una pared más." },
