@@ -1,5 +1,8 @@
 import Phaser from "phaser";
+import { cosmeticById, type CosmeticDefinition } from "../data/cosmetics";
 import { levelsForMode } from "../data/levels";
+import { drawBall } from "../systems/CosmeticRenderer";
+import { SaveSystem } from "../systems/SaveSystem";
 import type { GameSceneData, LevelDefinition, PopBumperDef, PopWallDef, RectDef } from "../types";
 
 interface BallState {
@@ -12,6 +15,17 @@ interface BallState {
 
 interface RuntimePopWall extends PopWallDef { active: boolean; anim: number; }
 interface RuntimePopBumper extends PopBumperDef { active: boolean; anim: number; }
+
+interface TrailParticle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+  size: number;
+  phase: number;
+}
 
 const FIELD = { x: 28, y: 28, w: 484, h: 904 };
 const BALL_R = 13;
@@ -33,9 +47,16 @@ export class GameScene extends Phaser.Scene {
   private popBumpers: RuntimePopBumper[] = [];
   private course!: Phaser.GameObjects.Graphics;
   private aim!: Phaser.GameObjects.Graphics;
-  private ballView!: Phaser.GameObjects.Arc;
+  private trailView!: Phaser.GameObjects.Graphics;
+  private ballView!: Phaser.GameObjects.Container;
+  private ballGraphic!: Phaser.GameObjects.Graphics;
   private strokeText!: Phaser.GameObjects.Text;
   private timeText!: Phaser.GameObjects.Text;
+  private ballCosmetic!: CosmeticDefinition;
+  private trailCosmetic!: CosmeticDefinition;
+  private holeCosmetic!: CosmeticDefinition;
+  private trailParticles: TrailParticle[] = [];
+  private trailAccumulator = 0;
   private strokes = 0;
   private startedAt = 0;
   private dragPointer: Phaser.Input.Pointer | null = null;
@@ -61,10 +82,20 @@ export class GameScene extends Phaser.Scene {
     this.startedAt = performance.now();
     this.moving = false;
     this.sinking = false;
+    this.trailParticles = [];
+    this.trailAccumulator = 0;
 
-    this.course = this.add.graphics();
-    this.aim = this.add.graphics();
-    this.ballView = this.add.circle(this.ball.x, this.ball.y, BALL_R, 0xfbfefe).setStrokeStyle(2, 0xbac4ce);
+    const equipped = SaveSystem.cosmetics().equipped;
+    this.ballCosmetic = cosmeticById(equipped.ball) ?? cosmeticById("ball-classic")!;
+    this.trailCosmetic = cosmeticById(equipped.trail) ?? cosmeticById("trail-none")!;
+    this.holeCosmetic = cosmeticById(equipped.holeEffect) ?? cosmeticById("hole-default")!;
+
+    this.course = this.add.graphics().setDepth(0);
+    this.trailView = this.add.graphics().setDepth(6);
+    this.aim = this.add.graphics().setDepth(15);
+    this.ballGraphic = this.add.graphics();
+    drawBall(this.ballGraphic, this.ballCosmetic, 0, 0, BALL_R);
+    this.ballView = this.add.container(this.ball.x, this.ball.y, [this.ballGraphic]).setDepth(10);
 
     this.strokeText = this.add.text(42, 43, "Golpes 0", {
       fontFamily: "system-ui, sans-serif", fontSize: "15px", fontStyle: "bold", color: "#f5f7fa"
@@ -101,6 +132,7 @@ export class GameScene extends Phaser.Scene {
       this.stepPhysics(dt);
     }
 
+    this.updateTrail(dt);
     this.ballView.setPosition(this.ball.x, this.ball.y);
     this.drawCourse();
   }
@@ -159,7 +191,11 @@ export class GameScene extends Phaser.Scene {
     this.aim.fillStyle(0xedf5ff, 0.72);
     for (let i = 1; i <= 8; i += 1) {
       const t = i / 8;
-      this.aim.fillCircle(this.ball.x + dx * pull * (0.55 + t * 0.95), this.ball.y + dy * pull * (0.55 + t * 0.95), 3.5 - t * 1.5);
+      this.aim.fillCircle(
+        this.ball.x + dx * pull * (0.55 + t * 0.95),
+        this.ball.y + dy * pull * (0.55 + t * 0.95),
+        3.5 - t * 1.5
+      );
     }
   }
 
@@ -225,11 +261,88 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private updateTrail(dt: number): void {
+    for (let i = this.trailParticles.length - 1; i >= 0; i -= 1) {
+      const p = this.trailParticles[i];
+      p.life -= dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      if (p.life <= 0) this.trailParticles.splice(i, 1);
+    }
+
+    if (this.moving && this.trailCosmetic.id !== "trail-none") {
+      const speed = Math.hypot(this.ball.vx, this.ball.vy);
+      if (speed > 70) {
+        this.trailAccumulator += dt;
+        const interval = this.trailCosmetic.id === "trail-sparks" ? 0.022 : 0.032;
+        while (this.trailAccumulator >= interval) {
+          this.trailAccumulator -= interval;
+          this.spawnTrailParticle();
+        }
+      }
+    } else {
+      this.trailAccumulator = 0;
+    }
+
+    this.drawTrail();
+  }
+
+  private spawnTrailParticle(): void {
+    const isPetal = this.trailCosmetic.id === "trail-petals";
+    const isSpark = this.trailCosmetic.id === "trail-sparks";
+    const maxLife = isPetal ? 0.62 : isSpark ? 0.34 : 0.50;
+    this.trailParticles.push({
+      x: this.ball.x + Phaser.Math.FloatBetween(-3, 3),
+      y: this.ball.y + Phaser.Math.FloatBetween(-3, 3),
+      vx: Phaser.Math.FloatBetween(-12, 12),
+      vy: isPetal ? Phaser.Math.FloatBetween(-6, 18) : Phaser.Math.FloatBetween(-10, 10),
+      life: maxLife,
+      maxLife,
+      size: isSpark ? Phaser.Math.FloatBetween(2, 4) : Phaser.Math.FloatBetween(3, 6),
+      phase: Math.random() * Math.PI * 2
+    });
+    if (this.trailParticles.length > 90) this.trailParticles.shift();
+  }
+
+  private drawTrail(): void {
+    this.trailView.clear();
+    const secondary = this.trailCosmetic.secondary ?? this.trailCosmetic.primary;
+
+    for (let i = 0; i < this.trailParticles.length; i += 1) {
+      const p = this.trailParticles[i];
+      const life = Math.max(0, p.life / p.maxLife);
+      const color = i % 2 === 0 ? this.trailCosmetic.primary : secondary;
+
+      if (this.trailCosmetic.id === "trail-petals") {
+        this.trailView.fillStyle(color, life * 0.72);
+        const wave = Math.sin(p.phase + p.life * 12) * 3;
+        this.trailView.fillTriangle(
+          p.x - p.size,
+          p.y + wave,
+          p.x + p.size * 0.8,
+          p.y - p.size * 0.65 + wave,
+          p.x + p.size,
+          p.y + p.size * 0.55 + wave
+        );
+      } else if (this.trailCosmetic.id === "trail-sparks") {
+        this.trailView.lineStyle(Math.max(1, p.size * 0.45), color, life * 0.85);
+        this.trailView.beginPath();
+        this.trailView.moveTo(p.x - p.vx * 0.08 - 4, p.y - p.vy * 0.08);
+        this.trailView.lineTo(p.x + 4, p.y);
+        this.trailView.strokePath();
+      } else {
+        this.trailView.fillStyle(color, life * 0.42);
+        this.trailView.fillCircle(p.x, p.y, p.size * (0.45 + life * 0.55));
+      }
+    }
+  }
+
   private finishHole(): void {
     if (this.sinking) return;
     this.sinking = true;
     this.moving = false;
     this.aim.clear();
+    this.playHoleEffect();
 
     const timeMs = Math.round(performance.now() - this.startedAt);
     const stars = this.strokes <= this.level.threeStars ? 3 : this.strokes <= this.level.twoStars ? 2 : 1;
@@ -238,21 +351,74 @@ export class GameScene extends Phaser.Scene {
       targets: this.ballView,
       x: this.level.hole.x,
       y: this.level.hole.y,
-      scale: 0.08,
+      scale: 0.06,
       alpha: 0,
       duration: 420,
       ease: "Cubic.easeOut",
       onComplete: () => {
-        this.scene.start("results", {
-          mode: this.mode,
-          levelIndex: this.levelIndex,
-          levelId: this.level.id,
-          strokes: this.strokes,
-          timeMs,
-          stars
+        this.time.delayedCall(120, () => {
+          this.scene.start("results", {
+            mode: this.mode,
+            levelIndex: this.levelIndex,
+            levelId: this.level.id,
+            strokes: this.strokes,
+            timeMs,
+            stars
+          });
         });
       }
     });
+  }
+
+  private playHoleEffect(): void {
+    const g = this.add.graphics();
+    const fx = this.add.container(this.level.hole.x, this.level.hole.y, [g]).setDepth(12);
+
+    if (this.holeCosmetic.id === "hole-bloom") {
+      g.fillStyle(this.holeCosmetic.primary, 0.78);
+      for (let i = 0; i < 8; i += 1) {
+        const a = i * Math.PI / 4;
+        g.fillCircle(Math.cos(a) * 22, Math.sin(a) * 22, 7);
+      }
+      g.fillStyle(this.holeCosmetic.secondary ?? this.holeCosmetic.primary, 0.95);
+      g.fillCircle(0, 0, 5);
+      g.lineStyle(2, this.holeCosmetic.secondary ?? this.holeCosmetic.primary, 0.55);
+      g.strokeCircle(0, 0, 32);
+      fx.setScale(0.35).setAlpha(0.95);
+      this.tweens.add({ targets: fx, scale: 2.15, alpha: 0, angle: 24, duration: 620, ease: "Cubic.easeOut" });
+      return;
+    }
+
+    if (this.holeCosmetic.id === "hole-nova") {
+      g.lineStyle(3, this.holeCosmetic.primary, 0.9);
+      for (let i = 0; i < 10; i += 1) {
+        const a = i * Math.PI / 5;
+        g.beginPath();
+        g.moveTo(Math.cos(a) * 12, Math.sin(a) * 12);
+        g.lineTo(Math.cos(a) * 42, Math.sin(a) * 42);
+        g.strokePath();
+      }
+      g.fillStyle(this.holeCosmetic.secondary ?? 0xffffff, 0.95);
+      g.fillCircle(0, 0, 6);
+      fx.setScale(0.45);
+      this.tweens.add({ targets: fx, scale: 1.8, alpha: 0, duration: 470, ease: "Cubic.easeOut" });
+      return;
+    }
+
+    if (this.holeCosmetic.id === "hole-pulse") {
+      g.lineStyle(3, this.holeCosmetic.primary, 0.85);
+      g.strokeCircle(0, 0, 20);
+      g.lineStyle(2, this.holeCosmetic.primary, 0.45);
+      g.strokeCircle(0, 0, 31);
+      fx.setScale(0.55);
+      this.tweens.add({ targets: fx, scale: 2.25, alpha: 0, duration: 520, ease: "Cubic.easeOut" });
+      return;
+    }
+
+    g.lineStyle(2, 0xffffff, 0.65);
+    g.strokeCircle(0, 0, 19);
+    fx.setScale(0.7);
+    this.tweens.add({ targets: fx, scale: 1.45, alpha: 0, duration: 330, ease: "Cubic.easeOut" });
   }
 
   private isInAnyRect(rects: RectDef[]): boolean {
@@ -339,7 +505,14 @@ export class GameScene extends Phaser.Scene {
     this.course.lineTo(this.level.hole.x, this.level.hole.y - 58);
     this.course.strokePath();
     this.course.fillStyle(0xf2f2f2, 1);
-    this.course.fillTriangle(this.level.hole.x, this.level.hole.y - 58, this.level.hole.x + 30, this.level.hole.y - 46, this.level.hole.x, this.level.hole.y - 34);
+    this.course.fillTriangle(
+      this.level.hole.x,
+      this.level.hole.y - 58,
+      this.level.hole.x + 30,
+      this.level.hole.y - 46,
+      this.level.hole.x,
+      this.level.hole.y - 34
+    );
   }
 
   private drawWall(r: RectDef, alpha = 1): void {
