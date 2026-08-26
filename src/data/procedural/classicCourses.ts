@@ -12,7 +12,7 @@ const movingBumper=(x:number,y:number,rad:number,axis:"x"|"y",amplitude:number,s
 const curve=(x:number,y:number,rad:number,startDeg:number,endDeg:number,thickness=22):CurveDef=>({x,y,r:rad,startAngle:startDeg*Math.PI/180,endAngle:endDeg*Math.PI/180,thickness});
 
 function dogleg(ctx:Ctx,mode:GameMode):LevelDefinition{
-  const left=ctx.rng.bool();
+  const left=!ctx.mirror;
   const level=blank(mode,ctx.index,left?105:435,left?420:120);
   const vx=left?245:271;
   level.walls=[r(vx,390,WALL,385)];
@@ -34,15 +34,14 @@ function gates(ctx:Ctx,mode:GameMode,count:number):LevelDefinition{
 
 function bumperCourse(ctx:Ctx,mode:GameMode):LevelDefinition{
   const level=dogleg(ctx,mode);
-  const x=mirrorX(390,ctx.mirror);
-  level.bumpers=[bump(x,520,32)];
+  level.bumpers=[bump(mirrorX(390,ctx.mirror),520,32)];
   level.walls!.push(mirrorRect(r(90,295,245,WALL),ctx.mirror));
   return level;
 }
 
 function surfaceCourse(ctx:Ctx,mode:GameMode,surface:"sand"|"ice"):LevelDefinition{
   const level=gates(ctx,mode,2);
-  const zone=mirrorRect(r(315,505,145,145),ctx.mirror);
+  const zone=mirrorRect(r(315,420,145,130),ctx.mirror);
   if(surface==="sand") level.sand=[zone]; else level.ice=[zone];
   return level;
 }
@@ -85,24 +84,24 @@ function bridge(ctx:Ctx,mode:GameMode,trampoline:boolean):LevelDefinition{
   level.voids=[r(55,430,430,72)];
   level.walls=[mirrorRect(r(220,600,WALL,165),ctx.mirror),mirrorRect(r(310,245,WALL,145),ctx.mirror)];
   if(trampoline){
-    level.trampolines=[{x:mirrorX(165,ctx.mirror),y:555,r:36,power:425+ctx.difficulty*18}];
+    level.trampolines=[{x:mirrorX(165,ctx.mirror),y:550,r:36,power:425+ctx.difficulty*18}];
   }else{
     const rx=ctx.mirror?318:110;
-    level.ramps=[{x:rx,y:530,w:112,h:72,dx:0,dy:-1,lift:335+ctx.difficulty*22,boost:35+ctx.difficulty*10}];
+    level.ramps=[{x:rx,y:515,w:112,h:72,dx:0,dy:-1,lift:335+ctx.difficulty*22,boost:35+ctx.difficulty*10}];
   }
   return level;
 }
 
 function fanCurve(ctx:Ctx,mode:GameMode):LevelDefinition{
   const level=curveCourse(ctx,mode);
-  const z=mirrorRect(r(285,500,165,145),ctx.mirror);
+  const z=mirrorRect(r(310,470,145,82),ctx.mirror);
   level.fans=[fan(z.x,z.y,z.w,z.h,ctx.mirror?-0.78:0.78,-0.42,235+ctx.difficulty*45)];
   return level;
 }
 
 function portalSlalom(ctx:Ctx,mode:GameMode):LevelDefinition{
   const level=gates(ctx,mode,3);
-  level.portals=[portal(mirrorX(390,ctx.mirror),590,mirrorX(145,ctx.mirror),335,28)];
+  level.portals=[portal(mirrorX(390,ctx.mirror),570,mirrorX(145,ctx.mirror),390,28)];
   return level;
 }
 
@@ -115,32 +114,24 @@ function moverCurve(ctx:Ctx,mode:GameMode):LevelDefinition{
 
 function mastery(ctx:Ctx,mode:GameMode):LevelDefinition{
   const level=gates(ctx,mode,3);
-  const z=mirrorRect(r(315,520,135,130),ctx.mirror);
+  const z=mirrorRect(r(315,510,135,120),ctx.mirror);
   level.fans=[fan(z.x,z.y,z.w,z.h,ctx.mirror?-0.68:0.68,-0.34,245+ctx.difficulty*35)];
   level.curves=[ctx.mirror?curve(380,370,88,350,85,20):curve(160,370,88,95,190,20)];
   return level;
 }
 
+function finalCourse(ctx:Ctx,mode:GameMode):LevelDefinition{
+  const level=mastery(ctx,mode);
+  level.movingWalls=[movingWall(ctx.mirror?330:185,350,WALL,90,"y",48,1.08,ctx.rng.next()*Math.PI)];
+  level.portals=[portal(mirrorX(395,ctx.mirror),715,mirrorX(135,ctx.mirror),235,26)];
+  return level;
+}
+
 const BUILDERS:Builder[]=[
-  dogleg,
-  (c,m)=>gates(c,m,1),
-  (c,m)=>gates(c,m,2),
-  bumperCourse,
-  (c,m)=>surfaceCourse(c,m,"sand"),
-  (c,m)=>surfaceCourse(c,m,"ice"),
-  fanCourse,
-  curveCourse,
-  portalCourse,
-  movingGate,
-  movingBumperCourse,
-  (c,m)=>bridge(c,m,false),
-  (c,m)=>bridge(c,m,true),
-  fanCurve,
-  portalSlalom,
-  moverCurve,
-  (c,m)=>gates(c,m,3),
-  mastery,
-  portalSlalom
+  dogleg,(c,m)=>gates(c,m,1),(c,m)=>gates(c,m,2),bumperCourse,
+  (c,m)=>surfaceCourse(c,m,"sand"),(c,m)=>surfaceCourse(c,m,"ice"),fanCourse,curveCourse,portalCourse,
+  movingGate,movingBumperCourse,(c,m)=>bridge(c,m,false),(c,m)=>bridge(c,m,true),fanCurve,portalSlalom,moverCurve,
+  (c,m)=>gates(c,m,3),mastery,finalCourse
 ];
 
 export function buildClassicCourse(index:number):LevelDefinition{
