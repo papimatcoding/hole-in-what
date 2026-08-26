@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { pointerToDesign, setupDesignCamera, sharpenSceneText } from "../config/display";
 import { cosmeticById, type CosmeticDefinition } from "../data/cosmetics";
 import { levelsForMode } from "../data/levels";
 import { drawBall } from "../systems/CosmeticRenderer";
@@ -74,6 +75,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
+    setupDesignCamera(this);
     this.cameras.main.setBackgroundColor("#0d1117");
     this.ball = { x: this.level.ball.x, y: this.level.ball.y, vx: 0, vy: 0, r: BALL_R };
     this.popWalls = (this.level.popWalls ?? []).map((wall) => ({ ...wall, active: false, anim: 0 }));
@@ -118,6 +120,7 @@ export class GameScene extends Phaser.Scene {
     this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => this.onPointerUp(pointer));
 
     this.drawCourse();
+    sharpenSceneText(this);
   }
 
   update(_time: number, deltaMs: number): void {
@@ -139,22 +142,25 @@ export class GameScene extends Phaser.Scene {
 
   private onPointerDown(pointer: Phaser.Input.Pointer): void {
     if (this.moving || this.sinking) return;
-    if (Phaser.Math.Distance.Between(pointer.x, pointer.y, this.ball.x, this.ball.y) <= 60) {
+    const point = pointerToDesign(this, pointer);
+    if (Phaser.Math.Distance.Between(point.x, point.y, this.ball.x, this.ball.y) <= 60) {
       this.dragPointer = pointer;
-      this.drawAim(pointer.x, pointer.y);
+      this.drawAim(point.x, point.y);
     }
   }
 
   private onPointerMove(pointer: Phaser.Input.Pointer): void {
     if (!this.dragPointer || this.moving || this.sinking) return;
-    this.drawAim(pointer.x, pointer.y);
+    const point = pointerToDesign(this, pointer);
+    this.drawAim(point.x, point.y);
   }
 
   private onPointerUp(pointer: Phaser.Input.Pointer): void {
     if (!this.dragPointer || this.moving || this.sinking) return;
 
-    let dx = this.ball.x - pointer.x;
-    let dy = this.ball.y - pointer.y;
+    const point = pointerToDesign(this, pointer);
+    let dx = this.ball.x - point.x;
+    let dy = this.ball.y - point.y;
     const len = Math.hypot(dx, dy);
     this.dragPointer = null;
     this.aim.clear();
