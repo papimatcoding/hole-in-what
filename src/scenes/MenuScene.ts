@@ -12,6 +12,13 @@ export class MenuScene extends Phaser.Scene {
     const { width, height } = this.scale;
     this.cameras.main.setBackgroundColor("#0d1117");
 
+    this.add.text(width - 42, 54, `◈ ${SaveSystem.coins()}`, {
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "14px",
+      fontStyle: "bold",
+      color: "#d9e4ee"
+    }).setOrigin(1, 0.5);
+
     this.add.text(width / 2, 135, "TROLL GOLF", {
       fontFamily: "system-ui, sans-serif",
       fontSize: "48px",
