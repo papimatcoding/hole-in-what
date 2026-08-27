@@ -20,9 +20,9 @@ const c4=base("classic",4,pt(96,834),pt(430,150),3,4,"wall");
 c4.walls=[r(28,608,358,26),r(128,360,384,26),r(322,470,24,82)];
 path(c4,pt(430,690),pt(430,548),pt(102,470),pt(102,285),pt(430,150));
 
-// Bumper gate: crossing the middle line requires interacting with the bumper.
+// Bumper gate: the sides remain physically passable, but the clean 2-stroke line uses the bumper.
 const c5=base("classic",5,pt(150,836),pt(390,158),2,4,"bumper");
-c5.walls=[r(28,500,207,24),r(305,500,207,24),r(326,278,24,132)];
+c5.walls=[r(28,500,130,24),r(382,500,130,24),r(326,278,24,132)];
 c5.bumpers=[{x:270,y:512,r:32}];
 path(c5,pt(252,650),pt(270,512),pt(390,410),pt(390,158));
 
