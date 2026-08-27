@@ -5,6 +5,7 @@ import { levelsForMode } from "../data/campaign";
 import { BetaFeedbackSystem } from "../systems/BetaFeedbackSystem";
 import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
 import { LiveOps } from "../systems/LiveOpsSystem";
+import { PatchNotes } from "../systems/PatchNotesSystem";
 import { SaveSystem } from "../systems/SaveSystem";
 import type { GameMode } from "../types";
 
@@ -26,21 +27,22 @@ export class MenuScene extends Phaser.Scene {
     this.add.text(DESIGN_WIDTH/2,158,"MINIGOLF · 3 ESTRELLAS",{fontFamily:"system-ui, sans-serif",fontSize:"13px",color:"#8f9dab"}).setOrigin(.5);
     if(BETA_TESTING)this.add.text(DESIGN_WIDTH/2,192,"BETA TEST · TODOS LOS HOYOS ABIERTOS",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#8fb8cf"}).setOrigin(.5);
 
-    this.makeModeButton("CLASSIC","classic",265);
-    this.makeModeButton("HARD","troll",370);
-    this.makeSimpleButton("PERSONALIZAR",478,()=>this.scene.start("cosmetics"));
-    this.makeSimpleButton("TIENDA",540,()=>this.scene.start("shop"));
-    this.makeSimpleButton("RECOMPENSAS",602,()=>this.scene.start("rewards"));
-    this.makeSimpleButton("COMMUNITY MAPS",674,()=>{void this.openCommunity();},true);
+    this.makeModeButton("CLASSIC","classic",258);
+    this.makeModeButton("HARD","troll",356);
+    this.makeSimpleButton("PERSONALIZAR",460,()=>this.scene.start("cosmetics"));
+    this.makeSimpleButton("TIENDA",520,()=>this.scene.start("shop"));
+    this.makeSimpleButton("RECOMPENSAS",580,()=>this.scene.start("rewards"));
+    this.makeSimpleButton("COMMUNITY MAPS",648,()=>{void this.openCommunity();},true);
+    this.makeSimpleButton(PatchNotes.hasUnread()?"PATCH NOTES   ·   ● NUEVO":"PATCH NOTES",710,()=>this.scene.start("patch-notes"),PatchNotes.hasUnread());
 
     const equipped=SaveSystem.cosmetics().equipped;
-    this.add.text(DESIGN_WIDTH/2,738,`● ${equipped.ball.replace("ball-","")}   ·   ─ ${equipped.trail.replace("trail-","")}`,{fontFamily:"system-ui, sans-serif",fontSize:"11px",color:"#718090"}).setOrigin(.5);
+    this.add.text(DESIGN_WIDTH/2,764,`● ${equipped.ball.replace("ball-","")}   ·   ─ ${equipped.trail.replace("trail-","")}`,{fontFamily:"system-ui, sans-serif",fontSize:"11px",color:"#718090"}).setOrigin(.5);
 
-    const beta=this.add.rectangle(270,804,390,48,0x111922).setStrokeStyle(2,0x405666);
-    const betaText=this.add.text(270,804,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5);
-    this.wirePress(beta,betaText,804,410,58,()=>this.scene.start("editor"),0x111922,0x1d2b36);
+    const beta=this.add.rectangle(270,824,390,50,0x111922).setStrokeStyle(2,0x405666);
+    const betaText=this.add.text(270,824,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5);
+    this.wirePress(beta,betaText,824,410,62,()=>this.scene.start("editor"),0x111922,0x1d2b36);
 
-    this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-48,BETA_TESTING?"CAMPAÑA BETA · TESTER MODE":"CAMPAÑA · CORE SLICE",{fontFamily:"system-ui, sans-serif",fontSize:"12px",color:"#657282"}).setOrigin(.5);
+    this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-34,BETA_TESTING?"CAMPAÑA BETA · TESTER MODE":"CAMPAÑA · CORE SLICE",{fontFamily:"system-ui, sans-serif",fontSize:"11px",color:"#657282"}).setOrigin(.5);
     sharpenSceneText(this);
   }
 
@@ -66,7 +68,7 @@ export class MenuScene extends Phaser.Scene {
     const rest=accent?0x192831:0x151d25,hover=accent?0x294250:0x222f3b;
     const bg=this.add.rectangle(270,y,390,54,rest).setStrokeStyle(2,accent?0x52788c:0x364653);
     const text=this.add.text(270,y,label,{fontFamily:"system-ui, sans-serif",fontSize:"14px",fontStyle:"bold",color:accent?"#d9eef8":"#d7e0e8"}).setOrigin(.5);
-    this.wirePress(bg,text,y,410,60,action,rest,hover);
+    this.wirePress(bg,text,y,410,62,action,rest,hover);
   }
 
   private wirePress(bg:Phaser.GameObjects.Rectangle,labels:Phaser.GameObjects.Text|Phaser.GameObjects.Text[],y:number,w:number,h:number,action:()=>void,rest:number,hover:number):void{
