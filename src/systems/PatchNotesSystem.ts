@@ -10,6 +10,19 @@ const READ_KEY="troll-golf-last-read-patch-v1";
 
 export const PATCH_NOTES:PatchNote[]=[
   {
+    id:"friends-rc5",
+    title:"FRIENDS BETA RC5 · PLAYER UX",
+    date:"27 AGO 2026",
+    summary:"Más control para testers y creadores, y otro pase profundo a HARD 03 basado en feedback real.",
+    bullets:[
+      "Tu nombre de jugador ahora se ve y se edita completamente dentro del juego; tu ID de tester permanece estable.",
+      "Nueva sección Asistencia al jugador en el menú para perfil, encuesta general y comentarios directos.",
+      "Los creadores pueden borrar sus propios Community Maps con confirmación y validación del servidor.",
+      "HARD 03 reconstruido alrededor de una falsa ruta cuyo suelo desaparece al comprometer el primer tiro.",
+      "RC5 usa un bucket de telemetría nuevo para medir estos cambios por separado."
+    ]
+  },
+  {
     id:"friends-rc4",
     title:"FRIENDS BETA RC4 · QUALITY PASS",
     date:"27 AGO 2026",
@@ -17,9 +30,9 @@ export const PATCH_NOTES:PatchNote[]=[
     bullets:[
       "El juego detecta si tu pestaña está en una build antigua y pide actualizar antes de seguir.",
       "La encuesta global ahora es una experiencia completa dentro del juego, sin prompts del navegador.",
-      "HARD 03 rediseñado: la trampa del suelo obliga a cambiar la ruta si caes en la lectura obvia.",
+      "HARD 03 recibió un primer rediseño, sustituido de nuevo en RC5 tras feedback humano insuficiente.",
       "Patch Notes siguen marcados como SIN LEER hasta que abras esta pantalla.",
-      "RC4 usa un bucket de telemetría nuevo para comparar datos limpios."
+      "RC4 usa un bucket de telemetría propio para comparar datos limpios."
     ]
   },
   {
