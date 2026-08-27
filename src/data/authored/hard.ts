@@ -29,12 +29,12 @@ h4.popWalls=[
 ];
 path(h4,pt(420,718),pt(420,520),pt(160,390),pt(410,250),pt(270,142));trap(h4,"cross-gate");
 
-// First combined exam. Three clean strokes is genuine mastery; extra strokes remain forgiving.
+// First combined exam. The late shutter punishes the obvious finish but leaves a learned upper lane.
 const h5=base("troll",5,pt(96,842),pt(432,142),3,5,"bumper");
 h5.walls=[r(28,676,300,24),r(214,448,298,24),r(28,252,304,24)];
 h5.bumpers=[{x:414,y:566,r:34}];
 h5.popBumpers=[{x:126,y:342,r:34,triggerX:138,triggerY:492,triggerRadius:112}];
-h5.popWalls=[{x:330,y:224,w:182,h:22,triggerX:350,triggerY:326,triggerRadius:96}];
+h5.popWalls=[{x:354,y:224,w:96,h:22,triggerX:350,triggerY:326,triggerRadius:96}];
 path(h5,pt(414,736),pt(414,566),pt(128,516),pt(126,342),pt(410,210));trap(h5,"late-combo");
 
 export const HARD_AUTHORED:LevelDefinition[]=[h1,h2,h3,h4,h5];
