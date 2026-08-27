@@ -26,6 +26,8 @@ jobs:
         run: npm run test:hole
       - name: Check authored mechanics
         run: npm run test:mechanics
+      - name: Check mechanic behavior contracts
+        run: npm run test:mechanic-behavior
       - name: Check authored geometry
         run: npm run test:geometry
       - name: Check authored clearance
