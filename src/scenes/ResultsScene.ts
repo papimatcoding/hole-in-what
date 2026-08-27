@@ -33,7 +33,7 @@ export class ResultsScene extends Phaser.Scene{
     const newTimeRecord=previous.bestTimeMs===null||this.resultData.timeMs<previous.bestTimeMs;
     const newStars=this.resultData.stars>previous.stars;
     const reward=SaveSystem.submit(this.resultData.levelId,this.resultData.stars,this.resultData.strokes,this.resultData.timeMs);
-    if(BETA_TESTING){BetaTelemetry.beginAttempt(this.resultData.levelId);this.runUpload=BetaTelemetry.submitRun({levelId:this.resultData.levelId,mode:this.resultData.mode,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs,stars:this.resultData.stars});}
+    if(BETA_TESTING)this.runUpload=BetaTelemetry.submitRun({levelId:this.resultData.levelId,mode:this.resultData.mode,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs,stars:this.resultData.stars,trapsTriggered:this.resultData.trapsTriggered??[],mechanicsUsed:this.resultData.mechanicsUsed??[],voids:this.resultData.voids??0});
 
     this.add.text(498,54,`◈ ${reward.totalCoins}   ◆ ${reward.totalGems}`,{fontFamily:"system-ui, sans-serif",fontSize:"15px",fontStyle:"bold",color:"#d9e4ee"}).setOrigin(1,.5);
     const stars="★".repeat(this.resultData.stars)+"☆".repeat(3-this.resultData.stars);
