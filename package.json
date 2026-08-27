@@ -11,6 +11,7 @@
     "test:hole": "tsx scripts/holePhysicsCheck.ts",
     "test:mechanics": "tsx scripts/mechanicIntegrityCheck.ts",
     "test:geometry": "tsx scripts/courseGeometryCheck.ts",
+    "test:clearance": "tsx scripts/courseClearanceCheck.ts",
     "audit:courses": "tsx scripts/courseAudit.ts",
     "audit:originality": "tsx scripts/courseOriginalityAudit.ts"
   },
