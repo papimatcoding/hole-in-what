@@ -25,9 +25,9 @@ const c4=base("classic",4,pt(92,836),pt(430,156),2,3,"wall");
 c4.walls=[r(28,588,324,26),r(188,346,324,26),r(330,462,26,126)];
 path(c4,pt(428,690),pt(428,520),pt(150,468),pt(150,274),pt(430,156));
 
-// 05 — Bumper introduction. The bumper is the fast route around the elbow, not decoration.
+// 05 — Bumper introduction. Safe route exists on the left; bumper is the faster mastery shortcut.
 const c5=base("classic",5,pt(116,836),pt(422,166),2,3,"bumper");
-c5.walls=[r(28,520,250,24),r(302,306,210,24),r(278,306,24,238)];
+c5.walls=[r(92,520,186,24),r(302,306,210,24),r(278,306,24,238)];
 c5.bumpers=[{x:300,y:590,r:34}];
 path(c5,pt(300,700),pt(300,590),pt(424,448),pt(422,166));
 
