@@ -28,7 +28,7 @@ export class MenuScene extends Phaser.Scene {
     this.add.text(DESIGN_WIDTH/2,150,"MINIGOLF · 3 ESTRELLAS",{fontFamily:"system-ui, sans-serif",fontSize:"12px",color:"#8f9dab"}).setOrigin(.5);
 
     const alias=BetaTelemetry.alias();
-    const identity=this.add.text(DESIGN_WIDTH/2,178,alias?`JUGADOR · ${alias}   ✎":"JUGADOR · ELIGE TU NOMBRE   ✎",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:alias?"#c9d9e3":"#e0bc70"}).setOrigin(.5).setInteractive({useHandCursor:true});
+    const identity=this.add.text(DESIGN_WIDTH/2,178,alias?`JUGADOR · ${alias}   ✎`:"JUGADOR · ELIGE TU NOMBRE   ✎",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:alias?"#c9d9e3":"#e0bc70"}).setOrigin(.5).setInteractive({useHandCursor:true});
     identity.on("pointerup",()=>this.scene.start("player-profile"));
     if(BETA_TESTING)this.add.text(DESIGN_WIDTH/2,202,"BETA TEST · TODOS LOS HOYOS ABIERTOS",{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#8fb8cf"}).setOrigin(.5);
 
