@@ -15,13 +15,13 @@ h2.walls=[r(28,612,332,24),r(186,330,326,24)];
 h2.popBumpers=[{x:430,y:520,r:44,triggerX:432,triggerY:690,triggerRadius:150}];
 path(h2,pt(438,700),pt(154,530),pt(154,406),pt(110,160));trap(h2,"bumper-ambush");
 
-// 03 — False bridge. The obvious centre/left commitment wakes a broad floor collapse and genuinely drops the ball.
-// The learned answer is to escape far right before entering the trigger zone. Once above the collapse, two offset shelves force a cross-back S-route.
-// This makes the trap the first strategic fact of the hole and prevents a single outer-bank shot from solving the whole joke.
+// 03 — False bridge. The obvious centre commitment wakes a floor collapse; the learned route escapes right.
+// Human-playtest fix: the old RC5 layout left only a near pixel-perfect cross-gap between the void and first shelf.
+// The collapse is now shorter/narrower and both S-turn shelves are offset farther apart, preserving the troll while making the learned answer comfortably executable.
 const h3=base("troll",3,pt(270,842),pt(420,142),3,4,"void");
-h3.walls=[r(330,520,182,24),r(28,330,300,24)];
-h3.popVoids=[{x:28,y:590,w:372,h:126,triggerX:270,triggerY:750,triggerRadius:105}];
-path(h3,pt(452,730),pt(452,568),pt(220,500),pt(220,390),pt(390,278),pt(420,142));trap(h3,"floor-drop");
+h3.walls=[r(350,500,162,24),r(28,310,282,24)];
+h3.popVoids=[{x:28,y:620,w:340,h:96,triggerX:270,triggerY:738,triggerRadius:82}];
+path(h3,pt(440,738),pt(440,574),pt(292,566),pt(250,430),pt(376,270),pt(420,142));trap(h3,"floor-drop");
 
 // 04 — Two-stage joke: solving the first shutter reveals a second one later in the route.
 const h4=base("troll",4,pt(270,848),pt(270,144),3,4,"wall");
