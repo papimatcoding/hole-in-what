@@ -1,7 +1,7 @@
 import type { GameMode } from "../types";
 
 const ENDPOINT="https://xtekdrkqgfjnnwawyoim.supabase.co/functions/v1/beta-feedback";
-export const BETA_BUILD_ID="beta-step-2-5-v1";
+export const BETA_BUILD_ID="beta-step-3-block-1-v1";
 const TESTER_KEY="troll-golf-beta-tester-id-v1";
 const ALIAS_KEY="troll-golf-beta-tester-alias-v1";
 const ASKED_ALIAS_KEY="troll-golf-beta-tester-alias-asked-v1";
