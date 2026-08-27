@@ -125,13 +125,11 @@ Do not spoil HARD traps in level select, tutorial overlays or Patch Notes.
 
 RC5 HARD 03 was mathematically solvable but effectively pixel-perfect for a human. RC5.1 widened the learned route while keeping the trap meaningful.
 
-This failure is now a permanent **Audit 2.0 regression fixture**. Audit changes should continue to distinguish the bad RC5 geometry from the accepted RC5.1 geometry.
+This failure is now a permanent **Audit 2.1 regression fixture**. Audit changes should continue to distinguish the bad RC5 geometry from the accepted RC5.1 geometry.
 
-## Audit 2.0
+## Audit 2.1
 
-Development branch used to build it:
-
-- `feature/audit-2-human`
+Audit 2.1 is the current internal level-design critic. It was developed on `feature/audit-2-human` and certified through PR #1 before promotion to `dev`.
 
 Core scripts:
 
@@ -143,7 +141,7 @@ Workflows:
 - `.github/workflows/lab-audit.yml` — fast feature-branch feedback;
 - `.github/workflows/lab-full-audit.yml` — full PR/manual pre-release certification.
 
-### What Audit 2.0 measures
+### What Audit 2.1 measures
 
 - learned / naive / explorer agents;
 - best and blind solvability;
@@ -159,15 +157,22 @@ Workflows:
 - moving-state / softlock risk;
 - traditional geometry / clearance / originality checks.
 
+Audit 2.1 explicitly separates:
+
+- **best route** — lowest-stroke route found;
+- **human route** — most robust route found within at most +1 stroke of optimum.
+
+This prevents a fragile 2-stroke speedrun line from making an otherwise comfortable 3-stroke solution look pixel-perfect.
+
 Important calibration rule:
 
 > **A mathematical solution is not human validation.**
 
-The human model is a critic, not an oracle. It currently runs as advisory/reporting rather than replacing manual playtests or the existing strict campaign gate.
+The human model is a critic, not an oracle. It remains advisory/reporting rather than replacing manual playtests or the strict campaign gate.
 
 ### Difficulty and originality
 
-Both Audit 2.0 metrics use **1.0–5.0**, not LOW/MEDIUM/HIGH labels.
+Both design metrics use **1.0–5.0**, not LOW/MEDIUM/HIGH labels.
 
 Keep machine and player scores separate:
 
@@ -180,34 +185,48 @@ Do not average them together. Disagreement is valuable evidence.
 
 Examples:
 
-- audit difficulty 2.2 / players 4.3 → investigate controls, readability or missing knowledge before tightening/loosening geometry;
+- audit difficulty 2.2 / players 4.3 → investigate controls, readability or missing knowledge before changing geometry;
 - audit originality 4.0 / players 2.0 → structurally different may still feel repetitive.
 
-### Current calibration result
+### Audit 2.1 full calibration — accepted baseline
 
-Latest adaptive calibration on block 1:
+Full Lab Audit:
 
-- H03 RC5 regression: touch ~46%, shot tolerance ~20%;
-- H03 RC5.1: touch ~83%, shot tolerance ~60%;
-- regression: **PASS**.
+- run `33085175970`: **success**;
+- strict campaign solver: **Classic 10/10 + HARD 5/5 clean**;
+- Audit 2.1 human model: **13 PASS / 2 REVIEW / 0 BLOCKER**;
+- originality audit: **0 structurally similar pairs**.
 
-Current simulation-only difficulty order is approximately:
+The two advisory reviews are:
 
-1. Classic 01 — 2.2/5
-2. Classic 02 — 2.5/5
-3. HARD 03 — 2.5/5
-4. Classic 07 — 2.5/5
-5. Classic 08 — 2.7/5
-6. Classic 04 — 2.7/5
-7. Classic 09 — 2.8/5
-8. Classic 03 — 2.8/5
-9. Classic 06 — 2.9/5
-10. HARD 01 — 3.0/5
-11. HARD 04 — 3.0/5
-12. Classic 05 — 3.0/5
-13. Classic 10 — 3.2/5
-14. HARD 02 — 3.3/5
-15. HARD 05 — 3.5/5
+- Classic 06 — `MECHANIC_RELEVANCE_LOW` in the selected robust route;
+- HARD 01 — touch/tolerance margin worth watching.
+
+Do **not** reopen frozen block 1 from these advisory flags alone. Cross them with real player evidence first.
+
+HARD 03 regression in the full model:
+
+- bad RC5 fixture: human score ~61%, touch ~71%, tolerance ~43%;
+- accepted RC5.1: human route **3 strokes**, human score ~83%, touch ~89%, tolerance ~72%;
+- regression result: **PASS**.
+
+Current simulation-only difficulty order from the full Design Advisor:
+
+1. Classic 01 — difficulty 2.0/5 · originality 3.7/5
+2. Classic 05 — 2.2/5 · 3.4/5
+3. Classic 07 — 2.2/5 · 2.9/5
+4. Classic 03 — 2.3/5 · 3.5/5
+5. Classic 02 — 2.4/5 · 3.5/5
+6. Classic 08 — 2.4/5 · 3.5/5
+7. Classic 06 — 2.4/5 · 3.5/5
+8. Classic 04 — 2.6/5 · 3.6/5
+9. Classic 09 — 2.8/5 · 3.4/5
+10. HARD 03 — 2.9/5 · 3.6/5
+11. HARD 04 — 2.9/5 · 3.4/5
+12. HARD 01 — 3.1/5 · 3.4/5
+13. HARD 05 — 3.1/5 · 4.1/5
+14. HARD 02 — 3.2/5 · 3.7/5
+15. Classic 10 — 3.4/5 · 2.9/5
 
 These are calibration outputs, **not authored truth**. Reorder/redesign only after combining them with human evidence.
 
@@ -223,7 +242,7 @@ These are calibration outputs, **not authored truth**. Reorder/redesign only aft
 - HARD surprise/caught score;
 - recurring themes.
 
-Recommendations should distinguish cases such as:
+Recommendations distinguish cases such as:
 
 - low fun + low difficulty → add a memorable decision/mechanic/risk-reward, not precision;
 - low fun + high difficulty → reduce friction/precision and improve readability;
@@ -233,6 +252,8 @@ Recommendations should distinguish cases such as:
 - player/audit difficulty disagreement → investigate input/readability/knowledge first.
 
 Current RC5.1 feedback remains tiny and owner-weighted. One H03 response currently gives roughly 3/5 fun, 3/5 originality, 3/5 difficulty and 5/5 surprise. Do not overfit to n=1.
+
+When importing feedback into Audit 2.1, use **aggregated/non-identifying snapshots**. Do not commit tester aliases, UUIDs or raw private comments just to run design analysis.
 
 ## Validation commands
 
@@ -249,13 +270,13 @@ npm run audit:courses
 npm run audit:originality
 ```
 
-Classic strict solver:
+Strict campaign solver:
 
 ```bash
 FULL_AUDIT=1 npm run audit:courses
 ```
 
-Audit 2.0:
+Audit 2.1:
 
 ```bash
 npm run audit:human
@@ -263,7 +284,7 @@ npm run audit:human:full
 npm run audit:design
 ```
 
-Full Audit certification still requires every authored campaign course to be `OK`. Inspect textual summaries; workflow colour alone is not a substitute for understanding the output.
+Full campaign certification still requires every authored campaign course to be `OK`. Inspect textual summaries; workflow colour is not a substitute for understanding the output.
 
 ## Patch Notes policy
 
@@ -271,7 +292,7 @@ Player-facing Patch Notes must be **short, natural and spoiler-free**.
 
 Good examples:
 
-- “Solucionado un problema que hacía HARD 03 demasiado difícil.”
+- “Solucionado un problema que hacía HARD 03 demasiado difícil de resolver.”
 - “Mejorados los controles cerca de los bordes.”
 - “Mejoras y correcciones en Community Maps.”
 
@@ -372,7 +393,7 @@ Meaningful production deploy protocol:
 4. CI + Pages green;
 5. final smoke checks;
 6. concise Patch Notes + README handoff;
-7. update server build ID;
+7. update server build ID if gameplay/data comparability changes;
 8. maintenance OFF.
 
 With feature/lab branches, most level design and audit work should happen with **no maintenance at all**.
@@ -385,7 +406,7 @@ With feature/lab branches, most level design and audit work should happen with *
 - Community discovery/search/pagination waits for real map volume;
 - multi-hole Community is schema-prepared but not implemented;
 - private DEV/review dashboard not implemented;
-- Audit 2.0 thresholds are still being calibrated and should not yet auto-redesign levels.
+- Audit 2.1 thresholds remain advisory and should not auto-redesign frozen levels without human evidence.
 
 ## Deliberately not building now
 
@@ -395,14 +416,14 @@ Historical ideas such as ~40 Classic + ~40 HARD, competitive online up to 10, bo
 
 ## Immediate next steps — resume here
 
-**Block 1 is frozen. Audit 2.0 is the current infrastructure milestone.**
+**Block 1 is frozen. Audit 2.1 is merged into `dev`, fully calibrated against the H03 regression, and is now the standard development critic.**
 
-1. Merge/certify Audit 2.0 into `dev` after the full lab PR audit passes.
-2. When reviewing beta feedback, query Supabase, create an **aggregated/non-identifying** feedback snapshot and feed it to `audit2Design.ts`; never commit raw aliases/comments/private tester data just to run design analysis.
-3. Run Community Maps end-to-end with at least two testers: create → draft → playtest → publish → discover → play → rate → comment → report → creator delete / self-rating blocked.
-4. Start **campaign block 2** on a feature branch, not `dev`.
-5. Before authoring many new holes, define a small set of genuinely new mechanics and add each mechanic to GolfSimulation + audit coverage first.
-6. Use Audit 2.0 to rank candidate holes by difficulty/originality and recommend changes, then manually play them before promotion.
+1. Verify post-merge CI/Pages remain green. No maintenance is required because campaign physics/geometry is unchanged.
+2. Run Community Maps end-to-end with at least two testers: create → draft → playtest → publish → discover → play → rate → comment → report → creator delete / self-rating blocked.
+3. Start **campaign block 2 on a new feature branch**, never directly on `dev`.
+4. Before authoring many new holes, define a small set of genuinely new mechanics and add each mechanic to `GolfSimulation` + renderer/editor support + audit coverage first.
+5. Use Audit 2.1 to rank candidate holes by difficulty/originality and recommend changes, then manually play them before promotion.
+6. When reviewing beta feedback, query Supabase, create an aggregated/non-identifying snapshot and feed it to `audit2Design.ts`.
 7. Build a private DEV/review dashboard only when enough fresh beta/community data exists to justify it.
 
 ## Development principle
