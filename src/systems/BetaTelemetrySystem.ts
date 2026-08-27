@@ -13,7 +13,7 @@ export type BetaReportCategory="bug"|"too-easy"|"too-hard"|"repetitive"|"object"
 export type BetaSupportCategory="comment"|"bug"|"suggestion"|"other";
 
 function safeGet(key:string):string|null{try{return localStorage.getItem(key);}catch{return null;}}
-function safeSet(key:string,value:string):void{try{localStorage.setItem(key,value);}catch{/* beta telemetry must never break gameplay */}}
+function safeSet(key:string,value:string):boolean{try{localStorage.setItem(key,value);return true;}catch{return false;}}
 function testerId():string{
   let id=safeGet(TESTER_KEY);
   if(id)return id;
@@ -43,8 +43,11 @@ export const BetaTelemetry={
   async setAlias(value:string):Promise<boolean>{
     const name=value.trim().replace(/\s+/g," ").slice(0,40);
     if(!name)return false;
-    safeSet(ALIAS_KEY,name);
-    return registerTester();
+    // The visible profile is local-first: temporary backend/network failure must never make it
+    // look as if the name cannot be edited. ensureTester() retries the server sync later.
+    if(!safeSet(ALIAS_KEY,name))return false;
+    await registerTester();
+    return true;
   },
   beginAttempt(levelId:string):number{
     const map=attemptMap(),key=`${BETA_BUILD_ID}:${levelId}`;map[key]=(map[key]??0)+1;safeSet(ATTEMPTS_KEY,JSON.stringify(map));return map[key]!;
