@@ -31,4 +31,4 @@ const config:Phaser.Types.Core.GameConfig={
 };
 
 const game=new Phaser.Game(config);
-LiveOps.start(game);
+game.events.once(Phaser.Core.Events.READY,()=>LiveOps.start(game));
