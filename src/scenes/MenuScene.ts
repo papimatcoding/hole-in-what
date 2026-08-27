@@ -4,6 +4,7 @@ import { DESIGN_HEIGHT, DESIGN_WIDTH, setupDesignCamera, sharpenSceneText } from
 import { levelsForMode } from "../data/campaign";
 import { BetaFeedbackSystem } from "../systems/BetaFeedbackSystem";
 import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
+import { LiveOps } from "../systems/LiveOpsSystem";
 import { SaveSystem } from "../systems/SaveSystem";
 import type { GameMode } from "../types";
 
@@ -14,6 +15,10 @@ export class MenuScene extends Phaser.Scene {
     setupDesignCamera(this);
     this.cameras.main.setBackgroundColor("#0b0f14");
     SaveSystem.claimEligibleStarRewards();
+
+    const online=this.add.text(42,54,"● — ONLINE",{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#78bfa0"}).setOrigin(0,.5);
+    const stopOnline=LiveOps.onOnline(count=>online.setText(`● ${count==null?"—":count} ONLINE`));
+    this.events.once("shutdown",stopOnline);
 
     const wallet=SaveSystem.wallet();
     this.add.text(DESIGN_WIDTH-42,54,`◈ ${wallet.coins}   ◆ ${wallet.gems}`,{fontFamily:"system-ui, sans-serif",fontSize:"15px",fontStyle:"bold",color:"#d9e4ee"}).setOrigin(1,.5);
@@ -31,10 +36,9 @@ export class MenuScene extends Phaser.Scene {
     const equipped=SaveSystem.cosmetics().equipped;
     this.add.text(DESIGN_WIDTH/2,738,`● ${equipped.ball.replace("ball-","")}   ·   ─ ${equipped.trail.replace("trail-","")}`,{fontFamily:"system-ui, sans-serif",fontSize:"11px",color:"#718090"}).setOrigin(.5);
 
-    const beta=this.add.rectangle(270,804,390,48,0x111922).setStrokeStyle(1,0x334554).setInteractive({useHandCursor:true});
-    const betaText=this.add.text(270,804,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5).setInteractive({useHandCursor:true});
-    const openBeta=()=>this.scene.start("editor");beta.on("pointerup",openBeta);betaText.on("pointerup",openBeta);
-    beta.on("pointerover",()=>beta.setFillStyle(0x1a2631));beta.on("pointerout",()=>beta.setFillStyle(0x111922));
+    const beta=this.add.rectangle(270,804,390,48,0x111922).setStrokeStyle(2,0x405666);
+    const betaText=this.add.text(270,804,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5);
+    this.wirePress(beta,betaText,804,410,58,()=>this.scene.start("editor"),0x111922,0x1d2b36);
 
     this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-48,BETA_TESTING?"CAMPAÑA BETA · TESTER MODE":"CAMPAÑA · CORE SLICE",{fontFamily:"system-ui, sans-serif",fontSize:"12px",color:"#657282"}).setOrigin(.5);
     sharpenSceneText(this);
@@ -45,7 +49,7 @@ export class MenuScene extends Phaser.Scene {
   private makeModeButton(label:string,mode:GameMode,y:number):void{
     const levels=levelsForMode(mode),stars=SaveSystem.totalStars(levels.map(level=>level.id));
     const locked=mode==="troll"&&!BETA_TESTING&&!SaveSystem.isTrollUnlocked();
-    const bg=this.add.rectangle(270,y,390,86,locked?0x121820:0x18212a).setStrokeStyle(2,locked?0x27313b:0x2d3a47);
+    const bg=this.add.rectangle(270,y,390,86,locked?0x121820:0x18212a).setStrokeStyle(2,locked?0x27313b:0x3d5060);
     const title=this.add.text(105,y-11,label,{fontFamily:"system-ui, sans-serif",fontSize:"23px",fontStyle:"bold",color:locked?"#697480":"#f5f7fa"}).setOrigin(0,.5);
     if(locked){
       const p=SaveSystem.classicProgress();
@@ -54,14 +58,23 @@ export class MenuScene extends Phaser.Scene {
       return;
     }
     const progress=this.add.text(435,y+16,BETA_TESTING?`BETA · ★ ${stars} / ${levels.length*3}`:`★ ${stars} / ${levels.length*3}`,{fontFamily:"system-ui, sans-serif",fontSize:"14px",color:"#c9d4df"}).setOrigin(1,.5);
-    const open=async():Promise<void>=>{if(BETA_TESTING)await BetaTelemetry.ensureTester(true);this.scene.start("level-select",{mode});};const run=()=>{void open();};
-    bg.setInteractive({useHandCursor:true}).on("pointerup",run);title.setInteractive({useHandCursor:true}).on("pointerup",run);progress.setInteractive({useHandCursor:true}).on("pointerup",run);
-    bg.on("pointerover",()=>bg.setFillStyle(0x202b36));bg.on("pointerout",()=>bg.setFillStyle(0x18212a));
+    const open=():void=>{void(async()=>{if(BETA_TESTING)await BetaTelemetry.ensureTester(true);this.scene.start("level-select",{mode});})();};
+    this.wirePress(bg,[title,progress],y,410,96,open,0x18212a,0x25323e);
   }
 
   private makeSimpleButton(label:string,y:number,action:()=>void,accent=false):void{
-    const bg=this.add.rectangle(270,y,390,54,accent?0x192831:0x151d25).setStrokeStyle(1,accent?0x456273:0x2b3744).setInteractive({useHandCursor:true});
-    const text=this.add.text(270,y,label,{fontFamily:"system-ui, sans-serif",fontSize:"14px",fontStyle:"bold",color:accent?"#d9eef8":"#d7e0e8"}).setOrigin(.5).setInteractive({useHandCursor:true});
-    bg.on("pointerup",action);text.on("pointerup",action);bg.on("pointerover",()=>bg.setFillStyle(accent?0x243945:0x1e2934));bg.on("pointerout",()=>bg.setFillStyle(accent?0x192831:0x151d25));
+    const rest=accent?0x192831:0x151d25,hover=accent?0x294250:0x222f3b;
+    const bg=this.add.rectangle(270,y,390,54,rest).setStrokeStyle(2,accent?0x52788c:0x364653);
+    const text=this.add.text(270,y,label,{fontFamily:"system-ui, sans-serif",fontSize:"14px",fontStyle:"bold",color:accent?"#d9eef8":"#d7e0e8"}).setOrigin(.5);
+    this.wirePress(bg,text,y,410,60,action,rest,hover);
+  }
+
+  private wirePress(bg:Phaser.GameObjects.Rectangle,labels:Phaser.GameObjects.GameObject|Phaser.GameObjects.GameObject[],y:number,w:number,h:number,action:()=>void,rest:number,hover:number):void{
+    const items=Array.isArray(labels)?labels:[labels],zone=this.add.zone(270,y,w,h).setInteractive({useHandCursor:true});
+    const scale=(value:number):void=>{bg.setScale(value);for(const item of items)item.setScale(value);};
+    zone.on("pointerover",()=>bg.setFillStyle(hover));
+    zone.on("pointerdown",()=>{bg.setFillStyle(hover);scale(.985);});
+    zone.on("pointerout",()=>{bg.setFillStyle(rest);scale(1);});
+    zone.on("pointerup",()=>{bg.setFillStyle(rest);scale(1);action();});
   }
 }
