@@ -10,6 +10,18 @@ const READ_KEY="troll-golf-last-read-patch-v1";
 
 export const PATCH_NOTES:PatchNote[]=[
   {
+    id:"friends-rc5-1",
+    title:"FRIENDS BETA RC5.1 · HARD 03 BALANCE",
+    date:"27 AGO 2026",
+    summary:"HARD 03 mantiene la trampa, pero deja de exigir una ruta prácticamente pixel-perfect.",
+    bullets:[
+      "La falsa pasarela y el suelo que desaparece siguen siendo el núcleo del nivel.",
+      "La escapatoria derecha es más ancha y el cruce entre el void y la primera pared tiene margen humano real.",
+      "Las dos paredes alternadas mantienen el S-turn y evitan una línea directa trivial a la copa.",
+      "RC5.1 usa telemetría separada para no mezclar este H03 con la versión demasiado cerrada de RC5."
+    ]
+  },
+  {
     id:"friends-rc5",
     title:"FRIENDS BETA RC5 · PLAYER UX",
     date:"27 AGO 2026",
