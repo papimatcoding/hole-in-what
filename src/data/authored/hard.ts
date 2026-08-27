@@ -31,10 +31,10 @@ h4.popWalls=[
 ];
 path(h4,pt(420,730),pt(420,534),pt(158,392),pt(408,250),pt(270,144));trap(h4,"cross-gate");
 
-// 05 — First the entry wakes a bumper, then the player must time the moving crossing, then a final wall guards the cup.
-// Blind players land around three strokes; the two-stroke solver line is kept as an elite mastery route.
+// 05 — First the entry wakes a bumper, then the narrowed waist forces interaction with the moving crossing, then a final wall guards the cup.
+// Blind players should land around three strokes; an elite line may remain, but it must not bypass the moving mechanic.
 const h5=base("troll",5,pt(96,848),pt(430,140),3,4,"moving");
-h5.walls=[r(28,682,286,24),r(28,520,162,24),r(350,520,162,24),r(228,310,284,24)];
+h5.walls=[r(28,682,286,24),r(28,520,162,24),r(350,520,162,24),r(190,486,20,92),r(320,486,20,92),r(228,310,284,24)];
 h5.movingWalls=[{x:210,y:520,w:110,h:24,axis:"x",amplitude:45,speed:1.2,phase:.4}];
 h5.popBumpers=[{x:404,y:610,r:36,triggerX:350,triggerY:720,triggerRadius:152}];
 h5.popWalls=[{x:354,y:238,w:104,h:22,triggerX:362,triggerY:292,triggerRadius:92}];
