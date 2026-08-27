@@ -24,6 +24,7 @@ export interface CourseClearanceReport {
 }
 
 interface CircleBlocker { label: string; x: number; y: number; r: number; }
+interface GridCell { point: Vec2; gx: number; gy: number; }
 
 const FIELD = GOLF_PHYSICS.field;
 const BALL = GOLF_PHYSICS.ballRadius;
@@ -33,6 +34,7 @@ const GRID = 10;
 const clamp = (v: number, min: number, max: number): number => Math.max(min, Math.min(max, v));
 const dist = (a: Vec2, b: Vec2): number => Math.hypot(a.x - b.x, a.y - b.y);
 const normalizeAngle = (angle: number): number => ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+const gridKey = (gx: number, gy: number): string => `${gx}:${gy}`;
 
 function movingWallRect(wall: MovingWallDef, seconds = 0): RectDef {
   const q = Math.sin(seconds * (wall.speed ?? 1.15) + (wall.phase ?? 0)) * wall.amplitude;
@@ -140,38 +142,45 @@ function segmentClear(level: LevelDefinition, a: Vec2, b: Vec2, state: CourseVal
   return true;
 }
 
-function nearestOpenCell(level: LevelDefinition, p: Vec2, state: CourseValidationState, cells: Vec2[]): number {
+function nearestOpenCell(level: LevelDefinition, p: Vec2, state: CourseValidationState, cells: GridCell[]): number {
   let best = -1, bestD = Infinity;
   for (let i = 0; i < cells.length; i += 1) {
-    const d = dist(p, cells[i]!);
-    if (d < bestD && segmentClear(level, p, cells[i]!, state)) { best = i; bestD = d; }
+    const d = dist(p, cells[i]!.point);
+    if (d < bestD && segmentClear(level, p, cells[i]!.point, state)) { best = i; bestD = d; }
   }
   return best;
 }
 
 export function analyzeReachability(level: LevelDefinition, state: CourseValidationState): ReachabilityResult {
-  const cells: Vec2[] = [];
-  for (let y = FIELD.y + BALL + SAFETY; y <= FIELD.y + FIELD.h - BALL - SAFETY; y += GRID) {
-    for (let x = FIELD.x + BALL + SAFETY; x <= FIELD.x + FIELD.w - BALL - SAFETY; x += GRID) {
-      const p = { x, y };
-      if (!pointIsBlocked(level, p, state)) cells.push(p);
+  const cells: GridCell[] = [];
+  const indexByGrid = new Map<string, number>();
+  let gy = 0;
+  for (let y = FIELD.y + BALL + SAFETY; y <= FIELD.y + FIELD.h - BALL - SAFETY; y += GRID, gy += 1) {
+    let gx = 0;
+    for (let x = FIELD.x + BALL + SAFETY; x <= FIELD.x + FIELD.w - BALL - SAFETY; x += GRID, gx += 1) {
+      const point = { x, y };
+      if (pointIsBlocked(level, point, state)) continue;
+      const index = cells.length;
+      cells.push({ point, gx, gy });
+      indexByGrid.set(gridKey(gx, gy), index);
     }
   }
+
   const startBlocked = pointIsBlocked(level, level.ball, state), holeBlocked = pointIsBlocked(level, level.hole, state, BALL + 6);
   if (startBlocked || holeBlocked) return { stateLabel: state.label, reachable: false, visited: 0, startBlocked, holeBlocked };
   const start = nearestOpenCell(level, level.ball, state, cells), goal = nearestOpenCell(level, level.hole, state, cells);
   if (start < 0 || goal < 0) return { stateLabel: state.label, reachable: false, visited: 0, startBlocked, holeBlocked };
+
   const queue = [start], seen = new Set<number>([start]);
-  const cols = Math.max(1, Math.ceil((FIELD.w - (BALL + SAFETY) * 2) / GRID) + 1);
   while (queue.length) {
     const i = queue.shift()!;
-    if (i === goal || segmentClear(level, cells[i]!, level.hole, state)) return { stateLabel: state.label, reachable: true, visited: seen.size, startBlocked, holeBlocked };
-    const x = i % cols, y = Math.floor(i / cols);
+    const cell = cells[i]!;
+    if (i === goal || segmentClear(level, cell.point, level.hole, state)) return { stateLabel: state.label, reachable: true, visited: seen.size, startBlocked, holeBlocked };
     for (const dy of [-1, 0, 1]) for (const dx of [-1, 0, 1]) {
       if (dx === 0 && dy === 0) continue;
-      const nx = x + dx, ny = y + dy, n = ny * cols + nx;
-      if (n < 0 || n >= cells.length || seen.has(n)) continue;
-      if (!segmentClear(level, cells[i]!, cells[n]!, state)) continue;
+      const n = indexByGrid.get(gridKey(cell.gx + dx, cell.gy + dy));
+      if (n === undefined || seen.has(n)) continue;
+      if (!segmentClear(level, cell.point, cells[n]!.point, state)) continue;
       seen.add(n); queue.push(n);
     }
   }
