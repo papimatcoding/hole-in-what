@@ -43,8 +43,11 @@ export const BetaTelemetry={
   async setAlias(value:string):Promise<boolean>{
     const name=value.trim().replace(/\s+/g," ").slice(0,40);
     if(!name)return false;
+    // Profile editing must remain usable even if the beta backend is temporarily unavailable.
+    // Persist locally first; every later ensureTester/run submission will retry syncing this alias.
     safeSet(ALIAS_KEY,name);
-    return registerTester();
+    void registerTester();
+    return alias()===name;
   },
   beginAttempt(levelId:string):number{
     const map=attemptMap(),key=`${BETA_BUILD_ID}:${levelId}`;map[key]=(map[key]??0)+1;safeSet(ATTEMPTS_KEY,JSON.stringify(map));return map[key]!;

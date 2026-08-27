@@ -10,6 +10,17 @@ const READ_KEY="troll-golf-last-read-patch-v1";
 
 export const PATCH_NOTES:PatchNote[]=[
   {
+    id:"friends-ui-polish-1",
+    title:"FRIENDS BETA · UI",
+    date:"27 AGO 2026",
+    summary:"Mejoras de interfaz.",
+    bullets:[
+      "Mejorada la interfaz y legibilidad en PC.",
+      "Las encuestas post-nivel ahora se envían manualmente.",
+      "Corregida la edición del nombre de jugador."
+    ]
+  },
+  {
     id:"friends-rc5-1",
     title:"FRIENDS BETA RC5.1",
     date:"27 AGO 2026",
