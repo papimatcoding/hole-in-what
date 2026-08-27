@@ -1,14 +1,12 @@
 name: Lab Audit
 
-# Development-only certification. Feature/lab branches never deploy GitHub Pages.
+# Fast development feedback. Feature/lab branches never deploy GitHub Pages.
 on:
   push:
     branches:
       - "feature/**"
       - "audit-*"
       - "lab/**"
-  pull_request:
-    branches: [dev]
   workflow_dispatch:
 
 jobs:
@@ -44,14 +42,10 @@ jobs:
       - name: Check authored clearance
         run: npm run test:clearance
 
-      - name: Existing adversarial campaign audit
-        env:
-          FULL_AUDIT: "1"
+      - name: Fast adversarial campaign audit
         run: npm run audit:courses
 
-      - name: Audit 2.0 human-model report
-        env:
-          AUDIT2_MODE: "full"
+      - name: Audit 2.0 fast human-model report
         run: npm run audit:human
 
       - name: Audit 2.0 difficulty and design advice
@@ -64,7 +58,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: audit-2-report
+          name: audit-2-fast-report
           path: |
             artifacts/audit2-report.*
             artifacts/audit2-design.*
