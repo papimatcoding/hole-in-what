@@ -24,6 +24,12 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Check authored mechanics
+        run: npm run test:mechanics
+      - name: Check authored geometry
+        run: npm run test:geometry
+      - name: Check authored clearance
+        run: npm run test:clearance
       - name: Full authored campaign audit
         env:
           FULL_AUDIT: "1"
