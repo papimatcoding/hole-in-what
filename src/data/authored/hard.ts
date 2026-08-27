@@ -15,13 +15,13 @@ h2.walls=[r(28,612,332,24),r(186,330,326,24)];
 h2.popBumpers=[{x:430,y:520,r:44,triggerX:432,triggerY:690,triggerRadius:150}];
 path(h2,pt(438,700),pt(154,530),pt(154,406),pt(110,160));trap(h2,"bumper-ambush");
 
-// 03 — False bridge. The tempting centre line wakes a floor collapse directly ahead.
-// The learned answer commits right before the trigger, then crosses back through the middle gate.
-// A lower-left shelf kills the full-power outer bank that previously turned the whole joke into a free HIO.
+// 03 — False bridge. The obvious centre shot wakes a floor collapse under the ball.
+// Once learned, the safe opening is far right; two offset shelves then force an S-turn instead of allowing a one-shot bank around the joke.
+// The trap remains the first strategic fact, while the upper half asks the player to convert that knowledge into a controlled route.
 const h3=base("troll",3,pt(270,842),pt(420,142),3,4,"void");
-h3.walls=[r(28,600,150,24),r(28,470,150,24),r(362,470,150,24),r(28,286,318,24)];
-h3.popVoids=[{x:190,y:558,w:160,h:132,triggerX:270,triggerY:724,triggerRadius:72}];
-path(h3,pt(398,708),pt(398,520),pt(270,430),pt(404,388),pt(404,232),pt(420,142));trap(h3,"floor-drop");
+h3.walls=[r(250,540,262,24),r(28,360,302,24)];
+h3.popVoids=[{x:200,y:590,w:140,h:126,triggerX:270,triggerY:738,triggerRadius:74}];
+path(h3,pt(420,700),pt(206,582),pt(206,478),pt(390,410),pt(390,250),pt(420,142));trap(h3,"floor-drop");
 
 // 04 — Two-stage joke: solving the first shutter reveals a second one later in the route.
 const h4=base("troll",4,pt(270,848),pt(270,144),3,4,"wall");
