@@ -19,9 +19,9 @@ const c4=base("classic",4,pt(92,836),pt(430,156),2,3,"wall");
 c4.walls=[r(28,588,324,26),r(188,346,324,26),r(330,462,26,126)];
 path(c4,pt(428,690),pt(428,520),pt(150,468),pt(150,274),pt(430,156));
 
-// First bumper lesson: an open pinball weave. The bumper is the fast setup, never a mandatory gate.
+// First bumper lesson: the lower shelf blocks the direct diagonal, making the bumper the fast setup while keeping the hole visually open.
 const c5=base("classic",5,pt(116,836),pt(422,166),2,3,"bumper");
-c5.walls=[r(210,548,24,164),r(326,320,24,174),r(88,300,144,24)];
+c5.walls=[r(210,548,24,164),r(326,320,24,174),r(88,300,144,24),r(28,714,248,24)];
 c5.bumpers=[{x:390,y:626,r:32}];
 path(c5,pt(390,626),pt(426,510),pt(270,420),pt(238,258),pt(422,166));
 
@@ -48,9 +48,9 @@ c9.sand=[r(318,530,160,100)];
 c9.walls=[r(28,642,344,24),r(468,650,24,132),r(180,490,260,24),r(278,300,234,24)];
 path(c9,pt(420,580),pt(468,450),pt(220,390),pt(220,250),pt(106,154));
 
-// Chapter exam: bumper shortcut, sand placement and a final reverse gate. No new rule.
+// Chapter exam: the lower gate removes the full-power bypass so the bumper shortcut is part of mastery, followed by sand placement and the reverse finish.
 const c10=base("classic",10,pt(104,850),pt(430,136),3,4,"bumper");
-c10.walls=[r(28,672,286,24),r(250,474,262,24),r(28,268,286,24),r(350,204,162,24)];
+c10.walls=[r(28,672,286,24),r(250,474,262,24),r(28,268,286,24),r(350,204,162,24),r(300,650,24,104)];
 c10.sand=[r(54,350,164,124)];
 c10.bumpers=[{x:404,y:736,r:34}];
 path(c10,pt(404,736),pt(404,570),pt(160,520),pt(132,394),pt(386,244),pt(326,184),pt(430,136));
