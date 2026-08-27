@@ -1,5 +1,4 @@
-import { buildCampaignCourse } from "../src/data/procedural/auditedCampaign";
-import { sanitizeCourse } from "../src/data/procedural/courseUtils";
+import { levelsForMode } from "../src/data/campaign";
 import type { CourseMechanic, LevelDefinition } from "../src/types";
 
 function mechanicCount(level:LevelDefinition,mechanic:CourseMechanic):number {
@@ -20,18 +19,12 @@ function mechanicCount(level:LevelDefinition,mechanic:CourseMechanic):number {
 }
 
 const missing:string[]=[];
-for(const mode of ["classic","troll"] as const){
-  for(let index=1;index<=40;index+=1){
-    const level=sanitizeCourse(buildCampaignCourse(mode,index));
+for(const mode of["classic","troll"]as const){
+  for(const level of levelsForMode(mode)){
     if(!level.authored||!level.primaryMechanic||level.primaryMechanic==="wall")continue;
-    const count=mechanicCount(level,level.primaryMechanic);
-    if(count===0)missing.push(`${level.id}: ${level.primaryMechanic}`);
+    if(mechanicCount(level,level.primaryMechanic)===0)missing.push(`${level.id}: ${level.primaryMechanic}`);
   }
 }
 
-if(missing.length){
-  console.error(`Missing authored primary mechanics after sanitization:\n${missing.join("\n")}`);
-  process.exitCode=1;
-}else{
-  console.log("PASS all authored primary mechanics survive sanitization");
-}
+if(missing.length){console.error(`Missing authored primary mechanics after sanitization:\n${missing.join("\n")}`);process.exitCode=1;}
+else console.log("PASS all authored primary mechanics survive sanitization");
