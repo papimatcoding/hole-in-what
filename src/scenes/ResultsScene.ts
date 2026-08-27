@@ -10,13 +10,16 @@ import { SaveSystem } from "../systems/SaveSystem";
 import { formatRequirement, requirementMet } from "../systems/StarScoring";
 import type { ResultsSceneData } from "../types";
 
-export class ResultsScene extends Phaser.Scene {
+type QuickKey="fun"|"originality"|"difficulty";
+
+export class ResultsScene extends Phaser.Scene{
   private resultData!:ResultsSceneData;
-  private feedbackPanel:Phaser.GameObjects.Container|null=null;
   private surveyPanel:Phaser.GameObjects.Container|null=null;
+  private feedbackPanel:Phaser.GameObjects.Container|null=null;
   private leaderboardPanel:Phaser.GameObjects.Container|null=null;
-  private surveyRatings={fun:0,originality:0,difficulty:0,surprise:0};
+  private quick={fun:0,originality:0,difficulty:0};
   private surveyBug=false;
+  private surveySurprise=false;
   private surveySubmitting=false;
   private runUpload:Promise<void>|null=null;
 
@@ -30,183 +33,87 @@ export class ResultsScene extends Phaser.Scene {
     const newTimeRecord=previous.bestTimeMs===null||this.resultData.timeMs<previous.bestTimeMs;
     const newStars=this.resultData.stars>previous.stars;
     const reward=SaveSystem.submit(this.resultData.levelId,this.resultData.stars,this.resultData.strokes,this.resultData.timeMs);
-    if(BETA_TESTING){
-      BetaTelemetry.beginAttempt(this.resultData.levelId);
-      this.runUpload=BetaTelemetry.submitRun({levelId:this.resultData.levelId,mode:this.resultData.mode,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs,stars:this.resultData.stars});
-    }
+    if(BETA_TESTING){BetaTelemetry.beginAttempt(this.resultData.levelId);this.runUpload=BetaTelemetry.submitRun({levelId:this.resultData.levelId,mode:this.resultData.mode,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs,stars:this.resultData.stars});}
 
     this.add.text(498,54,`◈ ${reward.totalCoins}   ◆ ${reward.totalGems}`,{fontFamily:"system-ui, sans-serif",fontSize:"15px",fontStyle:"bold",color:"#d9e4ee"}).setOrigin(1,.5);
     const stars="★".repeat(this.resultData.stars)+"☆".repeat(3-this.resultData.stars);
-    this.add.text(270,182,stars,{fontFamily:"system-ui, sans-serif",fontSize:"58px",color:"#f1d07a"}).setOrigin(.5);
-    this.add.text(270,265,`${this.resultData.strokes} ${this.resultData.strokes===1?"golpe":"golpes"}`,{fontFamily:"system-ui, sans-serif",fontSize:"28px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
-    this.add.text(270,305,`${(this.resultData.timeMs/1000).toFixed(1)} s`,{fontFamily:"system-ui, sans-serif",fontSize:"18px",color:"#9eabb9"}).setOrigin(.5);
+    this.add.text(270,176,stars,{fontFamily:"system-ui, sans-serif",fontSize:"56px",color:"#f1d07a"}).setOrigin(.5);
+    this.add.text(270,254,`${this.resultData.strokes} ${this.resultData.strokes===1?"golpe":"golpes"}`,{fontFamily:"system-ui, sans-serif",fontSize:"28px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
+    this.add.text(270,294,`${(this.resultData.timeMs/1000).toFixed(1)} s`,{fontFamily:"system-ui, sans-serif",fontSize:"18px",color:"#9eabb9"}).setOrigin(.5);
 
-    const notices:string[]=[];
-    if(newStars)notices.push(previous.stars===0?"NUEVAS ESTRELLAS":"NUEVA ESTRELLA");
-    if(newStrokeRecord)notices.push("NUEVO RÉCORD DE GOLPES");
-    if(newTimeRecord)notices.push("NUEVO RÉCORD DE TIEMPO");
-    if(notices.length>0){
-      const notice=this.add.text(270,347,notices.join("  ·  "),{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#dfe9ef",align:"center",wordWrap:{width:450}}).setOrigin(.5).setAlpha(0);
-      this.tweens.add({targets:notice,alpha:1,y:342,duration:240,ease:"Cubic.easeOut"});
-      if(newStars)AudioFeedback.play("star");
-    }
+    const notices:string[]=[];if(newStars)notices.push(previous.stars===0?"NUEVAS ESTRELLAS":"NUEVA ESTRELLA");if(newStrokeRecord)notices.push("RÉCORD DE GOLPES");if(newTimeRecord)notices.push("RÉCORD DE TIEMPO");
+    if(notices.length){const notice=this.add.text(270,338,notices.join(" · "),{fontFamily:"system-ui",fontSize:"12px",fontStyle:"bold",color:"#dfe9ef"}).setOrigin(.5).setAlpha(0);this.tweens.add({targets:notice,alpha:1,y:334,duration:220});if(newStars)AudioFeedback.play("star");}
 
     const metThree=requirementMet(level.threeStar,this.resultData.strokes),metTwo=requirementMet(level.twoStar,this.resultData.strokes);
-    this.add.rectangle(270,430,400,118,0x121a21).setStrokeStyle(1,0x2d3a47);
-    this.add.text(92,389,"MAESTRÍA",{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#7e8d9a"}).setOrigin(0,.5);
-    this.add.text(108,421,`${metThree?"✓":"·"}  ★★★   ${formatRequirement(level.threeStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"14px",fontStyle:"bold",color:metThree?"#f1d07a":"#82909b"}).setOrigin(0,.5);
-    this.add.text(108,455,`${metTwo?"✓":"·"}  ★★     ${formatRequirement(level.twoStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"13px",color:metTwo?"#c5d0da":"#7b8791"}).setOrigin(0,.5);
-
+    this.add.rectangle(270,420,400,112,0x121a21).setStrokeStyle(1,0x2d3a47);
+    this.add.text(108,398,`${metThree?"✓":"·"}  ★★★   ${formatRequirement(level.threeStar)}`,{fontFamily:"system-ui",fontSize:"14px",fontStyle:"bold",color:metThree?"#f1d07a":"#82909b"}).setOrigin(0,.5);
+    this.add.text(108,438,`${metTwo?"✓":"·"}  ★★     ${formatRequirement(level.twoStar)}`,{fontFamily:"system-ui",fontSize:"13px",color:metTwo?"#c5d0da":"#7b8791"}).setOrigin(0,.5);
     const target=this.resultData.stars>=3?null:this.resultData.stars===2?level.threeStar.maxStrokes:level.twoStar.maxStrokes;
-    if(target!==null&&target!==undefined){
-      const gap=Math.max(1,this.resultData.strokes-target),goalStars=this.resultData.stars===2?"★★★":"★★";
-      this.add.text(270,510,`Te ${gap===1?"faltó 1 golpe":`faltaron ${gap} golpes`} para ${goalStars}`,{fontFamily:"system-ui, sans-serif",fontSize:"15px",fontStyle:"bold",color:"#c9d3db"}).setOrigin(.5);
-    }else this.add.text(270,510,"Ruta de maestría conseguida",{fontFamily:"system-ui, sans-serif",fontSize:"15px",fontStyle:"bold",color:"#f1d07a"}).setOrigin(.5);
+    this.add.text(270,494,target==null?"Ruta de maestría conseguida":`Te ${Math.max(1,this.resultData.strokes-target)===1?"faltó 1 golpe":`faltaron ${Math.max(1,this.resultData.strokes-target)} golpes`} para ${this.resultData.stars===2?"★★★":"★★"}`,{fontFamily:"system-ui",fontSize:"14px",fontStyle:"bold",color:target==null?"#f1d07a":"#c9d3db"}).setOrigin(.5);
 
-    let infoY=552;
-    if(reward.coinsEarned>0){const t=this.add.text(270,infoY,`+${reward.coinsEarned} ◈`,{fontFamily:"system-ui, sans-serif",fontSize:"14px",fontStyle:"bold",color:"#e4d29d"}).setOrigin(.5).setAlpha(0);this.tweens.add({targets:t,alpha:1,y:infoY-5,duration:230,ease:"Cubic.easeOut"});infoY+=30;}
-    if(reward.newlyUnlockedCosmetics.length>0){const names=reward.newlyUnlockedCosmetics.map(id=>cosmeticById(id)?.name).filter((name):name is string=>Boolean(name));this.add.text(270,infoY,`DESBLOQUEADO · ${names.join(" · ")}`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",align:"center",color:"#f1d07a",wordWrap:{width:430}}).setOrigin(.5);}
+    let infoY=530;if(reward.coinsEarned>0){this.add.text(270,infoY,`+${reward.coinsEarned} ◈`,{fontFamily:"system-ui",fontSize:"13px",fontStyle:"bold",color:"#e4d29d"}).setOrigin(.5);infoY+=25;}
+    if(reward.newlyUnlockedCosmetics.length){const names=reward.newlyUnlockedCosmetics.map(id=>cosmeticById(id)?.name).filter((x):x is string=>Boolean(x));this.add.text(270,infoY,`DESBLOQUEADO · ${names.join(" · ")}`,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:"#f1d07a",wordWrap:{width:430},align:"center"}).setOrigin(.5);}
 
-    const canPrev=this.resultData.levelIndex>0;
-    const canNext=this.resultData.levelIndex<levels.length-1&&(BETA_TESTING||SaveSystem.isLevelUnlocked(this.resultData.mode,this.resultData.levelIndex+1));
-    const retry=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex});
-    const prev=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex-1});
-    const next=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex+1});
-    if(this.resultData.stars<3){this.makeButton("REINTENTAR",640,retry,true);if(canNext)this.makeButton("SIGUIENTE",718,next,false);}
-    else{if(canNext)this.makeButton("SIGUIENTE",640,next,true);this.makeButton("REINTENTAR",718,retry,false);}
-
-    if(BETA_TESTING){
-      this.betaNavText(126,785,"‹ ANTERIOR",canPrev,prev);
-      this.add.text(270,785,`${this.resultData.mode==="troll"?"H":"C"} ${String(this.resultData.levelIndex+1).padStart(2,"0")} / ${String(levels.length).padStart(2,"0")}`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#8193a1"}).setOrigin(.5);
-      this.betaNavText(414,785,"SIGUIENTE ›",canNext,next);
-    }
-
-    this.add.text(270,BETA_TESTING?826:810,"NIVELES",{fontFamily:"system-ui, sans-serif",fontSize:"15px",fontStyle:"bold",color:"#aeb9c5"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(this.resultData.levelIndex/10)}));
-    if(BETA_TESTING){
-      this.add.text(175,872,"🏆 RANKING",{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#e5d293"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>{void this.openLeaderboard();});
-      this.add.text(365,872,"⚑ FEEDBACK",{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#8fb8cf"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.openFeedback());
-    }else this.add.text(270,858,`FEEDBACK BETA · ${BetaFeedbackSystem.count()} guardados`,{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#8fb8cf"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.openFeedback());
+    const canPrev=this.resultData.levelIndex>0,canNext=this.resultData.levelIndex<levels.length-1&&(BETA_TESTING||SaveSystem.isLevelUnlocked(this.resultData.mode,this.resultData.levelIndex+1));
+    const retry=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex}),prev=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex-1}),next=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex+1});
+    if(this.resultData.stars<3){this.makeButton("REINTENTAR",620,retry,true);if(canNext)this.makeButton("SIGUIENTE",696,next,false);}else{if(canNext)this.makeButton("SIGUIENTE",620,next,true);this.makeButton("REINTENTAR",696,retry,false);}
+    if(BETA_TESTING){this.nav(126,768,"‹ ANTERIOR",canPrev,prev);this.add.text(270,768,`${this.resultData.mode==="troll"?"H":"C"} ${String(this.resultData.levelIndex+1).padStart(2,"0")} / ${String(levels.length).padStart(2,"0")}`,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:"#8193a1"}).setOrigin(.5);this.nav(414,768,"SIGUIENTE ›",canNext,next);}
+    this.add.text(270,812,"NIVELES",{fontFamily:"system-ui",fontSize:"14px",fontStyle:"bold",color:"#aeb9c5"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(this.resultData.levelIndex/10)}));
+    if(BETA_TESTING){this.add.text(175,858,"🏆 RANKING",{fontFamily:"system-ui",fontSize:"12px",fontStyle:"bold",color:"#e5d293"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>{void this.openLeaderboard();});this.add.text(365,858,"⚑ REPORTAR",{fontFamily:"system-ui",fontSize:"12px",fontStyle:"bold",color:"#8fb8cf"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.openFeedback());}
     sharpenSceneText(this);
-    if(BETA_TESTING&&!BetaTelemetry.levelSurveyDone(this.resultData.levelId))this.time.delayedCall(300,()=>this.openSurvey());
+    if(BETA_TESTING&&!BetaTelemetry.levelSurveyDone(this.resultData.levelId))this.time.delayedCall(280,()=>this.openSurvey());
   }
 
-  private betaNavText(x:number,y:number,label:string,enabled:boolean,action:()=>void):void{
-    const text=this.add.text(x,y,label,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:enabled?"#a9c3d3":"#46525b"}).setOrigin(.5);
-    if(enabled)text.setInteractive({useHandCursor:true}).on("pointerup",action);
-  }
-
-  private makeButton(label:string,y:number,action:()=>void,primary:boolean):void{
-    const bg=this.add.rectangle(270,y,334,66,primary?0x253847:0x172129).setStrokeStyle(2,primary?0x67869c:0x344454).setInteractive({useHandCursor:true});
-    const text=this.add.text(270,y,label,{fontFamily:"system-ui, sans-serif",fontSize:"18px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5).setInteractive({useHandCursor:true});
-    bg.on("pointerup",action);text.on("pointerup",action);bg.on("pointerover",()=>bg.setFillStyle(primary?0x30485a:0x22303b));bg.on("pointerout",()=>bg.setFillStyle(primary?0x253847:0x172129));
-  }
+  private makeButton(label:string,y:number,action:()=>void,primary:boolean):void{const bg=this.add.rectangle(270,y,334,62,primary?0x253847:0x172129).setStrokeStyle(2,primary?0x67869c:0x344454).setInteractive({useHandCursor:true});const t=this.add.text(270,y,label,{fontFamily:"system-ui",fontSize:"17px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5).setInteractive({useHandCursor:true});bg.on("pointerup",action);t.on("pointerup",action);}
+  private nav(x:number,y:number,label:string,enabled:boolean,action:()=>void):void{const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:enabled?"#a9c3d3":"#46525b"}).setOrigin(.5);if(enabled)t.setInteractive({useHandCursor:true}).on("pointerup",action);}
 
   private openSurvey():void{
-    if(this.surveyPanel)return;
-    this.surveyRatings={fun:0,originality:0,difficulty:0,surprise:0};this.surveyBug=false;this.surveySubmitting=false;
+    if(this.surveyPanel)return;this.quick={fun:0,originality:0,difficulty:0};this.surveyBug=false;this.surveySurprise=false;this.surveySubmitting=false;
     const hard=this.resultData.mode==="troll",children:Phaser.GameObjects.GameObject[]=[];
-    children.push(this.add.rectangle(270,480,540,960,0x05080b,.72).setInteractive());
-    const panelH=hard?456:394,top=hard?286:318;
-    children.push(this.add.rectangle(270,480,450,panelH,0x111a22,.99).setStrokeStyle(2,0x405668));
-    children.push(this.add.text(270,top,"VALORA EL HOYO",{fontFamily:"system-ui, sans-serif",fontSize:"18px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5));
-    children.push(this.add.text(270,top+27,hard?"4 toques y listo":"3 toques y listo",{fontFamily:"system-ui, sans-serif",fontSize:"11px",color:"#8395a3"}).setOrigin(.5));
-    let y=top+76;
-    this.ratingRow(children,"DIVERSIÓN",y,"fun");y+=62;
-    this.ratingRow(children,"ORIGINAL",y,"originality");y+=62;
-    this.ratingRow(children,"DIFICULTAD",y,"difficulty");y+=62;
-    if(hard){this.ratingRow(children,"TROLEO",y,"surprise");y+=62;}
-    const bug=this.add.rectangle(165,y,154,36,0x17242d).setStrokeStyle(1,0x3b5060).setInteractive({useHandCursor:true});
-    const bugText=this.add.text(165,y,"⚠ HAY UN BUG",{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5);children.push(bug,bugText);
-    bug.on("pointerup",()=>{this.surveyBug=!this.surveyBug;bug.setFillStyle(this.surveyBug?0x5a342f:0x17242d);});
-    children.push(this.add.text(368,y,"SALTAR",{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#748694"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.closeSurvey()));
-    children.push(this.add.text(270,y+39,"Se envía automáticamente al completar",{fontFamily:"system-ui, sans-serif",fontSize:"10px",color:"#667783"}).setOrigin(.5));
-    this.surveyPanel=this.add.container(0,0,children).setDepth(300).setAlpha(0);this.tweens.add({targets:this.surveyPanel,alpha:1,duration:100});
+    children.push(this.add.rectangle(270,480,540,960,0x05080b,.64).setInteractive());
+    children.push(this.add.rectangle(270,480,458,hard?360:326,0x111a22,.99).setStrokeStyle(2,0x405668));
+    const top=hard?326:344;children.push(this.add.text(270,top,"¿QUÉ TAL ESTE HOYO?",{fontFamily:"system-ui",fontSize:"17px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5));
+    children.push(this.add.text(270,top+27,"3 toques · se envía solo",{fontFamily:"system-ui",fontSize:"10px",color:"#8193a0"}).setOrigin(.5));
+    this.segmentRow(children,"DIVERSIÓN",top+72,["1","2","3","4","5"],[1,2,3,4,5],"fun");
+    this.segmentRow(children,"ORIGINAL",top+126,["REPETIDO","NORMAL","NUEVO"],[1,3,5],"originality");
+    this.segmentRow(children,"DIFICULTAD",top+180,["FÁCIL","JUSTA","DURA"],[1,3,5],"difficulty");
+    const chipY=top+232;const bug=this.chip(children,hard?160:205,chipY,"⚠ BUG",()=>{this.surveyBug=!this.surveyBug;bug.setFillStyle(this.surveyBug?0x5a342f:0x17242d);});
+    if(hard){const troll=this.chip(children,330,chipY,"😈 ME PILLÓ",()=>{this.surveySurprise=!this.surveySurprise;troll.setFillStyle(this.surveySurprise?0x4c3f65:0x17242d);});}
+    children.push(this.add.text(hard?430:335,chipY,"SALTAR",{fontFamily:"system-ui",fontSize:"10px",fontStyle:"bold",color:"#718491"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.closeSurvey()));
+    this.surveyPanel=this.add.container(0,0,children).setDepth(300).setAlpha(0);this.tweens.add({targets:this.surveyPanel,alpha:1,duration:90});
   }
 
-  private ratingRow(children:Phaser.GameObjects.GameObject[],label:string,y:number,key:"fun"|"originality"|"difficulty"|"surprise"):void{
-    children.push(this.add.text(64,y,label,{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#c9d5de"}).setOrigin(0,.5));
-    for(let i=1;i<=5;i+=1){
-      const x=244+(i-1)*47,c=this.add.circle(x,y,17,0x17242d).setStrokeStyle(1,0x496173).setInteractive({useHandCursor:true});
-      const t=this.add.text(x,y,String(i),{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#dfe8ee"}).setOrigin(.5);children.push(c,t);
-      c.on("pointerup",()=>{
-        this.surveyRatings[key]=i;
-        for(const obj of children)if(obj instanceof Phaser.GameObjects.Arc&&Math.abs(obj.y-y)<1)obj.setFillStyle(obj.x<=x?0x45677a:0x17242d);
-        this.queueSurveySubmit();
-      });
-    }
+  private segmentRow(children:Phaser.GameObjects.GameObject[],label:string,y:number,labels:string[],values:number[],key:QuickKey):void{
+    children.push(this.add.text(66,y,label,{fontFamily:"system-ui",fontSize:"10px",fontStyle:"bold",color:"#c9d5de"}).setOrigin(0,.5));
+    const start=labels.length===5?260:250,spacing=labels.length===5?40:72;
+    labels.forEach((label,i)=>{const x=start+i*spacing,w=labels.length===5?32:64,bg=this.add.rectangle(x,y,w,32,0x17242d).setStrokeStyle(1,0x405767).setInteractive({useHandCursor:true});const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:labels.length===5?"10px":"8px",fontStyle:"bold",color:"#dfe8ee"}).setOrigin(.5);children.push(bg,t);bg.on("pointerup",()=>{this.quick[key]=values[i]!;for(const obj of children)if(obj instanceof Phaser.GameObjects.Rectangle&&Math.abs(obj.y-y)<1&&obj.width<=70)obj.setFillStyle(obj===bg?0x45677a:0x17242d);this.queueSurveySubmit();});});
   }
-
-  private queueSurveySubmit():void{
-    const r=this.surveyRatings,complete=r.fun>0&&r.originality>0&&r.difficulty>0&&(this.resultData.mode!=="troll"||r.surprise>0);
-    if(!complete||this.surveySubmitting)return;
-    this.surveySubmitting=true;
-    this.time.delayedCall(480,()=>{if(this.surveyPanel)void this.submitSurvey();});
-  }
-
-  private async submitSurvey():Promise<void>{
-    const r=this.surveyRatings;
-    const ok=await BetaTelemetry.submitLevelFeedback({levelId:this.resultData.levelId,mode:this.resultData.mode,fun:r.fun,originality:r.originality,difficulty:r.difficulty,surprise:this.resultData.mode==="troll"?r.surprise:null,tags:this.surveyBug?["bug"]:[],comment:""});
-    this.closeSurvey();
-    const toast=this.add.text(270,170,ok?"✓ FEEDBACK ENVIADO":"NO SE PUDO ENVIAR",{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:ok?"#d9efde":"#f0c1b7",backgroundColor:ok?"#14231a":"#2b1715",padding:{x:12,y:7}}).setOrigin(.5).setDepth(350);this.tweens.add({targets:toast,alpha:0,delay:600,duration:160,onComplete:()=>toast.destroy()});
-    if(ok&&this.allCurrentLevelsCompleted()&&!BetaTelemetry.gameSurveyDone())this.time.delayedCall(350,()=>{void this.openGameSurvey();});
-  }
-
-  private async openLeaderboard():Promise<void>{
-    if(this.leaderboardPanel)return;
-    const children:Phaser.GameObjects.GameObject[]=[];
-    children.push(this.add.rectangle(270,480,540,960,0x05080b,.86).setInteractive());
-    children.push(this.add.rectangle(270,480,438,650,0x111a22,.99).setStrokeStyle(2,0x526878));
-    children.push(this.add.text(270,192,`🏆 ${this.resultData.levelId.toUpperCase()}`,{fontFamily:"system-ui, sans-serif",fontSize:"19px",fontStyle:"bold",color:"#f1d07a"}).setOrigin(.5));
-    const loading=this.add.text(270,480,"CARGANDO…",{fontFamily:"system-ui, sans-serif",fontSize:"13px",color:"#91a2af"}).setOrigin(.5);children.push(loading);
-    children.push(this.add.text(270,776,"CERRAR",{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#8295a3"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.closeLeaderboard()));
-    this.leaderboardPanel=this.add.container(0,0,children).setDepth(320);
-    await this.runUpload;
-    const entries=await BetaTelemetry.leaderboard(this.resultData.levelId);
-    if(!this.leaderboardPanel)return;
-    loading.destroy();
-    if(entries.length===0){this.add.text(270,470,"AÚN NO HAY MARCAS",{fontFamily:"system-ui, sans-serif",fontSize:"14px",fontStyle:"bold",color:"#91a2af"}).setOrigin(.5).setDepth(321);return;}
-    const header1=this.add.text(72,246,"#   JUGADOR",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#718695"}).setOrigin(0,.5);
-    const header2=this.add.text(468,246,"GOLPES   TIEMPO",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#718695"}).setOrigin(1,.5);this.leaderboardPanel.add([header1,header2]);
-    entries.forEach((e,i)=>{const y=286+i*43,color=e.isYou?"#f1d07a":"#dce5eb";this.leaderboardPanel!.add(this.add.text(72,y,`${e.rank}.  ${e.name}${e.isYou?"  · TÚ":""}`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:e.isYou?"bold":"normal",color}).setOrigin(0,.5));this.leaderboardPanel!.add(this.add.text(468,y,`${e.strokes}       ${(e.timeMs/1000).toFixed(1)}s`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color}).setOrigin(1,.5));});
-  }
-
-  private closeLeaderboard():void{this.leaderboardPanel?.destroy(true);this.leaderboardPanel=null;}
-  private allCurrentLevelsCompleted():boolean{return[...levelsForMode("classic"),...levelsForMode("troll")].every(level=>SaveSystem.record(level.id).completed);}
-
-  private async openGameSurvey():Promise<void>{
-    const askRating=(label:string):number=>{const raw=window.prompt(`${label} (1–5)`,"4");const n=Number(raw);return Number.isInteger(n)&&n>=1&&n<=5?n:4;};
-    const overallFun=askRating("Diversión general");
-    const controls=askRating("Controles / game feel");
-    const variety=askRating("Variedad de niveles");
-    const difficultyCurve=askRating("Progresión de dificultad");
-    const hardMode=askRating("Modo HARD");
-    const wouldKeepPlaying=window.confirm("Si hubiera otro bloque de 10 hoyos, ¿seguirías jugando?");
-    const favouriteLevel=window.prompt("Nivel favorito (opcional). Ej: classic-07","")??"";
-    const worstLevel=window.prompt("Peor nivel (opcional)","")??"";
-    const ideas=window.prompt("¿Qué cambiarías o añadirías? Ideas libres","")??"";
-    await BetaTelemetry.submitGameFeedback({overallFun,controls,variety,difficultyCurve,hardMode,wouldKeepPlaying,favouriteLevel,worstLevel,ideas});
-  }
-
+  private chip(children:Phaser.GameObjects.GameObject[],x:number,y:number,label:string,action:()=>void):Phaser.GameObjects.Rectangle{const bg=this.add.rectangle(x,y,112,32,0x17242d).setStrokeStyle(1,0x3b5060).setInteractive({useHandCursor:true});const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"9px",fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5);children.push(bg,t);bg.on("pointerup",action);return bg;}
+  private queueSurveySubmit():void{if(!this.quick.fun||!this.quick.originality||!this.quick.difficulty||this.surveySubmitting)return;this.surveySubmitting=true;this.time.delayedCall(450,()=>{if(this.surveyPanel)void this.submitSurvey();});}
+  private async submitSurvey():Promise<void>{const ok=await BetaTelemetry.submitLevelFeedback({levelId:this.resultData.levelId,mode:this.resultData.mode,fun:this.quick.fun,originality:this.quick.originality,difficulty:this.quick.difficulty,surprise:this.resultData.mode==="troll"?(this.surveySurprise?5:3):null,tags:this.surveyBug?["bug"]:[],comment:""});this.closeSurvey();this.toast(ok?"✓ FEEDBACK ENVIADO":"NO SE PUDO ENVIAR",ok);if(ok&&this.allCurrentLevelsCompleted()&&!BetaTelemetry.gameSurveyDone())this.time.delayedCall(350,()=>{void this.openGameSurvey();});}
   private closeSurvey():void{this.surveyPanel?.destroy(true);this.surveyPanel=null;this.surveySubmitting=false;}
 
   private openFeedback():void{
-    if(this.feedbackPanel)return;
-    const blocker=this.add.rectangle(270,480,540,960,0x05080b,.82).setInteractive();
-    const panel=this.add.rectangle(270,480,430,500,0x111a22,.99).setStrokeStyle(2,0x405668);
-    const title=this.add.text(270,285,`FEEDBACK · ${this.resultData.levelId.toUpperCase()}`,{fontFamily:"system-ui, sans-serif",fontSize:"18px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
-    const sub=this.add.text(270,322,"Reporte adicional opcional",{fontFamily:"system-ui, sans-serif",fontSize:"13px",color:"#aebbc6"}).setOrigin(.5);
-    const children:Phaser.GameObjects.GameObject[]=[blocker,panel,title,sub];
-    const choices:[string,BetaFeedbackCategory][]=[["BUG","bug"],["MUY FÁCIL","too-easy"],["MUY DIFÍCIL","too-hard"],["REPETITIVO","repetitive"],["OBJETO / MAPA","object"],["OTRO","other"]];
-    choices.forEach(([label,category],i)=>{const col=i%2,row=Math.floor(i/2),x=170+col*200,y=382+row*76;const bg=this.add.rectangle(x,y,170,56,0x1a2731).setStrokeStyle(1,0x496173).setInteractive({useHandCursor:true});const text=this.add.text(x,y,label,{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#dfe9ef"}).setOrigin(.5).setInteractive({useHandCursor:true});const choose=()=>this.saveFeedback(category);bg.on("pointerup",choose);text.on("pointerup",choose);children.push(bg,text);});
-    children.push(this.add.text(270,672,"CERRAR",{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#8596a4"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.closeFeedback()));
-    this.feedbackPanel=this.add.container(0,0,children).setDepth(200);
+    if(this.feedbackPanel)return;const children:Phaser.GameObjects.GameObject[]=[];children.push(this.add.rectangle(270,480,540,960,0x05080b,.82).setInteractive(),this.add.rectangle(270,480,430,430,0x111a22,.99).setStrokeStyle(2,0x405668),this.add.text(270,304,"REPORTE RÁPIDO",{fontFamily:"system-ui",fontSize:"17px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5),this.add.text(270,334,"1 toque. Nota sólo si eliges OTRO.",{fontFamily:"system-ui",fontSize:"10px",color:"#8da0ad"}).setOrigin(.5));
+    const choices:[string,BetaFeedbackCategory][]=[["BUG","bug"],["MUY FÁCIL","too-easy"],["MUY DIFÍCIL","too-hard"],["REPETITIVO","repetitive"],["OBJETO SOBRA","object"],["OTRO","other"]];
+    choices.forEach(([label,category],i)=>{const x=170+(i%2)*200,y=392+Math.floor(i/2)*68,bg=this.add.rectangle(x,y,170,48,0x1a2731).setStrokeStyle(1,0x496173).setInteractive({useHandCursor:true});const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:"#dfe9ef"}).setOrigin(.5);children.push(bg,t);bg.on("pointerup",()=>this.saveFeedback(category));});
+    children.push(this.add.text(270,632,"CERRAR",{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:"#8596a4"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.closeFeedback()));this.feedbackPanel=this.add.container(0,0,children).setDepth(220);
   }
-
-  private saveFeedback(category:BetaFeedbackCategory):void{
-    const note=window.prompt("Nota opcional","")??"";
-    BetaFeedbackSystem.add({levelId:this.resultData.levelId,mode:this.resultData.mode,levelIndex:this.resultData.levelIndex,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs},category,note);
-    this.closeFeedback();
-    const toast=this.add.text(270,860,"FEEDBACK GUARDADO",{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#e8f5ea",backgroundColor:"#14231a",padding:{x:12,y:8}}).setOrigin(.5).setDepth(220);this.tweens.add({targets:toast,alpha:0,y:850,delay:850,duration:250,onComplete:()=>toast.destroy()});
-  }
+  private saveFeedback(category:BetaFeedbackCategory):void{const note=category==="other"?(window.prompt("Cuéntanos qué pasó","")??""):"";BetaFeedbackSystem.add({levelId:this.resultData.levelId,mode:this.resultData.mode,levelIndex:this.resultData.levelIndex,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs},category,note);this.closeFeedback();this.toast("✓ REPORTE GUARDADO",true);}
   private closeFeedback():void{this.feedbackPanel?.destroy(true);this.feedbackPanel=null;}
+
+  private async openLeaderboard():Promise<void>{
+    if(this.leaderboardPanel)return;const children:Phaser.GameObjects.GameObject[]=[];children.push(this.add.rectangle(270,480,540,960,0x05080b,.86).setInteractive(),this.add.rectangle(270,480,438,650,0x111a22,.99).setStrokeStyle(2,0x526878));
+    children.push(this.add.text(270,192,`🏆 ${this.resultData.levelId.toUpperCase()}`,{fontFamily:"system-ui",fontSize:"18px",fontStyle:"bold",color:"#f1d07a"}).setOrigin(.5));const loading=this.add.text(270,480,"CARGANDO…",{fontFamily:"system-ui",fontSize:"12px",color:"#91a2af"}).setOrigin(.5);children.push(loading,this.add.text(270,776,"CERRAR",{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:"#8295a3"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.closeLeaderboard()));this.leaderboardPanel=this.add.container(0,0,children).setDepth(320);
+    await this.runUpload;const entries=await BetaTelemetry.leaderboard(this.resultData.levelId);if(!this.leaderboardPanel)return;loading.destroy();if(!entries.length){this.leaderboardPanel.add(this.add.text(270,470,"AÚN NO HAY MARCAS",{fontFamily:"system-ui",fontSize:"13px",fontStyle:"bold",color:"#91a2af"}).setOrigin(.5));return;}
+    entries.slice(0,10).forEach((e,i)=>{const y=270+i*43,color=e.isYou?"#f1d07a":"#dce5eb";this.leaderboardPanel!.add(this.add.text(72,y,`${e.rank}. ${e.name}${e.isYou?" · TÚ":""}`,{fontFamily:"system-ui",fontSize:"11px",fontStyle:e.isYou?"bold":"normal",color}).setOrigin(0,.5));this.leaderboardPanel!.add(this.add.text(468,y,`${e.strokes} golpes · ${(e.timeMs/1000).toFixed(1)}s`,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color}).setOrigin(1,.5));});
+  }
+  private closeLeaderboard():void{this.leaderboardPanel?.destroy(true);this.leaderboardPanel=null;}
+
+  private allCurrentLevelsCompleted():boolean{return[...levelsForMode("classic"),...levelsForMode("troll")].every(level=>SaveSystem.record(level.id).completed);}
+  private async openGameSurvey():Promise<void>{
+    const rating=(label:string):number=>{const n=Number(window.prompt(`${label} (1–5)`,"4"));return Number.isInteger(n)&&n>=1&&n<=5?n:4;};
+    await BetaTelemetry.submitGameFeedback({overallFun:rating("Diversión general"),controls:rating("Controles / game feel"),variety:rating("Variedad"),difficultyCurve:rating("Curva de dificultad"),hardMode:rating("Modo HARD"),wouldKeepPlaying:window.confirm("¿Jugarías otro bloque de 10 hoyos?"),favouriteLevel:window.prompt("Nivel favorito (opcional)","")??"",worstLevel:window.prompt("Peor nivel (opcional)","")??"",ideas:window.prompt("Ideas / cambios (opcional)","")??""});
+  }
+  private toast(message:string,ok:boolean):void{const t=this.add.text(270,166,message,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:ok?"#d9efde":"#f0c1b7",backgroundColor:ok?"#14231a":"#2b1715",padding:{x:12,y:7}}).setOrigin(.5).setDepth(350);this.tweens.add({targets:t,alpha:0,delay:700,duration:180,onComplete:()=>t.destroy()});}
 }
