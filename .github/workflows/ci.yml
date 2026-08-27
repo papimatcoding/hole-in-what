@@ -28,6 +28,8 @@ jobs:
         run: npm run test:mechanics
       - name: Check authored geometry
         run: npm run test:geometry
+      - name: Check authored clearance
+        run: npm run test:clearance
       - name: Simulate authored campaign
         run: npm run audit:courses
       - name: Check course originality
