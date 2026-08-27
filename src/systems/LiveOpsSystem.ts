@@ -17,6 +17,7 @@ let cachedStatus:LiveStatus={...DEFAULT_STATUS};
 let cachedOnline:number|null=null;
 let timer:number|null=null;
 let visibilityBound=false;
+let contextOverride:string|null=null;
 const listeners=new Set<(count:number|null)=>void>();
 
 async function post<T>(payload:Record<string,unknown>):Promise<T|null>{
@@ -42,6 +43,7 @@ function notifyOnline():void{for(const fn of listeners)fn(cachedOnline);}
 export const LiveOps={
   status():LiveStatus{return{...cachedStatus};},
   online():number|null{return cachedOnline;},
+  setContext(value:string|null):void{contextOverride=value?.slice(0,48)??null;},
   onOnline(fn:(count:number|null)=>void):()=>void{listeners.add(fn);fn(cachedOnline);return()=>listeners.delete(fn);},
   async fetchStatus():Promise<LiveStatus>{
     const data=await post<{ok?:boolean}&Partial<LiveStatus>>({type:"status"});
@@ -61,7 +63,7 @@ export const LiveOps={
     if(timer!==null)return;
     const tick=async():Promise<void>=>{
       if(document.visibilityState==="hidden")return;
-      const active=game.scene.getScenes(true)[0]?.scene.key??"game";
+      const active=contextOverride??game.scene.getScenes(true)[0]?.scene.key??"game";
       const result=await this.heartbeat(active);
       const now=game.scene.getScenes(true)[0]?.scene.key;
       if(result.status.maintenance&&now!=="maintenance")game.scene.start("maintenance",{status:result.status});
