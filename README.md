@@ -1,10 +1,10 @@
 # Troll Golf
 
-Mobile-first 2D arcade minigolf built with Phaser + TypeScript. Current priority is **core shot + authored campaign + HARD troll identity + real beta evidence + a usable Community Maps loop**. Do not expand metagame before those are genuinely good.
+Mobile-first 2D arcade minigolf built with Phaser + TypeScript. Current priority is **core shot + authored campaign quality + HARD troll identity + trustworthy beta evidence + a usable Community Maps loop**. Do not expand the metagame before these are genuinely good.
 
-> **SOURCE OF TRUTH / CHAT HANDOFF — Last updated 2026-08-27 after Friends Beta RC3 (`146c712`) + Community Maps Edge Function v2**
+> **SOURCE OF TRUTH / CHAT HANDOFF — Last updated 2026-08-27 after Friends Beta RC4 · Quality Pass**
 >
-> If development continues in another chat/session, read this file first. The exact resume point is in **Immediate next steps**. Update this README whenever campaign state, priorities, beta/live-ops behavior, architecture, backend schema or next actions change.
+> If development continues in another chat/session, read this file first. The exact resume point is in **Immediate next steps**. Update this README whenever campaign state, priorities, beta/live-ops behavior, architecture, backend schema, validation or next actions change.
 
 ## Play / branches
 
@@ -26,203 +26,226 @@ Current campaign:
 - shared pure-TypeScript physics
 - automated physics/mechanics/geometry/clearance/solver/originality checks
 - anonymous beta telemetry
-- per-level survey + global survey
+- per-level feedback + in-game global survey
 - in-hole remote bug reports
 - approximate online presence
 - remotely controlled maintenance screen
+- server-declared current build / stale-client update screen
 - patch notes with unread indicator
-- Community Maps RC3 social loop
+- Community Maps social loop
 
-Latest technical state after RC3:
+Current telemetry build ID:
 
-- latest normal CI: **green**;
-- latest Pages build/deploy: **green**;
+- **`beta-block-1-friends-rc4`**
+
+Analyse RC1, RC2, RC3 and RC4 separately.
+
+### RC4 certification
+
+RC4 is technically certified for friends-beta use.
+
+- normal CI on current code: **green**;
+- Pages deploy on current code: **green**;
 - typecheck/build/hole physics/mechanics/geometry/clearance: **green**;
-- fast campaign audit: **Classic 10/10 clean + Troll 5/5 clean**;
 - originality audit: **0 structurally similar pairs**;
-- last Full Audit (`FULL_AUDIT=1`), unchanged authored geometry/physics: **Classic 10/10 + Troll 5/5 clean**;
-- RC3 changes affect input/UI/community/live-ops, not authored campaign geometry or `GolfSimulation` physics rules.
+- strict Full Audit run `33071135763`: **success**;
+- Full Audit result: **Classic 10/10 clean + Troll 5/5 clean**;
+- **0 bypass · 0 too-easy · 0 no-route** across HARD;
+- Classic retains one informational difficulty-dip warning around 04→05; it is not a solver blocker.
 
-Friends-beta telemetry build ID is now:
+Important RC4 commits near the release point:
 
-- **`beta-block-1-friends-rc3`**
+- `6fef66a61fb37e4e29e34004720f8762fe35764e` — `hard: fix troll 03 dogleg wall clearance`
+- `87b1224c72be93950c819f0eed57986277392bff` — `ci: make full campaign audit a strict gate`
+- `37eb90008384706658e5da7551a171eb921a877e` — `ci: validate troll void traps by consequence`
 
-Analyse RC1, RC2 and RC3 separately.
+## RC4 — Quality Pass
 
-## RC3 — Community Maps rebuild
+RC4 exists mainly because early beta feedback exposed versioning, survey UX and HARD 03 design problems.
 
-The old Community Maps implementation was technically functional but confusing and less fluid than campaign play. RC3 rebuilds the flow around explicit drafts, playtesting, clear publishing and social feedback.
+### Reliable build/version detection
+
+Earlier, a browser tab could keep old RC2/RC3 JavaScript in memory after a new Pages deploy. This caused two confusing symptoms:
+
+- new feedback could be recorded under the old build ID even though a newer build had already been deployed;
+- the user would not see new Patch Notes because the old client literally did not contain them.
+
+RC4 fixes this structurally.
+
+Backend `app_status` now declares `current_build_id` and the client compares it with `BETA_BUILD_ID`.
+
+Runtime:
+
+- `src/systems/LiveOpsSystem.ts`
+- stale clients are routed to `update-required` when maintenance is off;
+- the update screen requires a controlled refresh before continuing;
+- heartbeat continues to carry the client build ID.
+
+**Transition note:** clients that were already running RC2/RC3 may still require one manual refresh to obtain the RC4 code that knows how to detect future stale builds. From RC4 onward, silent version drift should not be accepted.
+
+### Global survey is in-game
+
+The old global survey relied too heavily on browser prompts/confirms and looked detached from the game.
+
+RC4 replaces it with an actual in-game survey flow covering:
+
+- overall fun;
+- controls;
+- variety;
+- difficulty curve;
+- HARD experience;
+- whether the tester would keep playing;
+- favourite / weakest content;
+- priorities such as more levels, balance, variety, HARD, controls and Community.
+
+Do not return to native browser-question UX for the global survey.
+
+### HARD 03 redesign
+
+User feedback correctly identified a design bug in old HARD 03: the trap could trigger while having essentially no consequence for the winning run. That is not acceptable troll design.
+
+RC4 HARD 03 is now a **false-highway / two-stage dogleg**:
+
+1. the cup looks tempting from the tee;
+2. committing to the obvious lane activates a pop-void ahead of the ball;
+3. the naive line is genuinely punished by the void;
+4. once learned, the player escapes through the lower-left opening;
+5. climbs the safe lane;
+6. switches back to the right through the upper opening;
+7. finishes at the cup.
+
+Current Full Audit result for `troll-03`:
+
+- target 3★: 3 strokes;
+- best known: **2 strokes**;
+- blind known: **2 strokes**;
+- **HIO: no**;
+- robustness: ~30%;
+- primary: `void`;
+- naive trap consequence verified: **yes**;
+- status: **OK**.
+
+The long-solver learned route currently avoids falling into the trap, which is intentional. A learned troll solution may avoid the trap **provided the naive attractive read is demonstrably punished**.
+
+### Full Audit is now a real gate
+
+Previously `FULL_AUDIT=1 npm run audit:courses` could print `TOO_EASY_FOR_TARGET` or `MECHANIC_BYPASSED` while the workflow itself still succeeded; only `NO_ROUTE_FOUND` was fatal.
+
+RC4 changes this:
+
+- fast CI remains a quick critic and only hard-fails route impossibility;
+- **Full Audit hard-fails every non-`OK` course status**;
+- `TOO_EASY_FOR_TARGET`, `MECHANIC_BYPASSED` and `NO_ROUTE_FOUND` all fail long certification.
+
+For troll void traps, the audit now checks **consequence rather than requiring the learned route to hit the trap**:
+
+- an obvious/naive probe must trigger the trap and actually void the ball;
+- an optimal learned route is allowed to avoid that void;
+- this models the design rule “first read gets trolled, learned answer is fair”.
+
+## Community Maps
+
+Community Maps was rebuilt in RC3 and remains the current base for future work.
 
 ### Publishing flow
 
-Publishing no longer means “upload whatever happens to be in editor localStorage”.
-
 Current flow:
 
-**Editor working map → save as explicit draft → choose draft → playtest that exact draft → publish**
+**Editor working map → save explicit draft → choose draft → complete playtest → publish**
+
+Key behavior:
+
+- saved drafts are explicit and distinct from editor autosave;
+- publish screen shows **MIS BORRADORES**;
+- no draft = publication blocked;
+- editing/replacing a draft invalidates previous playtest status;
+- creator selects exactly which tested draft is published;
+- title + optional description are entered for the selected draft.
 
 Files:
 
 - `src/systems/CommunityDraftSystem.ts`
 - `src/scenes/CommunityPublishScene.ts`
 
-Behavior:
+Do not return to implicit “publish whatever is in localStorage” behavior.
 
-- saved Community drafts are distinct from the editor autosave;
-- publish screen shows **MIS BORRADORES** explicitly;
-- if there are no saved drafts, publishing is blocked;
-- an editor working map can be converted into a named saved draft;
-- each draft shows whether it has passed playtest;
-- a draft must be successfully completed before the backend accepts publication;
-- editing/replacing a saved draft invalidates its previous playtest status;
-- creator selects exactly which draft gets published;
-- title + optional description are entered only after selecting a valid tested draft.
+### Discovery / social
 
-Do not return to implicit “publish current localStorage map” behavior.
-
-### Community discovery
-
-`CommunityMapsScene` now has three explicit sorts:
+Community discovery supports:
 
 - **TENDENCIA**
 - **MEJORES**
 - **NUEVOS**
 
-Cards show:
+Cards can show:
 
-- title
-- creator alias
-- single/course type + hole count
-- average ★ rating + vote count
-- total plays
-- unique players
-- live `● N JUGANDO` when applicable
+- title + creator alias;
+- single/course type + hole count;
+- average 1–5 ★ rating + vote count;
+- total plays;
+- unique players;
+- approximate `● N JUGANDO`.
 
-Trend score currently favors:
+Trend currently favours live players, recent unique players/runs, total plays and rating with bounded weight. Do not over-engineer recommendations with the tiny beta population.
 
-1. players currently in the map;
-2. unique players in the last 24 h;
-3. recent completed runs;
-4. total plays;
-5. rating with bounded vote weight.
+Community social features:
 
-Do not over-engineer recommendation algorithms with this tiny beta population.
-
-### Community ratings
-
-Community ratings are now **one overall 1–5 star rating**, as requested.
-
+- one 1–5 ★ rating per tester/map;
 - creator cannot rate own map;
-- one rating per tester/map;
-- old feedback rows were backfilled into a star value for schema compatibility;
-- difficulty remains available internally for future use but is not the headline score.
+- comments up to 500 chars, one editable comment per tester/map;
+- separate map reports: bug / impossible / inappropriate / spam / other.
 
-### Comments
+Tables:
 
-Backend table:
-
+- `community_maps`
+- `community_map_runs`
+- `community_map_feedback`
 - `community_map_comments`
-
-Current behavior:
-
-- comments visible from Community Play;
-- max 500 chars;
-- one comment per tester/map;
-- posting again edits/replaces that tester's previous comment;
-- alias + timestamp are stored;
-- no replies/threads/likes/mentions yet.
-
-Keep comments simple until actual usage justifies richer social features.
-
-### Community map reports
-
-Backend table:
-
 - `community_map_reports`
 
-Report categories:
+### Community Play parity
 
-- bug
-- impossible
-- inappropriate
-- spam
-- other
+Community Play must feel like campaign, not a simplified clone.
 
-Reports are intentionally separate from ★ rating.
-
-### Multi-hole groundwork
-
-RC3 prepares the database for Golf It-style courses without building the full multi-hole editor yet.
-
-`community_maps` now includes:
-
-- `map_kind`: `single | course`
-- `hole_count`: 1–18
-- `holes_json`: reserved JSON payload for future course collections
-
-All current maps publish as:
-
-- `map_kind = single`
-- `hole_count = 1`
-
-**Do not implement the multi-hole course builder until the RC3 single-hole loop has been manually validated.** When it is built, reuse the same per-hole gameplay runtime rather than creating another physics layer.
-
-## Community Play parity
-
-The previous Community Play shared `GolfSimulation`, but its presentation/input layer was simplified enough to feel worse than campaign. RC3 reduces that divergence.
-
-Community Play now uses:
+It uses:
 
 - the same `GolfSimulation` authority;
 - `CourseRenderer` / dynamic course rendering;
-- equipped ball cosmetic;
-- equipped trail cosmetic;
-- ball shadow / airborne visual lift;
-- campaign-style aim line;
-- campaign-style shot audio;
-- wall/bumper/surface/portal/moving/jump/void/trap/hole feedback;
+- equipped ball/trail cosmetics;
+- shadows / airborne visual lift;
+- campaign-style aim + shot audio + impacts;
+- trap/void/hole feedback;
 - animated void reset;
-- same shot-input resolver as campaign;
-- comments/report/rating result UX.
+- the shared shot-input resolver.
 
-Gameplay behavior must remain shared. Community-specific code may change HUD/social flow, **not physics rules**.
+Community-specific code may change HUD/social flow, **not gameplay physics**.
 
-## Touch controls — RC3
+### Multi-hole groundwork
 
-Friend feedback identified two transversal UX problems:
+Database is prepared for Golf It-style courses:
 
-1. ball near screen edge could make strong shots physically difficult because the finger ran out of screen;
-2. feedback controls such as `SALTAR/CERRAR` and small survey choices could miss taps.
+- `map_kind`: `single | course`
+- `hole_count`: 1–18
+- `holes_json`: reserved for course collections
 
-### Edge-assisted shot input
+Current published content remains single-hole. Do not build the full multi-hole editor until the single-hole Community flow survives manual testing with multiple users.
 
-New shared file:
+## Touch controls
+
+Shared file:
 
 - `src/systems/ShotInputSystem.ts`
 
-Campaign and Community both call `resolveShotPull()`.
+Current rules:
 
-Rules:
-
-- in normal board positions, assist = 1 and controls behave normally;
-- near an edge, only when the required backward drag is physically constrained by the screen, the pull distance is amplified;
+- campaign and Community use the same shot resolver;
+- shared grab radius: **96 design px**;
+- in normal positions, sensitivity is unchanged;
+- near edges, backward pull is amplified only when the physical screen would otherwise prevent a strong shot;
 - shot angle is preserved;
-- full power remains reachable near borders/corners;
-- simulation launch power remains 0–1 and still goes through `GolfSimulation`;
-- shared grab radius is **96 design px**.
+- launch power remains 0–1 and still flows through `GolfSimulation`.
 
-Do not create different control sensitivity for Community and campaign again.
-
-### Feedback hitboxes
-
-RC3 enlarges touch targets in Results and in-hole reporting:
-
-- survey choices ~44 px high;
-- BUG / ME PILLÓ / SALTAR are real rectangle buttons;
-- `SALTAR` is no longer clickable text only;
-- report categories are larger;
-- `CERRAR`, ranking close, nav and report actions have larger targets;
-- per-level survey still auto-submits after the three required ratings to avoid adding another mandatory tap.
+Friend feedback also led to larger real touch targets for per-level feedback/report UI (`SALTAR`, `CERRAR`, choices, report categories, navigation). Avoid clickable text-only actions on mobile.
 
 ## Patch Notes
 
@@ -231,14 +254,13 @@ Files:
 - `src/systems/PatchNotesSystem.ts`
 - `src/scenes/PatchNotesScene.ts`
 
-Menu behavior:
+Current latest entry:
 
-- `PATCH NOTES · ● NUEVO` appears when the latest patch has not been opened on that browser;
-- opening Patch Notes marks the latest patch as read;
-- RC3 and RC2 notes are currently included;
-- every meaningful friends-beta patch should add/update a human-readable entry.
+- **Friends Beta RC4 · Quality Pass**
 
-Use this rather than relying on WhatsApp/Discord to explain every update.
+Menu should show `PATCH NOTES · ● NUEVO` while the latest patch has not been opened in that browser. Opening Patch Notes marks the current note as read.
+
+Every meaningful friends-beta patch should add a human-readable Patch Notes entry.
 
 ## Live players / presence
 
@@ -246,13 +268,13 @@ Backend table:
 
 - `beta_presence`
 
-Client behavior:
+Behavior:
 
-- heartbeat ~30 s while visible;
-- online window ~75 s;
+- heartbeat roughly every 30 s while visible;
+- online window roughly 75 s;
 - menu shows approximate `● N ONLINE`;
-- Community Play sets scene context to `community:<map UUID>`;
-- Community map cards can therefore show approximate `N JUGANDO`.
+- Community Play uses context `community:<map UUID>`;
+- Community cards can display approximate players currently inside a map.
 
 This is intentionally approximate presence, not websocket-perfect concurrency.
 
@@ -262,33 +284,35 @@ Backend table:
 
 - `app_status`
 
-Fields:
+Important fields:
 
 - `maintenance`
 - `patch_label`
 - `eta_text`
 - `message`
 - `updated_at`
+- `current_build_id`
 
 Runtime:
 
-- `BootScene` checks status before menu;
-- `MaintenanceScene` shows patch/message/ETA and retries automatically;
-- `LiveOpsSystem` can move an already-open session into maintenance on heartbeat.
+- `BootScene` checks live status;
+- `MaintenanceScene` shows patch/message/ETA and retries;
+- `LiveOpsSystem` can move already-open current clients into maintenance on heartbeat;
+- when maintenance is off but server build differs from client build, the client is sent to the update-required screen.
 
 ### Mandatory deploy protocol
 
-For a live beta patch likely to affect Pages:
+For a meaningful live beta patch:
 
 1. set `maintenance = true` before deploy;
 2. set honest patch label/message/ETA;
 3. push code/backend changes;
 4. wait for CI + Pages green;
-5. perform required smoke checks;
-6. set `maintenance = false`;
-7. update this README + Patch Notes.
+5. run required audits/smoke checks;
+6. update README + Patch Notes when state changed;
+7. set `maintenance = false` only after the release candidate is certified.
 
-Do not invent precise ETAs if uncertain.
+Do not leave maintenance on after a certified patch is complete.
 
 ## Physics authority
 
@@ -296,18 +320,18 @@ Do not invent precise ETAs if uncertain.
 
 It owns:
 
-- launch/friction
-- walls/bounds
-- curves/triangles
-- bumpers
-- sand/ice
-- boosters/fans
-- portals
-- moving objects
-- ramps/trampolines
-- void
-- pop traps
-- cup sweep/lip/sink
+- launch/friction;
+- bounds/walls;
+- triangles/curves;
+- bumpers;
+- sand/ice;
+- boosters/fans;
+- portals;
+- moving objects;
+- ramps/trampolines;
+- void;
+- pop traps;
+- cup sweep/lip/sink.
 
 Campaign, audits and Community Maps must share it. Phaser owns input, rendering, audio, haptics and FX.
 
@@ -337,8 +361,11 @@ A good troll trap:
 1. makes the obvious read attractive;
 2. surprises;
 3. is deterministic and understandable afterwards;
-4. leaves a fair learned route;
-5. creates “qué cabrón”, not “esto es random”.
+4. genuinely changes the failed/learned route;
+5. leaves a fair learned answer;
+6. creates “qué cabrón”, not “esto es random”.
+
+The learned optimal route does not have to touch the trap if avoiding it is the lesson. What matters is that the naive attractive read is actually punished.
 
 Do not spoil HARD traps in Level Select/tutorial overlays.
 
@@ -357,15 +384,17 @@ npm run audit:courses
 npm run audit:originality
 ```
 
-Long block certification:
+Long certification:
 
 ```bash
 FULL_AUDIT=1 npm run audit:courses
 ```
 
-`.github/workflows/full-audit.yml` runs mechanic integrity, geometry and clearance before the expensive long solver.
+`.github/workflows/full-audit.yml` runs mechanic integrity, geometry and clearance before the expensive solver.
 
-The solver is a critic, not the designer.
+**Current rule:** a Full Audit is certified only when every authored course is `OK`.
+
+The solver is a critic, not the designer. Never claim human fun/fairness solely from solver output.
 
 ## Beta backend / security
 
@@ -385,97 +414,84 @@ Beta tables:
 - `beta_presence`
 - `app_status`
 
-Community tables:
+Edge Function:
 
-- `community_maps`
-- `community_map_runs`
-- `community_map_feedback`
-- `community_map_comments`
-- `community_map_reports`
+- `beta-feedback`
 
-Edge Functions:
-
-- `beta-feedback` v5
-- `community-maps` v2
-
-New Community comments/reports have RLS enabled and direct anon/authenticated table access revoked; browser interaction is mediated through Edge Functions. Supabase security advisor currently shows only expected `rls_enabled_no_policy` INFO notices for this architecture, not warning-level vulnerabilities.
-
-RC3 added covering indexes for new comment/report tester foreign keys after performance advisor feedback.
+Community interactions are mediated through the Community Edge Function; direct public table access should remain constrained by RLS/revoked grants as designed.
 
 ## Early beta evidence — interpret carefully
 
-RC1 snapshot before RC2 input fixes:
+Known identity detail useful for analysis:
 
-- 5 testers were initially seen; total tester identities later reached 6 before RC3;
-- `Matkiller` is the project owner and contributed most early ratings;
-- RC1 therefore **must not be treated as public consensus**.
+- **`Matkiller` is the project owner**, not an independent external tester.
 
-Early level signals:
+Early RC1/RC2 feedback was therefore heavily owner-weighted and must not be treated as public consensus.
 
-- Classic 01: n=3, fun 2.67; huge run variance (roughly 1 stroke/4.5 s to 6 strokes/44.8 s);
-- Classic 02: n=2, fun 1.50;
-- Classic 03: n=2, fun 2.00;
-- Classic 07: n=1, fun 2, difficulty 1;
-- Troll 03: n=1, fun 1 + BUG tag;
-- Troll 04: n=1, fun 3 + surprise 5/5.
+Signals worth continuing to watch:
 
-RC2 separated telemetry after input fixes, and RC3 opens another clean bucket after edge/input/community changes.
+- Classic 02/03 received low early fun scores from more than one tester;
+- Classic 07/08 had owner-reported low difficulty/fun signals but tiny n;
+- old HARD 03 repeatedly received owner BUG/too-easy feedback because its trap did not affect the run; **RC4 specifically redesigns this and old HARD 03 feedback should not be attributed to the new layout**;
+- controls improved substantially in owner global feedback after early input fixes;
+- external friend feedback identified edge shots and missed feedback taps, both addressed by shared edge assist / larger hitboxes.
 
-Do **not** redesign Classic 02/03 or Troll 03 solely from these tiny RC1 samples. Re-test on RC3 first, then combine reports + runs + comments from multiple testers.
+Do not mix old-build level ratings into RC4 conclusions as if the level/input were unchanged.
 
 ## Known non-blockers
 
-- bundle remains roughly ~1.5 MB minified / ~395 kB gzip; splitting can wait;
-- abandoned runs are still not inserted as explicit incomplete `beta_runs`, so attempt count is improved but not perfect abandonment analytics;
-- global survey still needs more real completions;
-- Community comments currently use native prompt for writing/editing; a richer in-game keyboard/form can wait;
-- Community list currently shows only a small first page; pagination/search can wait for actual map volume;
-- multi-hole courses are schema-prepared but not implemented;
-- private DEV dashboard is still not implemented.
+- bundle remains ~1.5 MB minified / ~407 kB gzip; splitting can wait;
+- abandoned attempts are not yet represented as perfect explicit incomplete runs, so abandonment analytics remain approximate;
+- Community comments still use a simple input flow and can receive richer in-game text UX later;
+- Community list is still small/basic; pagination/search can wait for map volume;
+- multi-hole Community courses are schema-prepared but not implemented;
+- private DEV/review dashboard is not implemented yet;
+- current beta sample is still too small and owner-weighted for strong balance conclusions.
 
 ## Deliberately NOT building now
 
 Do not spend this milestone on:
 
-- ranked/MMR multiplayer
-- smart bots as a player feature
-- battle pass/seasons
-- Daily Hole
-- ads/lootboxes
-- extra currencies
-- large account/social profile system
-- complex recommendation algorithm
+- ranked/MMR multiplayer;
+- smart player bots;
+- battle pass/seasons;
+- Daily Hole;
+- ads/lootboxes;
+- extra currencies;
+- large account/profile systems;
+- complex recommendation algorithms.
+
+Historical long-term ideas such as ~40 Classic + ~40 troll holes, ranked multiplayer, seasons/pass and thematic season holes remain possible later but are explicitly deprioritized.
 
 ## Immediate next steps — resume here
 
-**RC3 is technically green. The next job is human validation, not more blind feature expansion.**
+**RC4 Quality Pass is technically certified. The next job is fresh human validation and clean RC4 evidence.**
 
-1. Ensure maintenance is **OFF** and have current testers refresh once to load RC3.
-2. Project owner should re-test the specific reported problems:
-   - strong shots with the ball near left/right/top/bottom edges;
-   - HARD 01–03 touch input;
-   - per-level `SALTAR` and feedback/report buttons.
-3. Validate Community Maps end-to-end with at least two testers:
-   - create/edit working map;
+1. Ensure backend maintenance is **OFF** after the final RC4 documentation deploy.
+2. Existing friends should refresh once if they came from RC2/RC3 so they definitely load RC4; future version drift should be caught by the update-required flow.
+3. Owner should manually verify on RC4:
+   - Patch Notes shows RC4 and unread state works;
+   - global survey is fully in-game;
+   - HARD 03: obvious lane gets punished and learned dogleg feels fair/fun;
+   - edge-assisted strong shots feel natural;
+   - per-level feedback/report buttons receive touch reliably.
+4. Collect fresh RC4 level/global feedback before redesigning Classic 02/03.
+5. Validate Community Maps end-to-end with at least two testers:
+   - edit map;
    - save explicit draft;
-   - choose draft in Publish;
-   - verify publication is blocked before successful playtest;
+   - select draft;
+   - publication blocked before successful playtest;
    - complete playtest;
-   - publish selected draft;
-   - discover under Nuevos/Tendencia;
+   - publish;
+   - discover via Nuevos/Tendencia;
    - play with campaign-like feel;
    - ★ rate from another tester;
    - comment;
    - report;
    - creator self-rating remains blocked;
-   - `N JUGANDO` appears when two sessions overlap if timing allows.
-4. Collect RC3 campaign feedback before redesigning weak maps.
-5. First campaign review targets once enough RC3 evidence exists:
-   - **Troll 03** because RC1 contained an explicit BUG;
-   - **Classic 02–03** because early fun scores were low;
-   - HARD 01–03 only if the touch/input complaint survives RC3.
-6. After the single-hole Community loop survives human testing, design **multi-hole Community Courses** (Golf It-style) using `map_kind=course`, `hole_count`, `holes_json` and the same per-hole runtime.
-7. Build a minimal private DEV/review dashboard only when enough fresh RC3 data exists to make it useful.
+   - observe `N JUGANDO` if two sessions overlap.
+6. Once single-hole Community survives human testing, design multi-hole Community Courses using `map_kind=course`, `hole_count`, `holes_json` and the same per-hole runtime.
+7. Build a small private DEV/review dashboard when enough fresh beta data exists to make it useful.
 8. Author campaign block 2 only when block 1 is genuinely strong.
 
 ## Development principle
