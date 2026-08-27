@@ -2,13 +2,13 @@
 
 Mobile-first 2D arcade minigolf built with Phaser + TypeScript. The current goal is **not** metagame expansion: it is to make the core shot, authored campaign and HARD troll identity good enough to retain real players.
 
-> **SOURCE OF TRUTH / CHAT HANDOFF — Last updated 2026-08-27 after commit `8d8c432`**
+> **SOURCE OF TRUTH / CHAT HANDOFF — Last updated 2026-08-27 after commit `4e1d77e` + beta backend v3**
 >
 > If development continues in another chat/session, read this file first. The exact resume point is in **Immediate next steps** below. Keep this README updated whenever campaign state, priorities, architecture, risks or next actions change.
 
 ## Play / branches
 
-- Public beta / GitHub Pages: https://papimatcoding.github.io/troll-golf/
+- Friends beta / GitHub Pages: https://papimatcoding.github.io/troll-golf/
 - `main`: stable history.
 - `dev`: active development and Pages beta deploy.
 - Pages deploy through **GitHub Actions**.
@@ -16,7 +16,7 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript. The current goal
 
 ## Current milestone
 
-Build an exceptional first external-beta vertical slice before multiplayer, ranked, seasons, ads or economy expansion.
+The first external-beta vertical slice is now technically certified and deployed.
 
 Current slice:
 
@@ -24,16 +24,21 @@ Current slice:
 - **5 authored HARD/Troll holes**
 - shared pure-TypeScript physics
 - automated geometry/clearance/solver/originality audits
-- anonymous beta telemetry + per-level feedback
+- anonymous beta telemetry + per-level feedback + global survey + remote quick reports
 - Community Maps MVP
 
 Campaign quality matters more than level count. Do not protect a weak level because time was already spent on it.
 
 ## CURRENT STATE — important
 
-Current gameplay revision is certified by both the fast CI audit and the long solver.
+### FRIENDS BETA: GO
 
-- normal CI is **green**;
+The first small external friend beta is approved.
+
+Technical release state:
+
+- latest normal CI is **green**;
+- latest Pages build/deploy is **green**;
 - typecheck/build/hole physics/mechanic integrity/geometry/clearance all pass;
 - originality audit flags **0 structurally similar pairs**;
 - fast campaign audit: **Classic 10/10 clean**;
@@ -41,8 +46,15 @@ Current gameplay revision is certified by both the fast CI audit and the long so
 - Full Audit (`FULL_AUDIT=1`): **Classic 10/10 clean**;
 - Full Audit (`FULL_AUDIT=1`): **Troll 5/5 clean**;
 - no current level is `TOO_EASY_FOR_TARGET`, `MECHANIC_BYPASSED` or `NO_ROUTE_FOUND` in the certified long solver;
-- the remaining long-solver warning is only the intentional difficulty dip from Classic 04 to the first-bumper lesson in Classic 05;
-- `.github/workflows/full-audit.yml` now fails fast through mechanic, geometry and clearance checks before running the long solver.
+- latest telemetry/reporting changes do not touch gameplay physics or authored geometry, so the long certification still applies to the deployed gameplay;
+- deployed beta build ID is **`beta-block-1-friends-rc1`**, separating friend-beta data from prior internal test data;
+- quick `REPORTAR` feedback now reaches Supabase remotely and is also kept locally as a fallback;
+- backend has a dedicated `beta_reports` table with RLS enabled;
+- Supabase `beta-feedback` Edge Function is on v3 with `report` support;
+- Supabase security advisor has no remaining warning-level issue from this pass; the old mutable `search_path` warning on the Community Maps self-rating trigger was fixed;
+- missing Community Maps foreign-key indexes flagged by the performance advisor were added.
+
+The remaining job is **human validation**, which is now exactly what this controlled friend beta is for. Do not mistake `GO` for “finished game”: it means the build is technically healthy enough to put in front of real testers and trust the telemetry/feedback they generate.
 
 ### Latest certification fixes
 
@@ -59,21 +71,7 @@ Current representative Full Audit results:
 - Classic 10: best 2, blind 3, bumper used yes, difficulty 36.6, status OK;
 - Troll 05: best 2, blind 3, moving used yes, trap triggered yes, difficulty 48.8, status OK.
 
-Do not redesign Classic 05 merely to remove its difficulty-dip warning. It is intentionally the first open bumper lesson after the harder setup-shot level; verify the pacing manually before changing it.
-
-### Beta approval gate
-
-The project owner can send the Pages link to friends only after all of these are true:
-
-1. normal CI green — **DONE**;
-2. Full Audit green on the current authored slice — **DONE**;
-3. one complete manual desktop playthrough with no blocker-level issue — **PENDING**;
-4. one complete mobile/touch playthrough with no blocker-level issue — **PENDING**;
-5. feedback submission flow works in the deployed Pages build — **PENDING FINAL CHECK**.
-
-When these are satisfied, the handoff should explicitly say **FRIENDS BETA: GO**.
-
-Current status: **FRIENDS BETA: HOLD** — automated certification is complete; manual desktop/mobile validation is now the blocker.
+Do not redesign Classic 05 merely to remove its difficulty-dip warning. It is intentionally the first open bumper lesson after the harder setup-shot level; use human data to decide whether that pacing works.
 
 ## Core design rules
 
@@ -158,7 +156,7 @@ Long solver / block certification:
 FULL_AUDIT=1 npm run audit:courses
 ```
 
-`.github/workflows/full-audit.yml` runs the long certification automatically on authored/physics/auditor changes and supports manual dispatch. It now runs mechanic integrity, geometry and clearance first so invalid maps fail fast before the expensive solver.
+`.github/workflows/full-audit.yml` runs the long certification automatically on authored/physics/auditor changes and supports manual dispatch. It runs mechanic integrity, geometry and clearance first so invalid maps fail fast before the expensive solver.
 
 The solver is a critic, not the designer. Never lower star targets merely to turn warnings green. First inspect whether the solver found a route that bypasses the intended decision.
 
@@ -177,16 +175,27 @@ Targets are authored per level.
 
 Supabase project: **Troll Golf** (`xtekdrkqgfjnnwawyoim`). Never commit service-role/admin secrets.
 
+Friends-beta build ID:
+
+- `beta-block-1-friends-rc1`
+
 Backend beta tables:
 
 - `beta_testers`
 - `beta_runs`
 - `beta_level_feedback`
 - `beta_game_feedback`
+- `beta_reports`
 
-Tester identity is a persistent anonymous browser UUID. Current quick survey: Fun, Originality, Difficulty, optional BUG, and HARD optional “me pilló”.
+Tester identity is a persistent anonymous browser UUID.
 
-`BetaTelemetry.beginAttempt()` still starts too late (result flow), so abandoned/retry counting is imperfect; this is backlog, not a beta blocker.
+Per-level survey currently records Fun, Originality, Difficulty, optional BUG tag, and HARD optional “me pilló”. A global survey is triggered after completing the slice and records overall fun, controls, variety, difficulty curve, HARD, willingness to keep playing, favourite/worst level and ideas.
+
+`REPORTAR` categories (`bug`, too easy, too hard, repetitive, object/map, other) are sent to the `beta-feedback` Edge Function and inserted into `beta_reports`. The same report is retained in local storage as a fallback/export copy so a temporary network failure does not destroy tester notes.
+
+`BetaTelemetry.beginAttempt()` still starts in the result flow, so abandoned/retry counting is imperfect. This is a known non-blocker; do not interpret the `attempts` column as exact abandonment analytics yet.
+
+The beta tables intentionally have RLS enabled and no direct client policies because browser clients do not access them directly; beta writes/reads are mediated by Edge Functions. The Supabase advisor therefore reports `rls_enabled_no_policy` as INFO, not as a vulnerability to “fix” with permissive policies.
 
 ## Community Maps MVP
 
@@ -200,7 +209,10 @@ Edge Function: `community-maps`.
 
 Current flow: create draft in Beta Lab/Editor → publish with title/description → browse newest/top → play using shared simulation → rate fun/originality/difficulty. Creator self-rating is blocked in API/database, and each tester gets one rating per map.
 
-Latest community fix before this campaign pass: `community: avoid Phaser loader name collision`.
+Security/performance cleanup in the final friend-beta pass:
+
+- `prevent_creator_community_rating()` now has an explicit safe `search_path`;
+- covering indexes were added for Community Maps tester/creator foreign keys.
 
 Still deliberately absent: accounts/social profiles, comments/follows, full moderation, search/tags/pagination, rich thumbnails, automatic campaign promotion and private review dashboard.
 
@@ -221,6 +233,7 @@ Wall physics is currently axis-aligned. Do not expose fake arbitrary visual rota
 - bundle warning remains around ~1.5 MB minified / ~395 kB gzip; code splitting can wait;
 - difficulty still needs real human data despite green audits;
 - Classic 05 intentionally dips after Classic 04 and needs human pacing validation rather than automatic redesign;
+- attempt/abandonment telemetry is not exact yet;
 - HARD will eventually need more troll primitives, but do not add many at once;
 - Community play is intentionally more minimal than campaign play.
 
@@ -230,16 +243,16 @@ Do not spend this milestone on multiplayer, ranked/MMR, smart bots as a player f
 
 ## Immediate next steps — resume here
 
-**AUTOMATED CERTIFICATION IS COMPLETE: 10/10 Classic + 5/5 Troll clean in fast CI and Full Audit. Do not author more levels yet.**
+**FRIENDS BETA: GO. The first job is no longer to author/fix blindly; it is to collect real human evidence.**
 
-1. Manually play all 15 holes in sequence on desktop. Evaluate fun, readability, repetition, difficulty curve and whether each teaching/trap idea is actually felt. Specifically judge whether Classic 05 feels like a welcome first-bumper breather or an awkward difficulty collapse.
-2. Fix only blocker-level/manual issues discovered in that desktop pass, then re-run CI/Full Audit only if authored geometry or shared physics changes.
-3. Repeat the whole slice on mobile/touch; pay special attention to narrow corridors, aiming precision, UI obstruction and restart/next-level flow.
-4. Verify the deployed feedback/report flow once more (per-level rating, optional bug report and global feedback).
-5. If steps 1–4 have no blocker, change this README to **FRIENDS BETA: GO** and send the Pages URL to a small group of friends.
-6. Collect per-level feedback and rebuild only levels that real data identifies as weak/repetitive/spiky. Do not regenerate the campaign wholesale.
+1. Send the Pages build to a **small first wave** of friends, preferably with a mix of desktop and mobile users.
+2. Ask them to play without coaching. Do not explain HARD traps or optimal Classic routes beforehand.
+3. Let the per-level survey, `REPORTAR`, global survey and run telemetry collect evidence. Ask testers to use `REPORTAR` immediately when something feels broken, unfair, repetitive or pointless.
+4. Review `beta_reports`, `beta_level_feedback`, `beta_game_feedback` and `beta_runs` grouped by `build_id = beta-block-1-friends-rc1`.
+5. Rebuild only levels that real data identifies as weak/repetitive/spiky. Do not regenerate the campaign wholesale.
+6. If a gameplay/physics change is made, re-run normal CI and Full Audit before sending the updated build back out.
 7. Validate Community Maps end-to-end with a few maps/testers (publish → discover → play → rate → self-rating blocked).
-8. Build the secure DEV/review dashboard only after enough feedback exists.
+8. Build the secure DEV/review dashboard only after enough feedback exists to make it useful.
 9. Author block 2 only when block 1 is genuinely strong.
 
 ## Development principle
