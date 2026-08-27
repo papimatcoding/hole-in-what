@@ -1,7 +1,8 @@
 import Phaser from "phaser";
+import { BETA_TESTING } from "../config/beta";
 import { pointerToDesign, setupDesignCamera, sharpenSceneText } from "../config/display";
 import { cosmeticById, type CosmeticDefinition } from "../data/cosmetics";
-import { levelFor } from "../data/campaign";
+import { levelFor, levelsForMode } from "../data/campaign";
 import { AudioFeedback, type FeedbackSound } from "../systems/AudioFeedback";
 import { drawBall } from "../systems/CosmeticRenderer";
 import { drawCourse, drawDynamicCourse } from "../systems/CourseRenderer";
@@ -82,6 +83,10 @@ export class GameplayScene extends Phaser.Scene {
     this.input.on("pointerdown",(p:Phaser.Input.Pointer)=>this.pointerDown(p));
     this.input.on("pointermove",(p:Phaser.Input.Pointer)=>this.pointerMove(p));
     this.input.on("pointerup",(p:Phaser.Input.Pointer)=>this.pointerUp(p));
+    if(BETA_TESTING){
+      this.input.keyboard?.on("keydown-LEFT",()=>this.goRelative(-1));
+      this.input.keyboard?.on("keydown-RIGHT",()=>this.goRelative(1));
+    }
 
     drawCourse(this.course,this.level,this.sim.state);drawDynamicCourse(this.dynamic,this.level,0);this.updateBallView();this.updateHudOcclusion();
     this.tutorialQueue=unseenMechanics(this.level);
@@ -107,6 +112,26 @@ export class GameplayScene extends Phaser.Scene {
     this.timeText=this.add.text(498,42,"0.0 s",{fontFamily:"system-ui, sans-serif",fontSize:"15px",color:"#f5f7fa"}).setOrigin(1,0).setDepth(20);
     this.add.text(42,84,"‹",{fontFamily:"system-ui, sans-serif",fontSize:"36px",color:"#f5f7fa"}).setDepth(20).setInteractive({useHandCursor:true})
       .on("pointerup",()=>this.scene.start("level-select",{mode:this.mode,page:Math.floor(this.levelIndex/10)}));
+    if(BETA_TESTING){
+      const levels=levelsForMode(this.mode);
+      this.betaLevelButton(452,84,"‹",this.levelIndex>0,()=>this.goRelative(-1));
+      this.betaLevelButton(496,84,"›",this.levelIndex<levels.length-1,()=>this.goRelative(1));
+      this.add.text(474,113,`${this.mode==="troll"?"H":"C"}${String(this.levelIndex+1).padStart(2,"0")}`,{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#7d91a0"}).setOrigin(.5).setDepth(20);
+    }
+  }
+
+  private betaLevelButton(x:number,y:number,label:string,enabled:boolean,action:()=>void):void{
+    const bg=this.add.rectangle(x,y,34,30,enabled?0x16232d:0x10171d,.92).setStrokeStyle(1,enabled?0x405767:0x252f37).setDepth(20);
+    const text=this.add.text(x,y-1,label,{fontFamily:"system-ui, sans-serif",fontSize:"21px",fontStyle:"bold",color:enabled?"#dce8ef":"#46535d"}).setOrigin(.5).setDepth(21);
+    if(!enabled)return;
+    bg.setInteractive({useHandCursor:true}).on("pointerup",action);text.setInteractive({useHandCursor:true}).on("pointerup",action);
+  }
+
+  private goRelative(delta:number):void{
+    if(!BETA_TESTING)return;
+    const levels=levelsForMode(this.mode),next=this.levelIndex+delta;
+    if(next<0||next>=levels.length)return;
+    this.scene.start("game",{mode:this.mode,levelIndex:next});
   }
 
   private updateHudOcclusion():void{
