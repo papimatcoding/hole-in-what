@@ -1,0 +1,65 @@
+name: Lab Audit
+
+# Fast development feedback. Feature/lab branches never deploy GitHub Pages.
+on:
+  push:
+    branches:
+      - "feature/**"
+      - "audit-*"
+      - "lab/**"
+  workflow_dispatch:
+
+jobs:
+  lab-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Check hole physics
+        run: npm run test:hole
+
+      - name: Check authored mechanics
+        run: npm run test:mechanics
+
+      - name: Check authored geometry
+        run: npm run test:geometry
+
+      - name: Check authored clearance
+        run: npm run test:clearance
+
+      - name: Fast adversarial campaign audit
+        run: npm run audit:courses
+
+      - name: Audit 2.0 fast human-model report
+        run: npm run audit:human
+
+      - name: Audit 2.0 difficulty and design advice
+        run: npm run audit:design
+
+      - name: Check course originality
+        run: npm run audit:originality
+
+      - name: Upload audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-2-fast-report
+          path: |
+            artifacts/audit2-report.*
+            artifacts/audit2-design.*
+          if-no-files-found: warn
