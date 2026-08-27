@@ -2,7 +2,7 @@
 
 Mobile-first 2D arcade minigolf built with Phaser + TypeScript. Current priority is **core shot quality + authored campaign quality + HARD troll identity + trustworthy beta evidence + a usable Community Maps loop**. Do not expand the metagame before these are genuinely strong.
 
-> **SOURCE OF TRUTH / CHAT HANDOFF — Last updated 2026-08-27 after Friends Beta RC5 · Player UX**
+> **SOURCE OF TRUTH / CHAT HANDOFF — Last updated 2026-08-27 after Friends Beta RC5 went live**
 >
 > If development continues in another chat/session, read this file first. The exact resume point is in **Immediate next steps**. Update this README whenever campaign state, priorities, beta/live-ops behavior, architecture, backend schema, validation or next actions change.
 
@@ -15,7 +15,7 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript. Current priority
 
 ## CURRENT STATE
 
-### FRIENDS BETA: GO — RC5 technically certified
+### FRIENDS BETA: GO — RC5 live and technically certified
 
 The first vertical slice contains:
 
@@ -35,6 +35,12 @@ Current telemetry build ID:
 
 - **`beta-block-1-friends-rc5`**
 
+Current live-ops state after release:
+
+- `maintenance = false`;
+- server `current_build_id = beta-block-1-friends-rc5`;
+- patch label `Friends Beta RC5 · Player UX`.
+
 Analyse RC1/RC2/RC3/RC4/RC5 separately. Do not mix old level/input feedback into RC5 conclusions when layouts or UX changed.
 
 ## RC5 — Player UX + HARD 03 recovery
@@ -53,20 +59,20 @@ Rules:
 
 - `tester_id` is the stable anonymous browser identity and **never changes when the player edits their name**;
 - alias is stored separately and can be changed in-game;
-- the current alias is visible from the game/menu so the tester knows who they are;
+- the current alias is visible from the game/menu;
 - do not bring back browser `prompt()` for username selection;
 - alias changes re-register metadata but preserve the same tester ID.
 
-Anti-duplicate survey integrity is backend-enforced, not alias-enforced:
+Anti-duplicate survey integrity is backend-enforced:
 
 - `beta_game_feedback`: unique `(tester_id, build_id)`;
 - `beta_level_feedback`: unique `(tester_id, build_id, level_id)`.
 
-Therefore changing alias cannot legitimately unlock another survey submission for the same tester/build.
+Changing alias therefore cannot legitimately unlock another survey submission for the same tester/build.
 
 ### Asistencia al jugador
 
-The old idea of a floating/general “Comentarios” control is replaced by a main-menu **ASISTENCIA AL JUGADOR** area.
+The old general “Comentarios” idea is replaced by a main-menu **ASISTENCIA AL JUGADOR** area.
 
 It provides:
 
@@ -83,19 +89,19 @@ Per-hole reports/feedback remain available where relevant; Assistance is the gen
 
 ### Community Maps ownership / deletion
 
-Creators can now delete their own published maps from Community discovery with an in-game confirmation.
+Creators can delete their own published maps from Community discovery with an in-game confirmation.
 
 Security rule:
 
 - the client showing `BORRAR` is only UX;
-- the `community-maps` backend validates `creator_tester_id` before deletion;
+- `community-maps` validates `creator_tester_id` server-side before deletion;
 - never trust a client-supplied ownership claim by itself.
 
 Backend Edge Function:
 
 - `community-maps` **v3**, ACTIVE.
 
-The owner's old empty test map was removed during RC5. At RC5 handoff the database has **0 published Community Maps**.
+The owner's old empty test map was removed during RC5. At RC5 release the database has **0 published Community Maps**.
 
 ### HARD 03 final RC5 design
 
@@ -128,14 +134,14 @@ Gameplay commit certified:
 
 - `333943172df21eebe5e34165bc9e127c8a2654cd` — `hard: make troll 03 collapse consequential`
 
-Normal CI:
+Normal CI on gameplay:
 
 - run `33075619341`: **success**;
 - typecheck/build/hole physics/mechanics/geometry/clearance: **green**;
 - fast campaign audit: **Classic 10/10 clean + Troll 5/5 clean**;
 - originality: **0 structurally similar pairs**.
 
-Pages:
+Pages gameplay deploy:
 
 - run `33075619290`: **success**.
 
@@ -160,9 +166,13 @@ RC5 H03 in the Full Audit:
 
 That warning is not an automated blocker. It says the blind beam search did not discover a route while the guided solver did. This may mean the hole now requires genuine learning, or it may be too opaque. **Only human playtesting decides which. Do not redesign it again solely to silence the warning.**
 
-H04 receives a secondary informational difficulty-dip warning because H03 now scores harder. Again, validate pacing manually before changing geometry.
+H04 receives a secondary informational difficulty-dip warning because H03 now scores harder. Validate pacing manually before changing geometry. Classic retains its known informational 04→05 difficulty dip; do not automatically redesign Classic 05 merely to flatten a solver graph.
 
-Classic retains its known informational 04→05 difficulty dip. Do not automatically redesign Classic 05 merely to flatten a solver graph.
+Final RC5 documentation deploy before release:
+
+- README commit `066e5ccf27bc4aa31499284ac908b1d34a6a6bfb`;
+- CI run `33076219744`: **success**;
+- Pages run `33076219754`: **success**.
 
 ## Physics authority
 
@@ -228,11 +238,7 @@ Current publishing flow:
 
 Do not return to implicit “publish whatever is in localStorage”. Editing/replacing a draft invalidates its previous playtest certification.
 
-Discovery supports:
-
-- TENDENCIA
-- MEJORES
-- NUEVOS
+Discovery supports **TENDENCIA / MEJORES / NUEVOS**.
 
 Social/current features:
 
@@ -282,24 +288,13 @@ Files:
 - `src/systems/PatchNotesSystem.ts`
 - `src/scenes/PatchNotesScene.ts`
 
-Latest entry:
-
-- **Friends Beta RC5 · Player UX**
+Latest entry: **Friends Beta RC5 · Player UX**.
 
 Menu shows the unread marker until the latest patch is opened in that browser. Every meaningful friends-beta patch should add a human-readable entry.
 
 ## Live ops / maintenance / version drift
 
 Backend table: `app_status`.
-
-Important fields:
-
-- `maintenance`
-- `patch_label`
-- `eta_text`
-- `message`
-- `updated_at`
-- `current_build_id`
 
 Runtime:
 
@@ -317,6 +312,8 @@ Mandatory meaningful-beta deploy protocol:
 5. required audits/smoke checks;
 6. README + Patch Notes updated;
 7. set server `current_build_id` to released build and maintenance OFF only after certification.
+
+RC5 completed this protocol and is now live with maintenance OFF.
 
 ## Beta backend / security
 
@@ -404,22 +401,21 @@ Historical ideas such as ~40 Classic + ~40 HARD, competitive online up to 10, bo
 
 ## Immediate next steps — resume here
 
-**RC5 is automatically certified. Human RC5 validation is now the only release-quality question.**
+**RC5 is live and automatically certified. Human RC5 validation is now the only release-quality question.**
 
-1. Finalize live ops: server build → `beta-block-1-friends-rc5`, maintenance OFF after this README deploy is green.
-2. Owner manually tests RC5 on desktop/mobile, especially:
+1. Owner manually tests RC5 on desktop/mobile, especially:
    - HARD 03: first read should genuinely drop/troll; learned route should feel understandable and not obnoxiously opaque;
    - visible player alias + in-game edit;
    - alias edit preserves survey-completed state;
    - Asistencia al jugador sends a support message correctly;
-   - general survey opens in-game;
+   - global survey opens in-game;
    - Community list is empty after test-map deletion;
    - create/publish a fresh test map and verify creator-only delete end-to-end.
-3. If H03 feels unfair/cryptic despite automated OK, tune readability/geometry from human observation; do not chase the `GUIDED_ROUTE_ONLY` warning mechanically.
-4. Test Community end-to-end with at least two actual testers: publish → discover → play → rate → comment → report → creator deletion/self-rating rules.
-5. Collect fresh RC5 level/global/support evidence and redesign only data-identified weak content.
-6. Build a private DEV/review dashboard only once enough fresh beta data exists to justify it.
-7. Author campaign block 2 only when block 1 is genuinely strong.
+2. If H03 feels unfair/cryptic despite automated OK, tune readability/geometry from human observation; do not chase the `GUIDED_ROUTE_ONLY` warning mechanically.
+3. Test Community end-to-end with at least two actual testers: publish → discover → play → rate → comment → report → creator deletion/self-rating rules.
+4. Collect fresh RC5 level/global/support evidence and redesign only data-identified weak content.
+5. Build a private DEV/review dashboard only once enough fresh beta data exists to justify it.
+6. Author campaign block 2 only when block 1 is genuinely strong.
 
 ## Development principle
 
