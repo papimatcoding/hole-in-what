@@ -6,9 +6,10 @@ import { CommunityDrafts } from "../systems/CommunityDraftSystem";
 import { CommunityMaps, type CommunityComment, type CommunityMapDetail, type CommunityReportCategory } from "../systems/CommunityMapsSystem";
 import { drawBall } from "../systems/CosmeticRenderer";
 import { drawCourse, drawDynamicCourse } from "../systems/CourseRenderer";
-import { GOLF_PHYSICS, GolfSimulation, powerFromPhysicalPull, type SimulationEvent } from "../systems/GolfSimulation";
+import { GOLF_PHYSICS, GolfSimulation, type SimulationEvent } from "../systems/GolfSimulation";
 import { LiveOps } from "../systems/LiveOpsSystem";
 import { SaveSystem } from "../systems/SaveSystem";
+import { resolveShotPull, SHOT_GRAB_RADIUS } from "../systems/ShotInputSystem";
 import type { LevelDefinition } from "../types";
 
 interface TrailParticle{x:number;y:number;life:number;maxLife:number;size:number;}
@@ -79,25 +80,25 @@ export class CommunityPlayScene extends Phaser.Scene{
   }
 
   private createHud():void{
-    const back=this.add.rectangle(48,48,52,46,0x111922,.94).setStrokeStyle(1,0x3b4f5e).setDepth(30).setInteractive({useHandCursor:true});this.add.text(48,46,"‹",{fontFamily:"system-ui",fontSize:"31px",fontStyle:"bold",color:"#eef4f8"}).setOrigin(.5).setDepth(31);back.on("pointerup",()=>this.goBack());
+    const back=this.add.rectangle(48,48,56,50,0x111922,.94).setStrokeStyle(1,0x3b4f5e).setDepth(30).setInteractive({useHandCursor:true});this.add.text(48,46,"‹",{fontFamily:"system-ui",fontSize:"31px",fontStyle:"bold",color:"#eef4f8"}).setOrigin(.5).setDepth(31);back.on("pointerup",()=>this.goBack());
     this.add.text(270,42,this.detail!.title,{fontFamily:"system-ui",fontSize:"15px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5).setDepth(20);
     this.add.text(270,66,`por ${this.detail!.creator}${this.draftId?" · PLAYTEST":""}`,{fontFamily:"system-ui",fontSize:"9px",fontStyle:"bold",color:this.draftId?"#d8ba75":"#8395a2"}).setOrigin(.5).setDepth(20);
     this.strokeText=this.add.text(42,92,"Golpes 0",{fontFamily:"system-ui",fontSize:"14px",fontStyle:"bold",color:"#f5f7fa"}).setDepth(20);this.timeText=this.add.text(498,92,"0.0 s",{fontFamily:"system-ui",fontSize:"14px",color:"#f5f7fa"}).setOrigin(1,0).setDepth(20);
-    if(this.mapId){this.smallButton(456,132,100,"⚑ REPORTAR",()=>this.openReport());this.smallButton(342,132,114,"COMENTARIOS",()=>{void this.openComments();});}
+    if(this.mapId){this.smallButton(450,136,112,"⚑ REPORTAR",()=>this.openReport());this.smallButton(322,136,126,"COMENTARIOS",()=>{void this.openComments();});}
   }
-  private smallButton(x:number,y:number,w:number,label:string,action:()=>void):void{const bg=this.add.rectangle(x,y,w,38,0x15212a,.95).setStrokeStyle(1,0x3d5362).setDepth(30).setInteractive({useHandCursor:true}),t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"8px",fontStyle:"bold",color:"#cfe0e9"}).setOrigin(.5).setDepth(31);bg.on("pointerdown",()=>{bg.setScale(.98);t.setScale(.98);}).on("pointerout",()=>{bg.setScale(1);t.setScale(1);}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);action();});}
+  private smallButton(x:number,y:number,w:number,label:string,action:()=>void):void{const bg=this.add.rectangle(x,y,w,44,0x15212a,.95).setStrokeStyle(1,0x3d5362).setDepth(30).setInteractive({useHandCursor:true}),t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"8px",fontStyle:"bold",color:"#cfe0e9"}).setOrigin(.5).setDepth(31);bg.on("pointerdown",()=>{bg.setScale(.98);t.setScale(.98);}).on("pointerout",()=>{bg.setScale(1);t.setScale(1);}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);action();});}
 
   private pointerDown(pointer:Phaser.Input.Pointer):void{
     AudioFeedback.unlock();if(this.overlayPanel||this.done||this.voidAnimating||this.sim.isAirborne())return;
     const speed=Math.hypot(this.sim.state.ball.vx,this.sim.state.ball.vy);if(this.sim.state.moving&&speed<GOLF_PHYSICS.stopSpeed*1.6){this.sim.state.ball.vx=0;this.sim.state.ball.vy=0;this.sim.state.moving=false;}
-    if(this.sim.state.moving)return;const p=pointerToDesign(this,pointer),b=this.sim.state.ball;if(Phaser.Math.Distance.Between(p.x,p.y,b.x,b.y)<=88){this.dragPointer=pointer;this.drawAim(p.x,p.y);}
+    if(this.sim.state.moving)return;const p=pointerToDesign(this,pointer),b=this.sim.state.ball;if(Phaser.Math.Distance.Between(p.x,p.y,b.x,b.y)<=SHOT_GRAB_RADIUS){this.dragPointer=pointer;this.drawAim(p.x,p.y);}
   }
   private pointerMove(pointer:Phaser.Input.Pointer):void{if(!this.dragPointer||this.done||this.sim.state.moving)return;const p=pointerToDesign(this,pointer);this.drawAim(p.x,p.y);}
   private pointerUp(pointer:Phaser.Input.Pointer):void{
-    if(!this.dragPointer||this.done||this.sim.state.moving)return;const p=pointerToDesign(this,pointer),b=this.sim.state.ball,dx=b.x-p.x,dy=b.y-p.y,len=Math.hypot(dx,dy);this.dragPointer=null;this.aim.clear();if(len<12)return;
-    const power=powerFromPhysicalPull(len);if(!this.sim.launch(Math.atan2(dy,dx),power))return;this.strokes++;this.strokeText.setText(`Golpes ${this.strokes}`);AudioFeedback.play("shot",.65+power*.45);this.impact(b.x,b.y,0xcbe8ff,18,.35);
+    if(!this.dragPointer||this.done||this.sim.state.moving)return;const p=pointerToDesign(this,pointer),b=this.sim.state.ball,pull=resolveShotPull(b,p);this.dragPointer=null;this.aim.clear();if(pull.length<12)return;
+    if(!this.sim.launch(Math.atan2(pull.dy,pull.dx),pull.power))return;this.strokes++;this.strokeText.setText(`Golpes ${this.strokes}`);AudioFeedback.play("shot",.65+pull.power*.45);this.impact(b.x,b.y,0xcbe8ff,18,.35);
   }
-  private drawAim(x:number,y:number):void{const b=this.sim.state.ball;let dx=b.x-x,dy=b.y-y;const len=Math.hypot(dx,dy)||1,power=powerFromPhysicalPull(len),pull=Math.min(len,GOLF_PHYSICS.maxPull/GOLF_PHYSICS.dragGain);dx/=len;dy/=len;this.aim.clear();this.aim.lineStyle(4,0x8bc5ff,.92);this.aim.beginPath();this.aim.moveTo(b.x,b.y);this.aim.lineTo(b.x-dx*pull,b.y-dy*pull);this.aim.strokePath();this.aim.fillStyle(0xedf7ff,.72);const reach=68+power*108;for(let i=1;i<=8;i++){const q=i/8;this.aim.fillCircle(b.x+dx*reach*q,b.y+dy*reach*q,3.4-q*1.5);}}
+  private drawAim(x:number,y:number):void{const b=this.sim.state.ball,pullData=resolveShotPull(b,{x,y});if(pullData.length<.001){this.aim.clear();return;}const pull=Math.min(pullData.length,GOLF_PHYSICS.maxPull/GOLF_PHYSICS.dragGain);this.aim.clear();this.aim.lineStyle(4,0x8bc5ff,.92);this.aim.beginPath();this.aim.moveTo(b.x,b.y);this.aim.lineTo(b.x-pullData.unitX*pull,b.y-pullData.unitY*pull);this.aim.strokePath();this.aim.fillStyle(0xedf7ff,.72);const reach=68+pullData.power*108;for(let i=1;i<=8;i++){const q=i/8;this.aim.fillCircle(b.x+pullData.unitX*reach*q,b.y+pullData.unitY*reach*q,3.4-q*1.5);}}
 
   private consume(events:SimulationEvent[]):void{for(const e of events){if(e.kind==="wall-hit")this.feedback(e,"wall",0xb7cad8,18,.00055);else if(e.kind==="bumper-hit")this.feedback(e,"bumper",0xffcf78,27,.00115);else if(e.kind==="surface-sand")this.playSound("sand",120);else if(e.kind==="surface-ice")this.playSound("ice",120);else if(e.kind==="portal")this.feedback(e,"portal",0xaecbff,31,.00075);else if(e.kind==="curve-hit")this.feedback(e,"wall",0x9fb9c8,20,.0006);else if(e.kind==="moving-hit")this.feedback(e,"bumper",0xbdd7e5,25,.0009);else if(e.kind==="ramp"||e.kind==="trampoline")this.feedback(e,"jump",0xd9f5ff,25,.00065);else if(e.kind==="landing")this.feedback(e,"land",0xeaf8ff,22,.0004);else if(e.kind==="void"){this.feedback(e,"void",0x5a7182,34,.00145);this.startVoidReset();}else if(e.kind==="trap-wall"||e.kind==="trap-bumper"||e.kind==="trap-void")this.feedback(e,"trap",0xf0b869,36,.00165);else if(e.kind==="hole-lip")this.feedback(e,"lip",0xf1e7b7,22,.0005);else if(e.kind==="hole"){this.playSound("hole",0);this.finish();}}}
   private feedback(e:SimulationEvent,sound:FeedbackSound,color:number,radius:number,shake:number):void{this.playSound(sound,sound==="wall"?65:95);this.impact(e.x,e.y,color,radius,.62);this.cameras.main.shake(32,shake);}
@@ -137,7 +138,7 @@ export class CommunityPlayScene extends Phaser.Scene{
   }
   private async sendReport(category:CommunityReportCategory):Promise<void>{if(!this.mapId)return;const note=(category==="bug"||category==="impossible"||category==="other")?(window.prompt("Detalle opcional","")??""):"";const result=await CommunityMaps.report(this.mapId,category,note);this.closeOverlay();this.toast(result.ok?"✓ REPORTE ENVIADO":"NO SE PUDO REPORTAR",result.ok);}
 
-  private panelButton(x:number,y:number,w:number,label:string,action:()=>void,primary=false):Phaser.GameObjects.Container{const rest=primary?0x294454:0x17232c,bg=this.add.rectangle(x,y,w,48,rest).setStrokeStyle(2,primary?0x78a9c2:0x3c5060).setInteractive({useHandCursor:true}),t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"10px",fontStyle:"bold",color:"#e6eef3"}).setOrigin(.5);bg.on("pointerdown",()=>{bg.setScale(.98);t.setScale(.98);}).on("pointerout",()=>{bg.setScale(1);t.setScale(1);}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);action();});return this.add.container(0,0,[bg,t]);}
+  private panelButton(x:number,y:number,w:number,label:string,action:()=>void,primary=false):Phaser.GameObjects.Container{const rest=primary?0x294454:0x17232c,bg=this.add.rectangle(x,y,w,54,rest).setStrokeStyle(2,primary?0x78a9c2:0x3c5060).setInteractive({useHandCursor:true}),t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"10px",fontStyle:"bold",color:"#e6eef3"}).setOrigin(.5);bg.on("pointerdown",()=>{bg.setScale(.98);t.setScale(.98);}).on("pointerout",()=>{bg.setScale(1);t.setScale(1);}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);action();});return this.add.container(0,0,[bg,t]);}
   private closeOverlay():void{this.overlayPanel?.destroy(true);this.overlayPanel=null;}
   private goBack():void{if(this.draftId)this.scene.start("community-publish");else this.scene.start("community-maps");}
   private toast(message:string,ok:boolean):void{const t=this.add.text(270,174,message,{fontFamily:"system-ui",fontSize:"10px",fontStyle:"bold",color:ok?"#d9efde":"#f0c1b7",backgroundColor:ok?"#14231a":"#2b1715",padding:{x:12,y:7}}).setOrigin(.5).setDepth(350);this.tweens.add({targets:t,alpha:0,delay:900,duration:180,onComplete:()=>t.destroy()});}
