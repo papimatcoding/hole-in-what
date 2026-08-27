@@ -5,10 +5,10 @@ export interface StarRewardDefinition {
   cosmeticId: string;
 }
 
-// HARD is the game's hook, not an endgame reward. A strong first Classic chapter or
-// roughly eight good Classic performances is enough to reveal it.
-export const TROLL_UNLOCK_STARS = 24;
-export const TROLL_UNLOCK_CLASSIC_COMPLETIONS = 10;
+// HARD is Troll Golf's hook. During the authored reboot it should appear inside the first batch,
+// not after the player has exhausted Classic.
+export const TROLL_UNLOCK_STARS = 12;
+export const TROLL_UNLOCK_CLASSIC_COMPLETIONS = 5;
 
 export const STAR_REWARDS: StarRewardDefinition[] = [
   { stars: 10, cosmeticId: "trail-stardust" },
