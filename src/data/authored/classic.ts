@@ -19,9 +19,10 @@ const c4=base("classic",4,pt(92,836),pt(430,156),2,3,"wall");
 c4.walls=[r(28,588,324,26),r(188,346,324,26),r(330,462,26,126)];
 path(c4,pt(428,690),pt(428,520),pt(150,468),pt(150,274),pt(430,156));
 
-// Bumper lesson: starting centrally kills the old full-power left-bank HIO. The safe route remains available.
+// First bumper lesson: there is always a safe route around the two separated shelves.
+// The bumper is the faster line, never a mandatory pinched gate.
 const c5=base("classic",5,pt(270,836),pt(422,166),2,3,"bumper");
-c5.walls=[r(92,520,186,24),r(302,306,210,24),r(278,306,24,238)];
+c5.walls=[r(76,520,178,24),r(310,306,202,24)];
 c5.bumpers=[{x:300,y:590,r:34}];
 path(c5,pt(300,700),pt(300,590),pt(424,448),pt(422,166));
 
