@@ -66,6 +66,11 @@ export const CommunityMaps={
     const result=await post<{ok?:boolean;map?:CommunityMapDetail}>({type:"get",testerId:BetaTelemetry.testerId(),mapId});
     return result?.ok&&result.map?result.map:null;
   },
+  async delete(mapId:string):Promise<{ok:boolean;error?:string}>{
+    await BetaTelemetry.ensureTester(false);
+    const result=await post<{ok?:boolean;error?:string}>({type:"delete",testerId:BetaTelemetry.testerId(),mapId});
+    return result?.ok?{ok:true}:{ok:false,error:result?.error??"network"};
+  },
   async rate(mapId:string,stars:number,difficulty=3):Promise<{ok:boolean;duplicate?:boolean;error?:string}>{
     await BetaTelemetry.ensureTester(false);
     const result=await post<{ok?:boolean;duplicate?:boolean;error?:string}>({type:"rate",testerId:BetaTelemetry.testerId(),mapId,stars,difficulty});
