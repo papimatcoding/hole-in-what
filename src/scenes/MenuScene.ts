@@ -86,7 +86,7 @@ export class MenuScene extends Phaser.Scene {
     const locked=mode==="troll"&&!BETA_TESTING&&!SaveSystem.isTrollUnlocked();
     const accent=mode==="troll"?0xc99a61:0x6f98ae,rest=locked?0x11171d:0x162129,hover=mode==="troll"?0x2d2924:0x22323d;
     const bg=this.add.rectangle(270,y,390,82,rest).setStrokeStyle(2,locked?0x27313b:mode==="troll"?0x705943:0x3d5666);
-    this.add.rectangle(78,y,4,70,accent,locked?.25:.9);
+    this.add.rectangle(78,y,4,70,accent,locked?0.25:0.9);
     const title=this.add.text(105,y-10,label,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(22,1),fontStyle:"bold",color:locked?"#697480":"#f5f7fa"}).setOrigin(0,.5);
     if(locked){
       const p=SaveSystem.classicProgress();
