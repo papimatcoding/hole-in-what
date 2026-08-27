@@ -7,7 +7,9 @@ interface ProfileResult{name:string;successRate:number;voidRate:number;medianEnd
 interface NaiveTrapResult{triggerRate:number;punishRate:number;sampleCount:number;}
 interface RecoveryResult{sampleCount:number;recoverableRate:number;movingTimeoutRate:number;}
 interface AuditRow{
-  id:string;mode:string;target:number;learnedStrokes:number|null;naiveStrokes:number|null;explorerStrokes:number|null;routeFamilies:number;
+  id:string;mode:string;target:number;
+  learnedStrokes:number|null;humanStrokes?:number|null;humanRouteDelta?:number|null;
+  naiveStrokes:number|null;explorerStrokes:number|null;routeFamilies:number;
   profiles:ProfileResult[];minShotTolerance:number|null;naiveTrap:NaiveTrapResult|null;mechanicRelevant:boolean|null;recovery:RecoveryResult;
   minRestEdgeDistance:number|null;flags:string[];status:AuditStatus;
 }
@@ -25,7 +27,6 @@ interface DesignRow{
 }
 
 const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v));
-const pct=(v:number)=>Math.round(v*100);
 const reportPath=process.env.AUDIT2_REPORT_FILE??"artifacts/audit2-report.json";
 const feedbackPath=process.env.AUDIT2_FEEDBACK_FILE??"artifacts/audit2-feedback.json";
 if(!existsSync(reportPath))throw new Error(`Audit 2.0 report not found: ${reportPath}`);
@@ -46,7 +47,8 @@ function complexity(level:LevelDefinition):number{
 function profile(row:AuditRow,name:string):ProfileResult{return row.profiles.find(x=>x.name===name)??{name,successRate:0,voidRate:0,medianEndDistance:9999};}
 function difficultyRaw(row:AuditRow,level:LevelDefinition):number{
   const touch=profile(row,"touch"),casual=profile(row,"casual");
-  const strokes=row.learnedStrokes??Math.max(5,row.target+2),precision=1-(row.minShotTolerance??0),recoveryRisk=1-row.recovery.recoverableRate;
+  const strokes=row.humanStrokes??row.learnedStrokes??Math.max(5,row.target+2);
+  const precision=1-(row.minShotTolerance??0),recoveryRisk=1-row.recovery.recoverableRate;
   const edgeRisk=row.minRestEdgeDistance===null?0:clamp((32-row.minRestEdgeDistance)/32,0,1);
   const execution=(1-touch.successRate)*18+(1-casual.successRate)*8+precision*14+recoveryRisk*8+edgeRisk*5;
   const trap=level.mode==="troll"?(row.naiveTrap?.punishRate??0)*5:0,routes=row.routeFamilies<=1?4:row.routeFamilies>=4?-2:0;
@@ -94,11 +96,12 @@ function originalityRaw(level:LevelDefinition,row:AuditRow):number{
   const routeNovelty=clamp((row.routeFamilies-1)*5,0,12),trapBonus=level.mode==="troll"?clamp((row.naiveTrap?.punishRate??0)*8,0,8):0;
   return clamp(geometryNovelty+mechanicNovelty+routeNovelty+trapBonus,0,100);
 }
-function confidence(row:AuditRow,fb:FeedbackLevel|null):"LOW"|"MEDIUM"|"HIGH"{if((fb?.sampleSize??0)>=5)return"HIGH";if((fb?.sampleSize??0)>=2)return"MEDIUM";return profile(row,"touch").successRate>0&&row.learnedStrokes!==null?"MEDIUM":"LOW";}
+function confidence(row:AuditRow,fb:FeedbackLevel|null):"LOW"|"MEDIUM"|"HIGH"{if((fb?.sampleSize??0)>=5)return"HIGH";if((fb?.sampleSize??0)>=2)return"MEDIUM";return profile(row,"touch").successRate>0&&(row.humanStrokes??row.learnedStrokes)!==null?"MEDIUM":"LOW";}
 function recommendations(row:AuditRow,level:LevelDefinition,fb:FeedbackLevel|null,pacingFlags:string[],difficulty:number,originality:number):string[]{
   const out:string[]=[];const touch=profile(row,"touch"),tol=row.minShotTolerance??0;
   if(row.status==="BLOCKER")out.push("Corregir primero el blocker técnico/de jugabilidad antes de balancear el nivel.");
   if(touch.successRate<.25||tol<.22)out.push("Aumentar margen de ejecución: ensanchar pasos, reducir precisión obligatoria o crear una zona de aterrizaje más tolerante; no solucionarlo con pistas visuales solamente.");
+  if((row.humanRouteDelta??0)>0)out.push("La línea récord es más estrecha que la ruta humana: conservarla como mastery line solo si la alternativa tolerante sigue siendo clara y divertida.");
   if(row.recovery.recoverableRate<.75)out.push("Añadir una salida o posición de recuperación para que un tiro mediocre cueste golpes sin convertir la run en un softlock.");
   if(row.routeFamilies<=1&&level.mode==="classic")out.push("Añadir una segunda familia de ruta o una decisión riesgo/recompensa; evitar que el nivel sea una única línea correcta.");
   if(row.routeFamilies<=1&&level.mode==="troll")out.push("Mantener una lectura troll clara, pero permitir más de una ejecución aprendida para que la solución no sea una contraseña de ángulo/potencia.");
