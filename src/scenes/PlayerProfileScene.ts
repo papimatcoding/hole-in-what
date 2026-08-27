@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { DESIGN_WIDTH, setupDesignCamera, sharpenSceneText } from "../config/display";
+import { DESIGN_WIDTH, DESKTOP_UI, setupDesignCamera, sharpenSceneText } from "../config/display";
 import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
 
 export class PlayerProfileScene extends Phaser.Scene{
@@ -17,15 +17,18 @@ export class PlayerProfileScene extends Phaser.Scene{
 
     const alias=BetaTelemetry.alias();
     this.current=this.add.text(DESIGN_WIDTH/2,220,alias?`AHORA ERES · ${alias}`:"AÚN NO TIENES NOMBRE",{fontFamily:"system-ui",fontSize:"17px",fontStyle:"bold",color:alias?"#dff2e7":"#d5b36b"}).setOrigin(.5);
-    this.add.text(DESIGN_WIDTH/2,260,"Cambiar el nombre NO cambia tu identidad de tester,\nni reinicia encuestas, ratings o estadísticas.",{fontFamily:"system-ui",fontSize:"11px",color:"#8293a0",align:"center",lineSpacing:5}).setOrigin(.5);
+    this.add.text(DESIGN_WIDTH/2,260,"Puedes cambiarlo cuando quieras. Tu tester ID,\nencuestas, ratings y estadísticas no se reinician.",{fontFamily:"system-ui",fontSize:"11px",color:"#8293a0",align:"center",lineSpacing:5}).setOrigin(.5);
 
     const field=document.createElement("input");
     field.type="text";field.maxLength=40;field.value=alias??"";field.placeholder="Escribe tu nombre o apodo";field.autocomplete="off";field.spellcheck=false;
-    Object.assign(field.style,{width:"330px",height:"46px",boxSizing:"border-box",border:"2px solid #587286",borderRadius:"8px",background:"#101820",color:"#eef5f8",font:"600 16px system-ui",padding:"0 14px",outline:"none",textAlign:"center"});
+    Object.assign(field.style,{width:DESKTOP_UI?"360px":"330px",height:DESKTOP_UI?"52px":"46px",boxSizing:"border-box",border:"2px solid #587286",borderRadius:"9px",background:"#101820",color:"#eef5f8",font:`600 ${DESKTOP_UI?"17px":"16px"} system-ui`,padding:"0 14px",outline:"none",textAlign:"center",boxShadow:DESKTOP_UI?"0 10px 28px rgba(0,0,0,.25)":"none"});
+    field.addEventListener("focus",()=>{field.style.borderColor="#82a9bf";});
+    field.addEventListener("blur",()=>{field.style.borderColor="#587286";});
+    field.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();void this.save();}});
     this.nameInput=field;this.add.dom(DESIGN_WIDTH/2,360,field);
 
     this.button(270,438,"GUARDAR NOMBRE",()=>{void this.save();},true);
-    this.status=this.add.text(DESIGN_WIDTH/2,492,"",{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:"#8fb8cf",align:"center",wordWrap:{width:400}}).setOrigin(.5);
+    this.status=this.add.text(DESIGN_WIDTH/2,492,alias?"Pulsa ENTER o GUARDAR para cambiarlo.":"Elige un nombre para identificar tus marcas.",{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:"#8fb8cf",align:"center",wordWrap:{width:400}}).setOrigin(.5);
 
     this.add.rectangle(270,615,410,170,0x10171e).setStrokeStyle(1,0x2d3d49);
     this.add.text(270,558,"IDENTIDAD BETA",{fontFamily:"system-ui",fontSize:"12px",fontStyle:"bold",color:"#a8bbc8"}).setOrigin(.5);
@@ -33,6 +36,7 @@ export class PlayerProfileScene extends Phaser.Scene{
     this.add.text(270,600,`ID ANÓNIMA · …${short}`,{fontFamily:"monospace",fontSize:"13px",color:"#d8e3ea"}).setOrigin(.5);
     this.add.text(270,648,"Esta ID permanece estable en este navegador.\nEl nombre es solo la etiqueta visible y puede cambiar.",{fontFamily:"system-ui",fontSize:"10px",color:"#758795",align:"center",lineSpacing:5}).setOrigin(.5);
     sharpenSceneText(this);
+    if(!alias)this.time.delayedCall(120,()=>this.nameInput.focus());
   }
 
   private async save():Promise<void>{
@@ -40,10 +44,11 @@ export class PlayerProfileScene extends Phaser.Scene{
     if(!name){this.status.setColor("#d99595").setText("Escribe un nombre antes de guardar.");return;}
     this.status.setColor("#8fb8cf").setText("GUARDANDO…");
     const ok=await BetaTelemetry.setAlias(name);
-    if(!ok){this.status.setColor("#d99595").setText("No se pudo guardar. Comprueba la conexión e inténtalo otra vez.");return;}
+    if(!ok){this.status.setColor("#d99595").setText("El navegador no permitió guardar el nombre.");return;}
     this.nameInput.value=BetaTelemetry.alias()??name;
     this.current.setColor("#dff2e7").setText(`AHORA ERES · ${this.nameInput.value}`);
-    this.status.setColor("#82c99e").setText("NOMBRE ACTUALIZADO · tu ID de tester no ha cambiado");
+    this.status.setColor("#82c99e").setText("NOMBRE GUARDADO · se sincronizará con la beta automáticamente");
+    this.nameInput.blur();
   }
 
   private backButton():void{
