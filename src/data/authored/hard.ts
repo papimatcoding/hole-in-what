@@ -17,9 +17,9 @@ path(h2,pt(438,700),pt(154,530),pt(154,406),pt(110,160));trap(h2,"bumper-ambush"
 
 // 03 — False bridge. The obvious centre commitment wakes a floor collapse; the learned route escapes right.
 // Human-playtest fix: the old RC5 layout left only a near pixel-perfect cross-gap between the void and first shelf.
-// The collapse is now shorter/narrower and both S-turn shelves are offset farther apart, preserving the troll while making the learned answer comfortably executable.
+// The collapse is now shorter/narrower and both S-turn shelves are offset farther apart. A low-left guard kills the unrelated outer-bank HIO without narrowing the learned route.
 const h3=base("troll",3,pt(270,842),pt(420,142),3,4,"void");
-h3.walls=[r(350,500,162,24),r(28,310,282,24)];
+h3.walls=[r(350,500,162,24),r(28,310,282,24),r(28,760,190,24)];
 h3.popVoids=[{x:28,y:620,w:340,h:96,triggerX:270,triggerY:738,triggerRadius:82}];
 path(h3,pt(440,738),pt(440,574),pt(292,566),pt(250,430),pt(376,270),pt(420,142));trap(h3,"floor-drop");
 
