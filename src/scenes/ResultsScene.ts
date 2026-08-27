@@ -17,6 +17,8 @@ export class ResultsScene extends Phaser.Scene{
   private surveyPanel:Phaser.GameObjects.Container|null=null;
   private feedbackPanel:Phaser.GameObjects.Container|null=null;
   private leaderboardPanel:Phaser.GameObjects.Container|null=null;
+  private surveySendBg:Phaser.GameObjects.Rectangle|null=null;
+  private surveySendText:Phaser.GameObjects.Text|null=null;
   private quick={fun:0,originality:0,difficulty:0};
   private surveyBug=false;
   private surveySurprise=false;
@@ -61,7 +63,7 @@ export class ResultsScene extends Phaser.Scene{
     this.smallAction(270,812,"NIVELES",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(this.resultData.levelIndex/10)}),160,0x172129,"#c8d3dc");
     if(BETA_TESTING){this.smallAction(175,858,"🏆 RANKING",()=>{void this.openLeaderboard();},174,0x211f1a,"#e5d293");this.smallAction(365,858,"⚑ REPORTAR",()=>this.openFeedback(),174,0x17242d,"#a9d1e5");}
     sharpenSceneText(this);
-    if(BETA_TESTING&&!BetaTelemetry.levelSurveyDone(this.resultData.levelId))this.time.delayedCall(280,()=>this.openSurvey());
+    if(BETA_TESTING&&!BetaTelemetry.levelSurveyDone(this.resultData.levelId))this.time.delayedCall(220,()=>this.openSurvey());
   }
 
   private makeButton(label:string,y:number,action:()=>void,primary:boolean):void{
@@ -76,30 +78,69 @@ export class ResultsScene extends Phaser.Scene{
   }
 
   private openSurvey():void{
-    if(this.surveyPanel)return;this.quick={fun:0,originality:0,difficulty:0};this.surveyBug=false;this.surveySurprise=false;this.surveySubmitting=false;
+    if(this.surveyPanel)return;
+    this.quick={fun:0,originality:0,difficulty:0};this.surveyBug=false;this.surveySurprise=false;this.surveySubmitting=false;
     const hard=this.resultData.mode==="troll",children:Phaser.GameObjects.GameObject[]=[];
-    children.push(this.add.rectangle(270,480,540,960,0x05080b,.64).setInteractive());
-    children.push(this.add.rectangle(270,480,468,hard?414:390,0x111a22,.99).setStrokeStyle(2,0x405668));
-    const top=hard?302:314;children.push(this.add.text(270,top,"¿QUÉ TAL ESTE HOYO?",{fontFamily:"system-ui",fontSize:"17px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5));
-    children.push(this.add.text(270,top+28,"3 respuestas · envío automático",{fontFamily:"system-ui",fontSize:"10px",color:"#8193a0"}).setOrigin(.5));
-    this.segmentRow(children,"DIVERSIÓN",top+78,["1","2","3","4","5"],[1,2,3,4,5],"fun");
-    this.segmentRow(children,"ORIGINAL",top+138,["REPETIDO","NORMAL","NUEVO"],[1,3,5],"originality");
-    this.segmentRow(children,"DIFICULTAD",top+198,["FÁCIL","JUSTA","DURA"],[1,3,5],"difficulty");
-    const chipY=top+264;if(hard){const bug=this.chip(children,132,chipY,"⚠ BUG",()=>{this.surveyBug=!this.surveyBug;bug.setFillStyle(this.surveyBug?0x5a342f:0x17242d);});const troll=this.chip(children,270,chipY,"😈 ME PILLÓ",()=>{this.surveySurprise=!this.surveySurprise;troll.setFillStyle(this.surveySurprise?0x4c3f65:0x17242d);});this.surveyAction(children,408,chipY,"SALTAR",()=>this.closeSurvey());}
-    else{const bug=this.chip(children,190,chipY,"⚠ BUG",()=>{this.surveyBug=!this.surveyBug;bug.setFillStyle(this.surveyBug?0x5a342f:0x17242d);});this.surveyAction(children,350,chipY,"SALTAR",()=>this.closeSurvey());}
-    this.surveyPanel=this.add.container(0,0,children).setDepth(300).setAlpha(0);this.tweens.add({targets:this.surveyPanel,alpha:1,duration:90});
+    children.push(this.add.rectangle(270,480,540,960,0x05080b,.68).setInteractive());
+    children.push(this.add.rectangle(270,480,468,hard?476:454,0x111a22,.99).setStrokeStyle(2,0x405668));
+    const top=hard?278:290;
+    children.push(this.add.text(270,top,"¿QUÉ TAL ESTE HOYO?",{fontFamily:"system-ui",fontSize:"18px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5));
+    children.push(this.add.text(270,top+30,"3 respuestas · envía cuando hayas terminado",{fontFamily:"system-ui",fontSize:"10px",color:"#8193a0"}).setOrigin(.5));
+    this.segmentRow(children,"DIVERSIÓN",top+82,["1","2","3","4","5"],[1,2,3,4,5],"fun");
+    this.segmentRow(children,"ORIGINAL",top+144,["REPETIDO","NORMAL","NUEVO"],[1,3,5],"originality");
+    this.segmentRow(children,"DIFICULTAD",top+206,["FÁCIL","JUSTA","DURA"],[1,3,5],"difficulty");
+    const chipY=top+266;
+    if(hard){
+      const bug=this.chip(children,192,chipY,"⚠ BUG",()=>{this.surveyBug=!this.surveyBug;bug.setFillStyle(this.surveyBug?0x5a342f:0x17242d);});
+      const troll=this.chip(children,348,chipY,"😈 ME PILLÓ",()=>{this.surveySurprise=!this.surveySurprise;troll.setFillStyle(this.surveySurprise?0x4c3f65:0x17242d);});
+    }else{
+      const bug=this.chip(children,270,chipY,"⚠ BUG",()=>{this.surveyBug=!this.surveyBug;bug.setFillStyle(this.surveyBug?0x5a342f:0x17242d);});
+    }
+    const actionY=top+330;
+    this.surveyAction(children,156,actionY,"SALTAR",()=>this.closeSurvey(),150,false);
+    const send=this.surveyAction(children,350,actionY,"ENVIAR",()=>{void this.submitSurvey();},218,true);
+    this.surveySendBg=send.bg;this.surveySendText=send.text;this.refreshSurveySend();
+    this.surveyPanel=this.add.container(0,0,children).setDepth(300).setAlpha(0);
+    this.tweens.add({targets:this.surveyPanel,alpha:1,duration:90});
   }
 
   private segmentRow(children:Phaser.GameObjects.GameObject[],label:string,y:number,labels:string[],values:number[],key:QuickKey):void{
     children.push(this.add.text(62,y,label,{fontFamily:"system-ui",fontSize:"10px",fontStyle:"bold",color:"#c9d5de"}).setOrigin(0,.5));
     const start=labels.length===5?262:246,spacing=labels.length===5?44:82;
-    labels.forEach((label,i)=>{const x=start+i*spacing,w=labels.length===5?40:74,bg=this.add.rectangle(x,y,w,44,0x17242d).setStrokeStyle(1,0x405767).setInteractive({useHandCursor:true});const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:labels.length===5?"11px":"8px",fontStyle:"bold",color:"#dfe8ee"}).setOrigin(.5);children.push(bg,t);const choose=()=>{this.quick[key]=values[i]!;for(const obj of children)if(obj instanceof Phaser.GameObjects.Rectangle&&Math.abs(obj.y-y)<1&&obj.width<=80)obj.setFillStyle(obj===bg?0x45677a:0x17242d);this.queueSurveySubmit();};bg.on("pointerdown",()=>{bg.setScale(.97);t.setScale(.97);}).on("pointerout",()=>{bg.setScale(1);t.setScale(1);}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);choose();});});
+    labels.forEach((label,i)=>{
+      const x=start+i*spacing,w=labels.length===5?40:74,bg=this.add.rectangle(x,y,w,44,0x17242d).setStrokeStyle(1,0x405767).setInteractive({useHandCursor:true});
+      const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:labels.length===5?"11px":"8px",fontStyle:"bold",color:"#dfe8ee"}).setOrigin(.5);children.push(bg,t);
+      const choose=()=>{this.quick[key]=values[i]!;for(const obj of children)if(obj instanceof Phaser.GameObjects.Rectangle&&Math.abs(obj.y-y)<1&&obj.width<=80)obj.setFillStyle(obj===bg?0x45677a:0x17242d);this.refreshSurveySend();};
+      bg.on("pointerdown",()=>{bg.setScale(.97);t.setScale(.97);}).on("pointerout",()=>{bg.setScale(1);t.setScale(1);}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);choose();});
+    });
   }
-  private chip(children:Phaser.GameObjects.GameObject[],x:number,y:number,label:string,action:()=>void):Phaser.GameObjects.Rectangle{const bg=this.add.rectangle(x,y,124,46,0x17242d).setStrokeStyle(1,0x3b5060).setInteractive({useHandCursor:true});const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"9px",fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5);children.push(bg,t);bg.on("pointerdown",()=>{bg.setScale(.97);t.setScale(.97);}).on("pointerout",()=>{bg.setScale(1);t.setScale(1);}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);action();});return bg;}
-  private surveyAction(children:Phaser.GameObjects.GameObject[],x:number,y:number,label:string,action:()=>void):void{const bg=this.add.rectangle(x,y,124,46,0x141d24).setStrokeStyle(1,0x354652).setInteractive({useHandCursor:true}),t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"10px",fontStyle:"bold",color:"#91a4b0"}).setOrigin(.5);children.push(bg,t);bg.on("pointerdown",()=>{bg.setScale(.97);t.setScale(.97);}).on("pointerout",()=>{bg.setScale(1);t.setScale(1);}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);action();});}
-  private queueSurveySubmit():void{if(!this.quick.fun||!this.quick.originality||!this.quick.difficulty||this.surveySubmitting)return;this.surveySubmitting=true;this.time.delayedCall(350,()=>{if(this.surveyPanel)void this.submitSurvey();});}
-  private async submitSurvey():Promise<void>{const ok=await BetaTelemetry.submitLevelFeedback({levelId:this.resultData.levelId,mode:this.resultData.mode,fun:this.quick.fun,originality:this.quick.originality,difficulty:this.quick.difficulty,surprise:this.resultData.mode==="troll"?(this.surveySurprise?5:3):null,tags:this.surveyBug?["bug"]:[],comment:""});this.closeSurvey();this.toast(ok?"✓ FEEDBACK ENVIADO":"NO SE PUDO ENVIAR",ok);if(ok&&this.allCurrentLevelsCompleted()&&!BetaTelemetry.gameSurveyDone())this.time.delayedCall(350,()=>this.openGameSurvey());}
-  private closeSurvey():void{this.surveyPanel?.destroy(true);this.surveyPanel=null;this.surveySubmitting=false;}
+  private chip(children:Phaser.GameObjects.GameObject[],x:number,y:number,label:string,action:()=>void):Phaser.GameObjects.Rectangle{
+    const bg=this.add.rectangle(x,y,132,46,0x17242d).setStrokeStyle(1,0x3b5060).setInteractive({useHandCursor:true}),t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"9px",fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5);children.push(bg,t);
+    bg.on("pointerdown",()=>{bg.setScale(.97);t.setScale(.97);}).on("pointerout",()=>{bg.setScale(1);t.setScale(1);}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);action();});return bg;
+  }
+  private surveyAction(children:Phaser.GameObjects.GameObject[],x:number,y:number,label:string,action:()=>void,w=124,accent=false):{bg:Phaser.GameObjects.Rectangle;text:Phaser.GameObjects.Text}{
+    const bg=this.add.rectangle(x,y,w,50,accent?0x172129:0x141d24).setStrokeStyle(accent?2:1,accent?0x405767:0x354652).setInteractive({useHandCursor:true}),t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:accent?"12px":"10px",fontStyle:"bold",color:accent?"#71818d":"#91a4b0"}).setOrigin(.5);children.push(bg,t);
+    bg.on("pointerover",()=>{if(accent&&this.surveyReady())bg.setFillStyle(0x355b6e);}).on("pointerdown",()=>{bg.setScale(.97);t.setScale(.97);}).on("pointerout",()=>{bg.setScale(1);t.setScale(1);this.refreshSurveySend();}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);action();});
+    return{bg,text:t};
+  }
+  private surveyReady():boolean{return Boolean(this.quick.fun&&this.quick.originality&&this.quick.difficulty);}
+  private refreshSurveySend():void{
+    if(!this.surveySendBg||!this.surveySendText)return;const ready=this.surveyReady();
+    this.surveySendBg.setFillStyle(ready?0x294c5e:0x172129).setStrokeStyle(2,ready?0x6d9aaf:0x405767);
+    this.surveySendText.setColor(ready?"#edf7fb":"#71818d");
+  }
+  private async submitSurvey():Promise<void>{
+    if(this.surveySubmitting)return;
+    if(!this.surveyReady()){this.toast("RESPONDE LAS 3 OPCIONES",false);return;}
+    this.surveySubmitting=true;
+    const payload={levelId:this.resultData.levelId,mode:this.resultData.mode,fun:this.quick.fun,originality:this.quick.originality,difficulty:this.quick.difficulty,surprise:this.resultData.mode==="troll"?(this.surveySurprise?5:3):null,tags:this.surveyBug?["bug"]:[],comment:""};
+    // Close immediately: feedback should never hold the player hostage while the network responds.
+    this.closeSurvey();
+    const ok=await BetaTelemetry.submitLevelFeedback(payload);
+    this.toast(ok?"✓ FEEDBACK ENVIADO":"NO SE PUDO ENVIAR",ok);
+    if(ok&&this.allCurrentLevelsCompleted()&&!BetaTelemetry.gameSurveyDone())this.time.delayedCall(350,()=>this.openGameSurvey());
+  }
+  private closeSurvey():void{this.surveyPanel?.destroy(true);this.surveyPanel=null;this.surveySendBg=null;this.surveySendText=null;this.surveySubmitting=false;}
 
   private openFeedback():void{
     if(this.feedbackPanel)return;const children:Phaser.GameObjects.GameObject[]=[];children.push(this.add.rectangle(270,480,540,960,0x05080b,.82).setInteractive(),this.add.rectangle(270,480,430,450,0x111a22,.99).setStrokeStyle(2,0x405668),this.add.text(270,292,"REPORTE RÁPIDO",{fontFamily:"system-ui",fontSize:"17px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5),this.add.text(270,324,"1 toque. Nota sólo si eliges OTRO.",{fontFamily:"system-ui",fontSize:"10px",color:"#8da0ad"}).setOrigin(.5));
@@ -127,5 +168,5 @@ export class ResultsScene extends Phaser.Scene{
 
   private allCurrentLevelsCompleted():boolean{return[...levelsForMode("classic"),...levelsForMode("troll")].every(level=>SaveSystem.record(level.id).completed);}
   private openGameSurvey():void{this.scene.start("global-survey");}
-  private toast(message:string,ok:boolean):void{const t=this.add.text(270,166,message,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:ok?"#d9efde":"#f0c1b7",backgroundColor:ok?"#14231a":"#2b1715",padding:{x:12,y:7}}).setOrigin(.5).setDepth(350);this.tweens.add({targets:t,alpha:0,delay:700,duration:180,onComplete:()=>t.destroy()});}
+  private toast(message:string,ok:boolean):void{const t=this.add.text(270,166,message,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:ok?"#d9efde":"#f0c1b7",backgroundColor:ok?"#14231a":"#2b1715",padding:{x:12,y:7}}).setOrigin(.5).setDepth(350);this.tweens.add({targets:t,alpha:0,delay:900,duration:180,onComplete:()=>t.destroy()});}
 }
