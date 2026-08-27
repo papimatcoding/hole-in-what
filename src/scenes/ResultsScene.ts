@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { BETA_TESTING } from "../config/beta";
 import { setupDesignCamera, sharpenSceneText } from "../config/display";
 import { cosmeticById } from "../data/cosmetics";
 import { levelsForMode } from "../data/campaign";
@@ -56,15 +57,28 @@ export class ResultsScene extends Phaser.Scene {
     if(reward.coinsEarned>0){const rewardText=this.add.text(270,infoY,`+${reward.coinsEarned} ◈`,{fontFamily:"system-ui, sans-serif",fontSize:"14px",fontStyle:"bold",color:"#e4d29d"}).setOrigin(.5).setAlpha(0);this.tweens.add({targets:rewardText,alpha:1,y:infoY-5,duration:230,ease:"Cubic.easeOut"});infoY+=30;}
     if(reward.newlyUnlockedCosmetics.length>0){const names=reward.newlyUnlockedCosmetics.map(id=>cosmeticById(id)?.name).filter((name):name is string=>Boolean(name));this.add.text(270,infoY,`DESBLOQUEADO · ${names.join(" · ")}`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",align:"center",color:"#f1d07a",wordWrap:{width:430}}).setOrigin(.5);}
 
-    const canNext=this.resultData.levelIndex<levels.length-1&&SaveSystem.isLevelUnlocked(this.resultData.mode,this.resultData.levelIndex+1);
+    const canPrev=this.resultData.levelIndex>0;
+    const canNext=this.resultData.levelIndex<levels.length-1&&(BETA_TESTING||SaveSystem.isLevelUnlocked(this.resultData.mode,this.resultData.levelIndex+1));
     const retry=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex});
+    const prev=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex-1});
     const next=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex+1});
     if(this.resultData.stars<3){this.makeButton("REINTENTAR",640,retry,true);if(canNext)this.makeButton("SIGUIENTE",718,next,false);}
     else{if(canNext)this.makeButton("SIGUIENTE",640,next,true);this.makeButton("REINTENTAR",718,retry,false);}
 
-    this.add.text(270,810,"NIVELES",{fontFamily:"system-ui, sans-serif",fontSize:"15px",fontStyle:"bold",color:"#aeb9c5"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(this.resultData.levelIndex/10)}));
-    this.add.text(270,858,`FEEDBACK BETA · ${BetaFeedbackSystem.count()} guardados`,{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#8fb8cf"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.openFeedback());
+    if(BETA_TESTING){
+      this.betaNavText(126,785,"‹ ANTERIOR",canPrev,prev);
+      this.add.text(270,785,`${this.resultData.mode==="troll"?"H":"C"} ${String(this.resultData.levelIndex+1).padStart(2,"0")} / ${String(levels.length).padStart(2,"0")}`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#8193a1"}).setOrigin(.5);
+      this.betaNavText(414,785,"SIGUIENTE ›",canNext,next);
+    }
+
+    this.add.text(270,BETA_TESTING?826:810,"NIVELES",{fontFamily:"system-ui, sans-serif",fontSize:"15px",fontStyle:"bold",color:"#aeb9c5"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(this.resultData.levelIndex/10)}));
+    this.add.text(270,BETA_TESTING?872:858,`FEEDBACK BETA · ${BetaFeedbackSystem.count()} guardados`,{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#8fb8cf"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.openFeedback());
     sharpenSceneText(this);
+  }
+
+  private betaNavText(x:number,y:number,label:string,enabled:boolean,action:()=>void):void{
+    const text=this.add.text(x,y,label,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:enabled?"#a9c3d3":"#46525b"}).setOrigin(.5);
+    if(enabled)text.setInteractive({useHandCursor:true}).on("pointerup",action);
   }
 
   private makeButton(label:string,y:number,action:()=>void,primary:boolean):void{
