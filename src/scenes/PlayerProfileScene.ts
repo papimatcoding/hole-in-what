@@ -3,7 +3,7 @@ import { DESIGN_WIDTH, setupDesignCamera, sharpenSceneText } from "../config/dis
 import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
 
 export class PlayerProfileScene extends Phaser.Scene{
-  private input!:HTMLInputElement;
+  private nameInput!:HTMLInputElement;
   private current!:Phaser.GameObjects.Text;
   private status!:Phaser.GameObjects.Text;
 
@@ -19,10 +19,10 @@ export class PlayerProfileScene extends Phaser.Scene{
     this.current=this.add.text(DESIGN_WIDTH/2,220,alias?`AHORA ERES · ${alias}`:"AÚN NO TIENES NOMBRE",{fontFamily:"system-ui",fontSize:"17px",fontStyle:"bold",color:alias?"#dff2e7":"#d5b36b"}).setOrigin(.5);
     this.add.text(DESIGN_WIDTH/2,260,"Cambiar el nombre NO cambia tu identidad de tester,\nni reinicia encuestas, ratings o estadísticas.",{fontFamily:"system-ui",fontSize:"11px",color:"#8293a0",align:"center",lineSpacing:5}).setOrigin(.5);
 
-    const input=document.createElement("input");
-    input.type="text";input.maxLength=40;input.value=alias??"";input.placeholder="Escribe tu nombre o apodo";input.autocomplete="off";input.spellcheck=false;
-    Object.assign(input.style,{width:"330px",height:"46px",boxSizing:"border-box",border:"2px solid #587286",borderRadius:"8px",background:"#101820",color:"#eef5f8",font:"600 16px system-ui",padding:"0 14px",outline:"none",textAlign:"center"});
-    this.input=input;this.add.dom(DESIGN_WIDTH/2,360,input);
+    const field=document.createElement("input");
+    field.type="text";field.maxLength=40;field.value=alias??"";field.placeholder="Escribe tu nombre o apodo";field.autocomplete="off";field.spellcheck=false;
+    Object.assign(field.style,{width:"330px",height:"46px",boxSizing:"border-box",border:"2px solid #587286",borderRadius:"8px",background:"#101820",color:"#eef5f8",font:"600 16px system-ui",padding:"0 14px",outline:"none",textAlign:"center"});
+    this.nameInput=field;this.add.dom(DESIGN_WIDTH/2,360,field);
 
     this.button(270,438,"GUARDAR NOMBRE",()=>{void this.save();},true);
     this.status=this.add.text(DESIGN_WIDTH/2,492,"",{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:"#8fb8cf",align:"center",wordWrap:{width:400}}).setOrigin(.5);
@@ -36,13 +36,13 @@ export class PlayerProfileScene extends Phaser.Scene{
   }
 
   private async save():Promise<void>{
-    const name=this.input.value.trim().replace(/\s+/g," ");
+    const name=this.nameInput.value.trim().replace(/\s+/g," ");
     if(!name){this.status.setColor("#d99595").setText("Escribe un nombre antes de guardar.");return;}
     this.status.setColor("#8fb8cf").setText("GUARDANDO…");
     const ok=await BetaTelemetry.setAlias(name);
     if(!ok){this.status.setColor("#d99595").setText("No se pudo guardar. Comprueba la conexión e inténtalo otra vez.");return;}
-    this.input.value=BetaTelemetry.alias()??name;
-    this.current.setColor("#dff2e7").setText(`AHORA ERES · ${this.input.value}`);
+    this.nameInput.value=BetaTelemetry.alias()??name;
+    this.current.setColor("#dff2e7").setText(`AHORA ERES · ${this.nameInput.value}`);
     this.status.setColor("#82c99e").setText("NOMBRE ACTUALIZADO · tu ID de tester no ha cambiado");
   }
 
