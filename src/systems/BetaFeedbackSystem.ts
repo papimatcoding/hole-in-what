@@ -1,4 +1,5 @@
 import type { GameMode } from "../types";
+import { BetaTelemetry } from "./BetaTelemetrySystem";
 
 export type BetaFeedbackCategory = "bug" | "too-easy" | "too-hard" | "repetitive" | "object" | "other";
 
@@ -60,7 +61,9 @@ export const BetaFeedbackSystem={
       note:note.trim(),
       createdAt:new Date().toISOString()
     };
-    entries.push(entry);persist(entries);return entry;
+    entries.push(entry);persist(entries);
+    void BetaTelemetry.submitReport({levelId:entry.levelId,mode:entry.mode,category:entry.category,note:entry.note,strokes:entry.strokes,timeMs:entry.timeMs});
+    return entry;
   },
   list():BetaFeedbackEntry[]{return load();},
   count():number{return load().length;},
