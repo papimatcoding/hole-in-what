@@ -2,7 +2,7 @@
 
 Mobile-first 2D arcade minigolf built with Phaser + TypeScript. The current goal is **not** metagame expansion: it is to make the core shot, authored campaign and HARD troll identity good enough to retain real players.
 
-> **SOURCE OF TRUTH / CHAT HANDOFF — Last updated 2026-08-27 after commit `77964c8`**
+> **SOURCE OF TRUTH / CHAT HANDOFF — Last updated 2026-08-27 after commit `8d8c432`**
 >
 > If development continues in another chat/session, read this file first. The exact resume point is in **Immediate next steps** below. Keep this README updated whenever campaign state, priorities, architecture, risks or next actions change.
 
@@ -31,61 +31,49 @@ Campaign quality matters more than level count. Do not protect a weak level beca
 
 ## CURRENT STATE — important
 
-As of commit `77964c87e9284268d07296d285e733570e1dc92f`:
+Current gameplay revision is certified by both the fast CI audit and the long solver.
 
-- normal CI is green on the latest gameplay revision;
+- normal CI is **green**;
 - typecheck/build/hole physics/mechanic integrity/geometry/clearance all pass;
 - originality audit flags **0 structurally similar pairs**;
-- fast campaign audit reports **Classic 10/10 clean**;
-- fast campaign audit reports **Troll 5/5 clean**;
-- no current level is `TOO_EASY_FOR_TARGET`, `MECHANIC_BYPASSED` or `NO_ROUTE_FOUND` in the fast audit;
-- Classic 09 was the latest gameplay blocker and is fixed;
-- `.github/workflows/full-audit.yml` now exists and runs `FULL_AUDIT=1 npm run audit:courses` on authored/physics/auditor changes and via manual dispatch;
-- the first Full Audit run has been started for the current slice. **Do not declare external-beta approval until that run finishes successfully and manual desktop/mobile play is completed.**
+- fast campaign audit: **Classic 10/10 clean**;
+- fast campaign audit: **Troll 5/5 clean**;
+- Full Audit (`FULL_AUDIT=1`): **Classic 10/10 clean**;
+- Full Audit (`FULL_AUDIT=1`): **Troll 5/5 clean**;
+- no current level is `TOO_EASY_FOR_TARGET`, `MECHANIC_BYPASSED` or `NO_ROUTE_FOUND` in the certified long solver;
+- the remaining long-solver warning is only the intentional difficulty dip from Classic 04 to the first-bumper lesson in Classic 05;
+- `.github/workflows/full-audit.yml` now fails fast through mechanic, geometry and clearance checks before running the long solver.
+
+### Latest certification fixes
+
+The first Full Audit exposed three real mechanic bypasses that the fast probe had missed:
+
+1. **Classic 05** — an outer bank HIO skipped the first bumper. The lower shelf plus right-side guard now remove that bypass. Full solver still finds an elite HIO, but it **uses the bumper** (best full-solver line `342°@0.96`, robustness 8%).
+2. **Classic 10** — a two-stroke solver route skipped the chapter-exam bumper. A lower gate now forces bumper interaction while preserving a two-stroke mastery route in the full solver.
+3. **Troll 05** — the optimal route ignored the moving crossing. The waist was narrowed so the best route now **uses the moving mechanic** while still triggering the intended troll sequence.
+
+Current representative Full Audit results:
+
+- Classic 05: best 1, HIO yes, bumper used yes, difficulty 24.5, status OK;
+- Classic 09: best 2, HIO no, sand used yes, difficulty 35.9, status OK;
+- Classic 10: best 2, blind 3, bumper used yes, difficulty 36.6, status OK;
+- Troll 05: best 2, blind 3, moving used yes, trap triggered yes, difficulty 48.8, status OK.
+
+Do not redesign Classic 05 merely to remove its difficulty-dip warning. It is intentionally the first open bumper lesson after the harder setup-shot level; verify the pacing manually before changing it.
 
 ### Beta approval gate
 
 The project owner can send the Pages link to friends only after all of these are true:
 
-1. normal CI green;
-2. Full Audit green on the current authored slice;
-3. one complete manual desktop playthrough with no blocker-level issue;
-4. one complete mobile/touch playthrough with no blocker-level issue;
-5. feedback submission flow works in the deployed Pages build.
+1. normal CI green — **DONE**;
+2. Full Audit green on the current authored slice — **DONE**;
+3. one complete manual desktop playthrough with no blocker-level issue — **PENDING**;
+4. one complete mobile/touch playthrough with no blocker-level issue — **PENDING**;
+5. feedback submission flow works in the deployed Pages build — **PENDING FINAL CHECK**.
 
-When these are satisfied, the handoff should explicitly say **FRIENDS BETA: GO**. Until then it should say **FRIENDS BETA: HOLD**.
+When these are satisfied, the handoff should explicitly say **FRIENDS BETA: GO**.
 
-Current status: **FRIENDS BETA: HOLD** — waiting for Full Audit result and manual desktop/mobile validation.
-
-### Latest Classic 09 work
-
-Original problem: Classic 09 was meant to be **sand as route choice**, but the solver found broad one-shot solutions that either made the level far too easy or bypassed the sand entirely.
-
-Two iterations were made:
-
-1. lower shelf extended to close the obvious diagonal HIO;
-2. a short right-side wall fin was added after the solver found a 288° full-power side-bank HIO that skipped the sand.
-
-Current fast-audit result for Classic 09:
-
-- 3★ target: 3 strokes
-- best known: **2 strokes**
-- blind solver: **2 strokes**
-- HIO: **no**
-- primary mechanic: sand
-- mechanic used: **yes**
-- robustness: **33%**
-- difficulty score: **33.2**
-- status: **OK**
-
-Current Classic progression around the end of the block is now roughly:
-
-- Classic 07: difficulty 32.8
-- Classic 08: 31.9
-- Classic 09: 33.2
-- Classic 10: 35.8
-
-Remaining fast-audit warnings are non-fatal and belong mainly to early accessible HIOs / intentional breathers (notably Classic 03 and 05). Do not redesign them automatically just to make warnings disappear; verify them manually first.
+Current status: **FRIENDS BETA: HOLD** — automated certification is complete; manual desktop/mobile validation is now the blocker.
 
 ## Core design rules
 
@@ -170,7 +158,7 @@ Long solver / block certification:
 FULL_AUDIT=1 npm run audit:courses
 ```
 
-GitHub Actions now includes `.github/workflows/full-audit.yml`, which runs the long solver automatically when authored campaign files, shared physics, course validation or the auditor change. It also supports `workflow_dispatch` for manual certification runs.
+`.github/workflows/full-audit.yml` runs the long certification automatically on authored/physics/auditor changes and supports manual dispatch. It now runs mechanic integrity, geometry and clearance first so invalid maps fail fast before the expensive solver.
 
 The solver is a critic, not the designer. Never lower star targets merely to turn warnings green. First inspect whether the solver found a route that bypasses the intended decision.
 
@@ -232,6 +220,7 @@ Wall physics is currently axis-aligned. Do not expose fake arbitrary visual rota
 
 - bundle warning remains around ~1.5 MB minified / ~395 kB gzip; code splitting can wait;
 - difficulty still needs real human data despite green audits;
+- Classic 05 intentionally dips after Classic 04 and needs human pacing validation rather than automatic redesign;
 - HARD will eventually need more troll primitives, but do not add many at once;
 - Community play is intentionally more minimal than campaign play.
 
@@ -241,12 +230,12 @@ Do not spend this milestone on multiplayer, ranked/MMR, smart bots as a player f
 
 ## Immediate next steps — resume here
 
-**The campaign is 10/10 Classic + 5/5 Troll clean in the normal fast CI audit. A dedicated Full Audit workflow has just been added and its first certification run is in progress. Do not immediately author more levels.**
+**AUTOMATED CERTIFICATION IS COMPLETE: 10/10 Classic + 5/5 Troll clean in fast CI and Full Audit. Do not author more levels yet.**
 
-1. Inspect the current **Full Audit** GitHub Actions run. If it exposes a shortcut/bypass, fix only the affected authored level and re-run normal CI + Full Audit.
-2. Once Full Audit is green, manually play all 15 holes in sequence on desktop, evaluating fun, readability, repetition, difficulty curve and whether each teaching/trap idea is actually felt.
+1. Manually play all 15 holes in sequence on desktop. Evaluate fun, readability, repetition, difficulty curve and whether each teaching/trap idea is actually felt. Specifically judge whether Classic 05 feels like a welcome first-bumper breather or an awkward difficulty collapse.
+2. Fix only blocker-level/manual issues discovered in that desktop pass, then re-run CI/Full Audit only if authored geometry or shared physics changes.
 3. Repeat the whole slice on mobile/touch; pay special attention to narrow corridors, aiming precision, UI obstruction and restart/next-level flow.
-4. Verify the deployed feedback/report flow once more.
+4. Verify the deployed feedback/report flow once more (per-level rating, optional bug report and global feedback).
 5. If steps 1–4 have no blocker, change this README to **FRIENDS BETA: GO** and send the Pages URL to a small group of friends.
 6. Collect per-level feedback and rebuild only levels that real data identifies as weak/repetitive/spiky. Do not regenerate the campaign wholesale.
 7. Validate Community Maps end-to-end with a few maps/testers (publish → discover → play → rate → self-rating blocked).
