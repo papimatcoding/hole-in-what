@@ -16,9 +16,10 @@ h2.popBumpers=[{x:430,y:520,r:44,triggerX:432,triggerY:690,triggerRadius:150}];
 path(h2,pt(438,700),pt(154,530),pt(154,406),pt(110,160));trap(h2,"bumper-ambush");
 
 // 03 — False highway: the cup is almost directly above the tee, but committing to that tempting right lane makes the floor disappear ahead of the ball.
-// The learned answer is to escape left through the lower opening, climb the safe lane, then cross back above the divider. The trap now changes the route instead of merely animating behind it.
+// The learned answer is to escape left through the lower opening, climb the safe lane, then cross back above the divider. A visible rear void removes reverse-boundary pinball cheese without spoiling the forward trap.
 const h3=base("troll",3,pt(420,840),pt(430,150),3,4,"void");
 h3.walls=[r(250,330,24,410),r(274,300,238,24)];
+h3.voids=[r(300,874,212,58)];
 h3.popVoids=[{x:300,y:515,w:190,h:195,triggerX:420,triggerY:760,triggerRadius:96}];
 path(h3,pt(182,770),pt(182,430),pt(196,250),pt(430,150));trap(h3,"safe-lane-collapse");
 
