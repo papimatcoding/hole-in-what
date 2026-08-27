@@ -2,7 +2,7 @@
 
 Mobile-first 2D arcade minigolf built with Phaser + TypeScript. Current priority is **core shot quality + authored campaign quality + HARD troll identity + trustworthy beta evidence + a usable Community Maps loop**. Do not expand the metagame before these are genuinely strong.
 
-> **SOURCE OF TRUTH / CHAT HANDOFF — Last updated 2026-08-27 during Friends Beta RC5.1 release**
+> **SOURCE OF TRUTH / CHAT HANDOFF — Last updated 2026-08-27 after Friends Beta RC5.1 went live**
 >
 > If development continues in another chat/session, read this file first. The exact resume point is in **Immediate next steps**. Update this README whenever campaign state, priorities, beta/live-ops behavior, architecture, backend schema, validation or next actions change.
 
@@ -15,7 +15,7 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript. Current priority
 
 ## CURRENT STATE
 
-### FRIENDS BETA: HOLD — RC5.1 certified, final documentation deploy in progress
+### FRIENDS BETA: GO — RC5.1 live and technically certified
 
 The first vertical slice contains:
 
@@ -31,16 +31,15 @@ The first vertical slice contains:
 - Patch Notes with unread indicator;
 - Community Maps editor/publish/discovery/play/social loop.
 
-RC5.1 client telemetry build ID:
+Current telemetry build ID:
 
 - **`beta-block-1-friends-rc5-1`**
 
-Current release procedure while this README commit deploys:
+Current live-ops state:
 
-- `maintenance = true`;
-- patch label `Friends Beta RC5.1 · HARD 03 Balance`;
-- server `current_build_id` remains RC5 until final RC5.1 CI + Pages/documentation check is green;
-- after that, set server `current_build_id = beta-block-1-friends-rc5-1` and maintenance OFF.
+- `maintenance = false`;
+- server `current_build_id = beta-block-1-friends-rc5-1`;
+- patch label `Friends Beta RC5.1 · HARD 03 Balance`.
 
 Analyse RC1/RC2/RC3/RC4/RC5/RC5.1 separately where level geometry or UX differs.
 
@@ -108,11 +107,13 @@ Supporting RC5.1 commits:
 
 - `7704686a46c5c924506e7762e1d9d603cf2fe26d` — opened the human learned route;
 - `10d85ae34bf2685b82bee82242efc875528e4588` — separated RC5.1 telemetry;
-- `09429b2ef20336fb157b85fde1d5fc21800c9be0` — added RC5.1 Patch Notes.
+- `09429b2ef20336fb157b85fde1d5fc21800c9be0` — added RC5.1 Patch Notes;
+- `810acbfdb6ede606d33ea64dfd6776e291b4bbc1` — RC5.1 certification handoff.
 
 Normal CI:
 
-- run `33077377504`: **success**;
+- gameplay run `33077377504`: **success**;
+- final documentation run `33077882299`: **success**;
 - typecheck/build/hole physics/mechanics/geometry/clearance: **green**;
 - originality: **0 structurally similar pairs**;
 - fast campaign audit: **Classic 10/10 clean + Troll 5/5 clean**;
@@ -149,7 +150,11 @@ Full H03:
 - status: **OK**;
 - warnings: **none**.
 
-This is much healthier than RC5: both the blind and guided searches now find the learned route, while the one-shot bypass remains closed. **Human playtesting is still the final judge.**
+Pages run for the RC5.1 certification handoff:
+
+- `33077882297`: **success**.
+
+This is much healthier than RC5: both blind and guided searches find the learned route, while the one-shot bypass remains closed. **Human playtesting is still the final judge.**
 
 ## RC5 player UX retained in RC5.1
 
@@ -357,6 +362,8 @@ Mandatory meaningful-beta deploy protocol:
 6. README + Patch Notes updated;
 7. server build ID switched and maintenance OFF only after certification.
 
+RC5.1 completed this protocol and is live with maintenance OFF.
+
 ## Beta backend / security
 
 Supabase project:
@@ -420,30 +427,20 @@ FULL_AUDIT=1 npm run audit:courses
 
 ## Deliberately NOT building now
 
-Do not spend the current milestone on:
-
-- ranked/MMR multiplayer;
-- smart player bots;
-- battle pass/seasons;
-- Daily Hole;
-- ads/lootboxes;
-- extra currencies;
-- large account/profile systems;
-- complex recommendations.
+Do not spend the current milestone on ranked/MMR multiplayer, smart player bots, battle pass/seasons, Daily Hole, ads/lootboxes, extra currencies, large account/profile systems or complex recommendations.
 
 Historical ideas such as ~40 Classic + ~40 HARD, competitive online up to 10, bots, ranked/MMR and thematic seasons remain possible later.
 
 ## Immediate next steps — resume here
 
-**RC5.1 automated gameplay certification is complete. Final release/human check is the only blocker before moving on to new holes/mechanics.**
+**RC5.1 is live and automatically certified. HARD 03 human validation is the final blocker before freezing block 1 and moving to new levels/mechanics.**
 
-1. Wait for the CI + Pages run caused by this README handoff commit to be green.
-2. Then set backend `current_build_id = beta-block-1-friends-rc5-1`, maintenance OFF, and update this README to `FRIENDS BETA: GO — RC5.1 live`.
-3. Owner refreshes and manually plays **HARD 03 on mobile**. Success criterion is not “pixel-perfect optimum”; it should be reasonably beatable after the troll is understood, ideally within a few learned attempts.
-4. If H03 now feels fair and fun, **freeze block 1 campaign geometry** instead of endlessly micro-tuning it.
-5. Verify RC5 player identity + Assistance briefly if not already confirmed.
-6. Run Community Maps end-to-end with at least two testers: create → draft → playtest → publish → discover → play → rate → comment → report → creator delete / self-rating blocked.
-7. Once H03 and Community single-hole flow pass human validation, begin **campaign block 2 and new mechanics**. Prefer adding genuinely new gameplay vocabulary rather than more variations of walls/bumper/sand/void.
+1. Owner refreshes and manually plays **HARD 03 on mobile**. Success criterion is not pixel-perfect optimum; after understanding the troll, it should be reasonably beatable within a few learned attempts.
+2. If H03 now feels fair and fun, **freeze block 1 campaign geometry** instead of endlessly micro-tuning it.
+3. Briefly verify RC5 player identity + Assistance if not already confirmed.
+4. Run Community Maps end-to-end with at least two testers: create → draft → playtest → publish → discover → play → rate → comment → report → creator delete / self-rating blocked.
+5. Once H03 and Community single-hole flow pass human validation, begin **campaign block 2 and new mechanics**. Prefer genuinely new gameplay vocabulary rather than more variations of walls/bumper/sand/void.
+6. Build a private DEV/review dashboard only when enough fresh beta data exists to make it useful.
 
 ## Development principle
 
