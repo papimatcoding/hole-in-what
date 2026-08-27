@@ -2,42 +2,84 @@
 
 Mobile-first 2D arcade minigolf built with Phaser + TypeScript. The current goal is **not** metagame expansion: it is to make the core shot, authored campaign and HARD troll identity good enough to retain real players.
 
-> **Source of truth / chat handoff** — Last updated 2026-08-27. If development continues in another chat/session, read this file before changing campaign architecture or adding features.
+> **SOURCE OF TRUTH / CHAT HANDOFF — Last updated 2026-08-27 after commit `77febd1`**
+>
+> If development continues in another chat/session, read this file first. The exact resume point is in **Immediate next steps** below. Keep this README updated whenever campaign state, priorities, architecture, risks or next actions change.
 
 ## Play / branches
 
 - Public beta / GitHub Pages: https://papimatcoding.github.io/troll-golf/
 - `main`: stable history.
 - `dev`: active development and Pages beta deploy.
-- Pages must deploy through **GitHub Actions**, not branch/static-source deploy.
-- Vite base is `/troll-golf/`.
+- Pages deploy through **GitHub Actions**.
+- Vite base: `/troll-golf/`.
 
-## Current priority
+## Current milestone
 
-Build an exceptional vertical slice before multiplayer, ranked, seasons, ads or more economy.
+Build an exceptional first external-beta vertical slice before multiplayer, ranked, seasons, ads or economy expansion.
 
-Current external-beta target:
+Current slice:
 
-- **10 Classic authored holes**
-- **5 HARD authored holes**
-- shared physics + automated audits
-- fast anonymous beta feedback
+- **10 authored Classic holes**
+- **5 authored HARD/Troll holes**
+- shared pure-TypeScript physics
+- automated geometry/clearance/solver/originality audits
+- anonymous beta telemetry + per-level feedback
 - Community Maps MVP
 
-Campaign quality matters more than level count. A level is deleted/rebuilt rather than protected because work was already spent on it.
+Campaign quality matters more than level count. Do not protect a weak level because time was already spent on it.
+
+## CURRENT STATE — important
+
+As of commit `77febd1ab14d8b438fea65373b7623ff880a5e6e`:
+
+- normal CI is **green**;
+- typecheck/build/hole physics/mechanic integrity/geometry/clearance all pass;
+- originality audit flags **0 structurally similar pairs**;
+- fast campaign audit reports **Classic 10/10 clean**;
+- fast campaign audit reports **Troll 5/5 clean**;
+- no current level is `TOO_EASY_FOR_TARGET`, `MECHANIC_BYPASSED` or `NO_ROUTE_FOUND`;
+- Classic 09 was the latest blocker and has now been fixed.
+
+### Latest Classic 09 work
+
+Original problem: Classic 09 was meant to be **sand as route choice**, but the solver found broad one-shot solutions that either made the level far too easy or bypassed the sand entirely.
+
+Two iterations were made:
+
+1. lower shelf extended to close the obvious diagonal HIO;
+2. a short right-side wall fin was added after the solver found a 288° full-power side-bank HIO that skipped the sand.
+
+Current fast-audit result for Classic 09:
+
+- 3★ target: 3 strokes
+- best known: **2 strokes**
+- blind solver: **2 strokes**
+- HIO: **no**
+- primary mechanic: sand
+- mechanic used: **yes**
+- robustness: **33%**
+- difficulty score: **33.2**
+- status: **OK**
+
+Current Classic progression around the end of the block is now roughly:
+
+- Classic 07: difficulty 32.8
+- Classic 08: 31.9
+- Classic 09: 33.2
+- Classic 10: 35.8
+
+Remaining fast-audit warnings are non-fatal and belong mainly to early accessible HIOs / intentional breathers (notably Classic 03 and 05). Do not redesign them automatically just to make warnings disappear; verify them manually first.
 
 ## Core design rules
 
 ### Classic
 
-- Every hole needs a different silhouette **and** a different strategic question.
-- Do not count `same map + different mechanic`, mirrors or trivial rotations as original levels.
-- Difficulty should rise as a curve. Small breathers are fine; large inversions are not.
-- New mechanics are introduced with space to learn them, then reused in new contexts.
-- Early HIOs can be accessible. Later HIOs should normally be narrow mastery lines, not obvious highways.
-- Objects must affect a decision. Decorative gameplay objects are a design failure.
+Every hole needs a different silhouette **and** a different strategic question. Mirrors, trivial rotations or “same layout + different mechanic” do not count as new levels.
 
-Current block-1 teaching plan:
+Difficulty should rise as a curve. Small breathers are acceptable; large inversions are not. New mechanics need room to be learned, then reused in different contexts. Early HIOs may be accessible; later HIOs should normally be narrow mastery lines rather than obvious highways. Gameplay objects must affect a decision.
+
+Block-1 teaching plan:
 
 1. control / comfortable HIO
 2. first bank
@@ -50,9 +92,9 @@ Current block-1 teaching plan:
 9. sand as route choice
 10. chapter exam using known rules
 
-### HARD
+### HARD / Troll
 
-HARD is the main differentiator of Troll Golf and must be troll from hole 1.
+HARD is the main differentiator and must feel troll from hole 1.
 
 A good trap:
 
@@ -60,57 +102,40 @@ A good trap:
 2. surprises the player;
 3. is deterministic and understandable afterwards;
 4. leaves a fair route after discovery;
-5. creates the reaction “qué cabrón” rather than “esto es random”.
+5. creates “qué cabrón”, not “esto es random”.
 
-Existing trap vocabulary deliberately stays small and composable: pop wall, surprise bumper, disappearing floor/void, cross-gate, false safe lane, rebound punishment and late combinations. Future candidates include a cup that dodges/relocates, reactive obstacles and richer deterministic state changes, but they must live in `GolfSimulation`, not as render-only hacks.
+Current trap vocabulary deliberately stays small and composable: pop wall, surprise bumper, disappearing floor/void, cross-gate, false safe lane, rebound punishment and combinations. Future candidates include a dodging/relocating cup and richer deterministic state changes, but gameplay behavior must live in `GolfSimulation`, never render-only hacks.
 
-Level Select must **not** reveal HARD mechanics/traps before play.
+Level Select must not spoil HARD traps before play.
 
 ## Architecture
 
 ### Physics authority
 
-`src/systems/GolfSimulation.ts`
+`src/systems/GolfSimulation.ts` is the single gameplay-physics authority.
 
-Pure TypeScript simulation owns ball state and gameplay physics:
+It owns ball launch/friction, bounds/walls, triangles/curves, bumpers, sand/ice, boosters/fans, portals, moving objects, ramps/trampolines, void, pop traps and cup sweep/lip/sink logic.
 
-- launch / friction
-- bounds and wall collisions
-- triangles / curves
-- bumpers
-- sand / ice
-- boosters / fans
-- portals
-- moving walls / bumpers
-- ramps / trampolines / vertical jump state
-- void
-- pop traps
-- hole sweep / lip / sink detection
-
-This simulation is shared by gameplay, course audit research and Community Maps. Phaser should primarily own input, rendering, audio, haptics and FX.
-
-Do **not** reintroduce a second physics implementation in an auditor.
+Gameplay, audits and Community Maps share this simulation. Phaser should mainly own input, rendering, audio, haptics and FX. **Do not reintroduce a second auditor physics implementation.**
 
 ### Main runtime
 
-- `src/scenes/GameplayScene.ts` — campaign gameplay.
-- `src/systems/CourseRenderer.ts` — course drawing/dynamic visuals.
-- `src/data/campaign.ts` — player-facing authored campaign only.
-- `src/data/authored/classic.ts` — Classic authored holes.
-- `src/data/authored/hard.ts` — HARD authored holes.
-- `src/systems/SaveSystem.ts` — progress/cosmetics/wallet.
+- `src/scenes/GameplayScene.ts` — campaign gameplay
+- `src/systems/CourseRenderer.ts` — drawing/dynamic visuals
+- `src/data/campaign.ts` — player-facing authored campaign
+- `src/data/authored/classic.ts` — Classic holes
+- `src/data/authored/hard.ts` — HARD holes
+- `src/systems/SaveSystem.ts` — progress/cosmetics/wallet
 
-The old `GameScene -> V8 -> V81 -> V82` inheritance chain was removed from runtime. Do not start a new V83/V84 patch-class chain.
+The old `GameScene -> V8 -> V81 -> V82` patch-inheritance chain is gone. Do not create V83/V84-style patch classes.
 
 ### Procedural status
 
-Procedural generation is **not** allowed to choose player-facing campaign levels anymore. It may remain as an internal prototyping/tooling aid. Campaign holes are authored and explicitly approved.
+Procedural generation may remain as internal prototyping/tooling only. It must **not** choose player-facing campaign holes and must never silently replace missing authored content.
 
-Do not silently fall back to generated levels if an authored level is missing.
+## Validation pipeline
 
-## Level validation pipeline
-
-Normal CI runs:
+Normal CI:
 
 ```bash
 npm run typecheck
@@ -123,95 +148,43 @@ npm run audit:courses
 npm run audit:originality
 ```
 
-Use the long solver before approving a block:
+Before approving the block, run the long solver:
 
 ```bash
 FULL_AUDIT=1 npm run audit:courses
 ```
 
-### What each check means
-
-- `test:hole` — regression battery for cup physics, including speed and rim cases.
-- `test:mechanics` — authored primary mechanic survives sanitization.
-- `test:geometry` — catches accidental authored object overlaps.
-- `test:clearance` — checks ball-sized navigability in initial and persistent troll states. Moving-obstacle snapshots are warnings because waiting is allowed.
-- `audit:courses` — shared-physics solver/audit; tracks HIOs, best-known strokes, robustness, mechanic interaction and traps.
-- `audit:originality` — structural similarity check designed to catch clones even when modifiers differ.
-
-The solver is a critic, **not the designer**. Do not lower star targets just to make warnings green. First inspect whether a shortcut bypasses the interesting decision.
+The solver is a critic, not the designer. Never lower star targets merely to turn warnings green. First inspect whether the solver found a route that bypasses the intended decision.
 
 ## Stars
 
-Current philosophy:
+- 1★ = complete
+- 2★ = solid strokes
+- 3★ = realistic mastery/par
+- time is stored separately and does not remove stars
 
-- 1★ = complete.
-- 2★ = solid strokes.
-- 3★ = realistic mastery/par.
-- Time is stored as a separate record and does **not** remove stars.
+Targets are authored per level.
 
-Targets are authored per level. Do not assign one par automatically to a whole difficulty band.
+## Beta mode / telemetry
 
-## Hole physics
+`src/config/beta.ts` separates tester UX from real progression. During beta all authored holes are accessible, level-select spoilers are hidden, previous/next navigation is available, Results supports fast feedback/reporting, and editor/previews are available.
 
-The old cup bug behaved like an invisible circular collider. Current cup logic uses continuous segment sweep:
+Supabase project: **Troll Golf** (`xtekdrkqgfjnnwawyoim`). Never commit service-role/admin secrets.
 
-- reasonable centred/valid entries sink;
-- an excessively fast shot can pass through;
-- a real tangential rim graze can lip;
-- lip feedback must never become an invisible wall;
-- sinking must never depend on shot count or elapsed simulation state.
-
-Keep `scripts/holePhysicsCheck.ts` green when touching cup physics.
-
-## Beta testing mode
-
-`src/config/beta.ts` controls tester-mode UX separately from real campaign progression.
-
-During beta:
-
-- all authored Classic/HARD holes can be accessed;
-- Level Select does not spoil mechanics;
-- keyboard/gameplay previous-next navigation is available;
-- Results has fast feedback/reporting and leaderboard access;
-- editor/previews are available for design work.
-
-Do not fake unlocks by corrupting `SaveSystem`; beta access should remain a separate concern.
-
-## Beta telemetry / Supabase
-
-Supabase project: **Troll Golf** (`xtekdrkqgfjnnwawyoim`). Do not commit service-role keys or admin secrets.
-
-Anonymous tester identity:
-
-- browser receives a persistent UUID in localStorage;
-- alias is optional;
-- backend can distinguish testers/builds/levels;
-- deleting storage/incognito can create a new identity, which is acceptable for the current friends-only beta.
-
-Current beta build ID lives in `src/systems/BetaTelemetrySystem.ts`. Change it when a campaign revision should collect fresh per-level surveys.
-
-Backend tables include:
+Backend beta tables:
 
 - `beta_testers`
 - `beta_runs`
 - `beta_level_feedback`
 - `beta_game_feedback`
 
-Per-level feedback is unique for `tester + build + level`. Global feedback is one per tester/build.
+Tester identity is a persistent anonymous browser UUID. Current quick survey: Fun, Originality, Difficulty, optional BUG, and HARD optional “me pilló”.
 
-Current quick level survey is deliberately lightweight:
+`BetaTelemetry.beginAttempt()` still starts too late (result flow), so abandoned/retry counting is imperfect; this is backlog, not a beta blocker.
 
-- Fun
-- Originality
-- Difficulty
-- optional BUG
-- HARD optional “me pilló”
+## Community Maps MVP
 
-The three core answers auto-submit. Separate quick-report exists for concrete problems. Global survey remains after completing the whole beta slice.
-
-## Community Maps — MVP
-
-Backend schema added in Supabase:
+Backend tables:
 
 - `community_maps`
 - `community_map_runs`
@@ -219,99 +192,50 @@ Backend schema added in Supabase:
 
 Edge Function: `community-maps`.
 
-Current MVP flow:
+Current flow: create draft in Beta Lab/Editor → publish with title/description → browse newest/top → play using shared simulation → rate fun/originality/difficulty. Creator self-rating is blocked in API/database, and each tester gets one rating per map.
 
-1. Build a draft in **BETA LAB / Editor**.
-2. Open **Community Maps**.
-3. `+ PUBLICAR` publishes the current local editor draft with title/description.
-4. Other testers can browse newest/top maps and play them using the shared `GolfSimulation`.
-5. Players can rate fun/originality/difficulty.
-6. Creator **cannot rate their own map**. This is enforced both by API logic and a PostgreSQL trigger, not only UI.
-7. One tester gets one rating per map.
+Latest community fix before this campaign pass: `community: avoid Phaser loader name collision`.
 
-Publication validation currently limits JSON size/object counts and applies a simple per-tester publishing rate limit. Community maps do **not** automatically enter the official campaign.
-
-### Community promotion plan
-
-Good community maps should eventually enter a private review queue:
-
-1. strong player feedback / enough votes;
-2. automated geometry/clearance/shared-physics audit;
-3. manual review by project owner (and optionally one trusted co-tester);
-4. only then consider adaptation/promotion into official content.
-
-### Community MVP deliberately does NOT include yet
-
-- accounts/social profiles
-- follows/comments
-- full moderation tooling
-- automatic official-campaign promotion
-- pagination/search/tags
-- rich preview thumbnails
-- private dev review dashboard
+Still deliberately absent: accounts/social profiles, comments/follows, full moderation, search/tags/pagination, rich thumbnails, automatic campaign promotion and private review dashboard.
 
 ## Private DEV zone
 
-**Not implemented yet.**
+**Not implemented yet.** Do not protect it with a hidden frontend button or hard-coded password. It needs backend authorization.
 
-Do not secure it with a hidden frontend button or hard-coded password. It must use backend authorization. Intended access: project owner and optionally one trusted tester/designer. Planned capabilities:
+Build it only once there is enough real beta/community data to make it useful. Intended functions: aggregate feedback, inspect bugs/comments by build+level, see trends, review top community maps and feature/hide/reject promotion candidates.
 
-- see aggregated beta feedback;
-- inspect comments/bugs by build + level;
-- see difficulty/fun/originality trends;
-- review top Community Maps;
-- run/record audit status for promotion candidates;
-- feature/hide/reject community maps.
+## Beta Lab / editor
 
-## Beta Lab / level editor
+Internal authoring tool with selection/manipulation, grid/snap, duplicate/delete, honest rotations where physics supports them, playtest and JSON draft storage/export.
 
-The editor is an internal design tool and the main way to author future maps. It supports selection/manipulation, grid/snap, duplication/deletion, rotation where physics supports it, playtest and JSON draft storage/export.
+Wall physics is currently axis-aligned. Do not expose fake arbitrary visual rotation that disagrees with collision physics.
 
-Important: current wall physics is axis-aligned, so arbitrary visual rotation must not be exposed unless `GolfSimulation` supports the same collision rotation. Honest 90° transforms are preferable to fake free rotation.
+## Known non-blockers
 
-The preview gallery exists to compare silhouettes before playing every hole and catch repeated compositions early.
-
-## Current campaign status / known risks
-
-- Campaign count is intentionally small: 10 Classic + 5 HARD.
-- This is the first real external-beta block, not a finished 80-hole campaign.
-- Classic 05 has been repeatedly rebuilt after geometry/clearance failures and is currently being revalidated as an open bumper lesson.
-- The difficulty curve still needs real-player data; audit metrics are supporting evidence only.
-- HARD identity needs continued iteration and future troll primitives, but avoid adding many mechanics at once.
-- `BetaTelemetry.beginAttempt()` is currently called on result flow; true abandoned/retry attempt counting can be improved later.
-- Community play is intentionally minimal compared with campaign gameplay.
-- Bundle-size warning exists (>500 kB minified chunk); not a current core blocker, but code splitting can be revisited.
+- bundle warning remains around ~1.5 MB minified / ~395 kB gzip; code splitting can wait;
+- difficulty still needs real human data despite green audits;
+- HARD will eventually need more troll primitives, but do not add many at once;
+- Community play is intentionally more minimal than campaign play.
 
 ## Things deliberately NOT being built now
 
-Do not spend current core-slice time on:
+Do not spend this milestone on multiplayer, ranked/MMR, smart bots as a player feature, battle pass/seasons, Daily Hole, ads, lootboxes, extra currencies, more shop screens or a large account system.
 
-- multiplayer
-- ranked/MMR
-- smart bots as a player feature
-- battle pass / seasons
-- Daily Hole
-- ads
-- lootboxes
-- extra currencies
-- more shop screens
-- large backend account system
+## Immediate next steps — resume here
 
-Coins/cosmetics that already exist can stay, but core level design and retention have priority.
+**The campaign has just reached 10/10 Classic + 5/5 Troll clean in the normal fast CI audit. Do not immediately author more levels.**
 
-## Immediate next steps
-
-1. Get current 10 Classic + 5 HARD through all CI checks, especially clearance/full audit.
-2. Manually play the entire slice on PC and mobile.
-3. Open the beta to a small group of friends using the Pages URL.
-4. Collect enough per-level feedback to identify low-fun/repetitive/difficulty-spike holes.
-5. Curate/rebuild specific levels from data; do not regenerate the campaign wholesale.
-6. Validate Community Maps MVP with a few published maps.
-7. Build the **secure** private DEV/review dashboard once enough feedback/community data exists to make it useful.
-8. Only after block 1 is genuinely strong, author the next small block.
+1. Run/obtain a **FULL_AUDIT=1** result for the current 15-hole slice. If the long solver exposes a shortcut/bypass, fix the affected authored level and re-run normal CI.
+2. Manually play all 15 holes in sequence on desktop, evaluating fun, readability, repetition, difficulty curve and whether each stated teaching/trap idea is actually felt.
+3. Repeat the whole slice on mobile/touch; pay special attention to narrow corridors, aiming precision, UI obstruction and restart/next-level flow.
+4. Only if manual play looks good, open the Pages beta to a small group of friends.
+5. Collect per-level feedback and rebuild only levels that real data identifies as weak/repetitive/spiky. Do not regenerate the campaign wholesale.
+6. Validate Community Maps end-to-end with a few maps/testers (publish → discover → play → rate → self-rating blocked).
+7. Build the secure DEV/review dashboard only after enough feedback exists.
+8. Author block 2 only when block 1 is genuinely strong.
 
 ## Development principle
 
-The project previously got stuck in a loop of procedural generation -> patch -> regenerated repetition -> patch. Do not return to that loop.
+The project previously got stuck in procedural generation → patch → regenerated repetition → patch.
 
-**Author deliberately -> audit adversarially -> play manually -> test with humans -> curate -> approve.**
+**Author deliberately → audit adversarially → play manually → test with humans → curate → approve.**
