@@ -19,11 +19,11 @@ const c4=base("classic",4,pt(92,836),pt(430,156),2,3,"wall");
 c4.walls=[r(28,588,324,26),r(188,346,324,26),r(330,462,26,126)];
 path(c4,pt(428,690),pt(428,520),pt(150,468),pt(150,274),pt(430,156));
 
-// First bumper lesson: the bumper sits on the fast right-hand setup line; the long route around the shelves remains safe.
-const c5=base("classic",5,pt(270,836),pt(422,166),2,3,"bumper");
-c5.walls=[r(28,600,292,24),r(220,370,292,24),r(348,212,24,120)];
-c5.bumpers=[{x:448,y:690,r:32}];
-path(c5,pt(448,690),pt(430,548),pt(168,330),pt(300,274),pt(422,166));
+// First bumper lesson: an open pinball weave. The bumper is the fast setup, never a mandatory gate.
+const c5=base("classic",5,pt(116,836),pt(422,166),2,3,"bumper");
+c5.walls=[r(210,548,24,164),r(326,320,24,174),r(88,300,144,24)];
+c5.bumpers=[{x:390,y:626,r:32}];
+path(c5,pt(390,626),pt(426,510),pt(270,420),pt(238,258),pt(422,166));
 
 // Same mechanic, different question: controlled rebound setup, followed by a side-entry finish that kills the old one-shot pinball line.
 const c6=base("classic",6,pt(420,836),pt(108,166),2,3,"bumper");
