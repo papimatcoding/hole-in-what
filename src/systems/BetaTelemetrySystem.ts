@@ -43,10 +43,10 @@ export const BetaTelemetry={
   async setAlias(value:string):Promise<boolean>{
     const name=value.trim().replace(/\s+/g," ").slice(0,40);
     if(!name)return false;
-    // The visible profile is local-first: temporary backend/network failure must never make it
-    // look as if the name cannot be edited. ensureTester() retries the server sync later.
+    // The visible profile is local-first. Saving must feel instant and must not depend on the
+    // backend being reachable; ensureTester() and normal telemetry will retry this alias later.
     if(!safeSet(ALIAS_KEY,name))return false;
-    await registerTester();
+    void registerTester();
     return true;
   },
   beginAttempt(levelId:string):number{
