@@ -236,4 +236,7 @@ export interface ResultsSceneData extends GameSceneData {
   strokes: number;
   timeMs: number;
   stars: number;
+  trapsTriggered?: string[];
+  mechanicsUsed?: string[];
+  voids?: number;
 }
