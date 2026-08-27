@@ -25,21 +25,24 @@ function makeId():string{try{return crypto.randomUUID();}catch{return`draft-${Da
 function activeId():string|null{try{return localStorage.getItem(ACTIVE_KEY);}catch{return null;}}
 function setActive(id:string|null):void{try{if(id)localStorage.setItem(ACTIVE_KEY,id);else localStorage.removeItem(ACTIVE_KEY);}catch{/* optional */}}
 function saveWorking(level:LevelDefinition):void{try{localStorage.setItem(WORKING_KEY,JSON.stringify(level));}catch{/* optional */}}
+function working():LevelDefinition|null{try{const raw=localStorage.getItem(WORKING_KEY);if(!raw)return null;const level=JSON.parse(raw) as LevelDefinition;return level?.ball&&level?.hole?level:null;}catch{return null;}}
 
 export const CommunityDrafts={
   list():SavedCommunityDraft[]{return read().sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));},
   get(id:string):SavedCommunityDraft|null{return read().find(x=>x.id===id)??null;},
+  working,
   activeId,
+  captureWorking(name:string,replaceId?:string):SavedCommunityDraft|null{
+    const level=working();if(!level)return null;const items=read(),now=new Date().toISOString(),index=replaceId?items.findIndex(x=>x.id===replaceId):-1;
+    if(index>=0){const old=items[index]!;const next:SavedCommunityDraft={...old,name:(name.trim()||old.name).slice(0,48),updatedAt:now,playtestedAt:null,level:clone(level)};items[index]=next;write(items);setActive(next.id);return next;}
+    const id=makeId(),next:SavedCommunityDraft={id,name:(name.trim()||"Mi mapa").slice(0,48),updatedAt:now,playtestedAt:null,level:clone(level)};items.push(next);write(items);setActive(id);return next;
+  },
   save(level:LevelDefinition,name?:string):SavedCommunityDraft{
-    const items=read(),current=activeId(),index=current?items.findIndex(x=>x.id===current):-1,now=new Date().toISOString();
-    if(index>=0){
-      const old=items[index]!;const next:SavedCommunityDraft={...old,name:(name?.trim()||old.name).slice(0,48),updatedAt:now,playtestedAt:null,level:clone(level)};items[index]=next;write(items);saveWorking(level);return next;
-    }
-    const id=makeId(),next:SavedCommunityDraft={id,name:(name?.trim()||"Mi mapa").slice(0,48),updatedAt:now,playtestedAt:null,level:clone(level)};items.push(next);write(items);setActive(id);saveWorking(level);return next;
+    saveWorking(level);const captured=this.captureWorking(name??"Mi mapa");if(captured)return captured;
+    throw new Error("draft_save_failed");
   },
   syncActive(level:LevelDefinition):void{
-    const id=activeId();if(!id)return;const items=read(),index=items.findIndex(x=>x.id===id);if(index<0){setActive(null);return;}
-    const old=items[index]!;items[index]={...old,updatedAt:new Date().toISOString(),playtestedAt:null,level:clone(level)};write(items);
+    const id=activeId();if(!id)return;saveWorking(level);const old=this.get(id);if(old)this.captureWorking(old.name,id);else setActive(null);
   },
   openInEditor(id:string):boolean{
     const draft=this.get(id);if(!draft)return false;setActive(id);saveWorking(clone(draft.level));return true;
