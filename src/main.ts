@@ -3,8 +3,10 @@ import "./styles.css";
 import { DESIGN_HEIGHT, DESIGN_WIDTH, RENDER_SCALE } from "./config/display";
 import { BootScene } from "./scenes/BootScene";
 import { MaintenanceScene } from "./scenes/MaintenanceScene";
+import { UpdateRequiredScene } from "./scenes/UpdateRequiredScene";
 import { MenuScene } from "./scenes/MenuScene";
 import { PatchNotesScene } from "./scenes/PatchNotesScene";
+import { GlobalSurveyScene } from "./scenes/GlobalSurveyScene";
 import { LevelSelectScene } from "./scenes/LevelSelectScene";
 import { GameplayScene } from "./scenes/GameplayScene";
 import { ResultsScene } from "./scenes/ResultsScene";
@@ -27,7 +29,7 @@ const config:Phaser.Types.Core.GameConfig={
   width:renderWidth,
   height:renderHeight,
   backgroundColor:"#0d1117",
-  scene:[BootScene,MaintenanceScene,MenuScene,PatchNotesScene,LevelSelectScene,GameplayScene,ResultsScene,CosmeticsScene,ShopScene,RewardsScene,EditorScene,LevelPreviewScene,CommunityMapsScene,CommunityPublishScene,CommunityPlayScene],
+  scene:[BootScene,MaintenanceScene,UpdateRequiredScene,MenuScene,PatchNotesScene,GlobalSurveyScene,LevelSelectScene,GameplayScene,ResultsScene,CosmeticsScene,ShopScene,RewardsScene,EditorScene,LevelPreviewScene,CommunityMapsScene,CommunityPublishScene,CommunityPlayScene],
   scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH,width:renderWidth,height:renderHeight},
   render:{antialias:true,roundPixels:false}
 };
