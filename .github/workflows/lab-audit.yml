@@ -54,6 +54,9 @@ jobs:
           AUDIT2_MODE: "full"
         run: npm run audit:human
 
+      - name: Audit 2.0 difficulty and design advice
+        run: npm run audit:design
+
       - name: Check course originality
         run: npm run audit:originality
 
@@ -62,5 +65,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: audit-2-report
-          path: artifacts/audit2-report.*
+          path: |
+            artifacts/audit2-report.*
+            artifacts/audit2-design.*
           if-no-files-found: warn
