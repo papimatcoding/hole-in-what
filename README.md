@@ -52,6 +52,19 @@ New development flow:
 
 `dev` should no longer be used as a scratchpad.
 
+## Responsive presentation
+
+Gameplay is **device-invariant**; presentation does not have to be.
+
+- physics, course coordinates, shot rules, sensitivity and mechanics stay identical on desktop and touch;
+- `src/config/display.ts` owns presentation-only form-factor detection;
+- desktop detection uses fine pointer + hover + viewport width, not user-agent sniffing;
+- desktop may use larger typography, denser/horizontal layouts, hover states and an intentional framed game shell;
+- touch/mobile keeps larger touch targets and the compact vertical flow that already works well;
+- never fix desktop UX by creating a second gameplay/input implementation.
+
+Current desktop UX work lives on `feature/pc-ui-ux`. Its first pass covers the browser shell, main menu, level select, Results/post-hole survey, player profile, Assistance, Community discovery, Patch Notes and the global survey. The post-hole survey now uses explicit **ENVIAR / SALTAR** rather than auto-submitting as soon as the third answer is clicked. Player alias edits are stored locally immediately and synced to the backend afterwards, while `tester_id` remains unchanged.
+
 ## Physics authority
 
 `src/systems/GolfSimulation.ts` is the **single physics authority** for campaign, audits and Community Maps.
@@ -416,12 +429,12 @@ Historical ideas such as ~40 Classic + ~40 HARD, competitive online up to 10, bo
 
 ## Immediate next steps — resume here
 
-**Block 1 is frozen. Audit 2.1 is merged into `dev`, fully calibrated against the H03 regression, and is now the standard development critic.**
+**Block 1 is frozen. Audit 2.1 is merged into `dev`. Desktop UX and Block 2 mechanic certification are now separate feature branches so neither needs maintenance while iterating.**
 
-1. Verify post-merge CI/Pages remain green. No maintenance is required because campaign physics/geometry is unchanged.
-2. Run Community Maps end-to-end with at least two testers: create → draft → playtest → publish → discover → play → rate → comment → report → creator delete / self-rating blocked.
-3. Start **campaign block 2 on a new feature branch**, never directly on `dev`.
-4. Before authoring many new holes, define a small set of genuinely new mechanics and add each mechanic to `GolfSimulation` + renderer/editor support + audit coverage first.
+1. Finish and certify `feature/pc-ui-ux`; manually inspect it on a real desktop before promotion to `dev`.
+2. Finish PR #2 (`feature/block-2-mechanics`) and certify ice, booster and portal behavior contracts before authoring Block 2 holes.
+3. Run Community Maps end-to-end with at least two testers: create → draft → playtest → publish → discover → play → rate → comment → report → creator delete / self-rating blocked.
+4. Start authored Block 2 holes only after the first mechanic contracts are merged; keep level work on feature branches.
 5. Use Audit 2.1 to rank candidate holes by difficulty/originality and recommend changes, then manually play them before promotion.
 6. When reviewing beta feedback, query Supabase, create an aggregated/non-identifying snapshot and feed it to `audit2Design.ts`.
 7. Build a private DEV/review dashboard only when enough fresh beta/community data exists to justify it.
