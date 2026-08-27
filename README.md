@@ -2,7 +2,7 @@
 
 Mobile-first 2D arcade minigolf built with Phaser + TypeScript. The current goal is **not** metagame expansion: it is to make the core shot, authored campaign and HARD troll identity good enough to retain real players.
 
-> **SOURCE OF TRUTH / CHAT HANDOFF — Last updated 2026-08-27 after commit `77febd1`**
+> **SOURCE OF TRUTH / CHAT HANDOFF — Last updated 2026-08-27 after commit `77964c8`**
 >
 > If development continues in another chat/session, read this file first. The exact resume point is in **Immediate next steps** below. Keep this README updated whenever campaign state, priorities, architecture, risks or next actions change.
 
@@ -31,15 +31,31 @@ Campaign quality matters more than level count. Do not protect a weak level beca
 
 ## CURRENT STATE — important
 
-As of commit `77febd1ab14d8b438fea65373b7623ff880a5e6e`:
+As of commit `77964c87e9284268d07296d285e733570e1dc92f`:
 
-- normal CI is **green**;
+- normal CI is green on the latest gameplay revision;
 - typecheck/build/hole physics/mechanic integrity/geometry/clearance all pass;
 - originality audit flags **0 structurally similar pairs**;
 - fast campaign audit reports **Classic 10/10 clean**;
 - fast campaign audit reports **Troll 5/5 clean**;
-- no current level is `TOO_EASY_FOR_TARGET`, `MECHANIC_BYPASSED` or `NO_ROUTE_FOUND`;
-- Classic 09 was the latest blocker and has now been fixed.
+- no current level is `TOO_EASY_FOR_TARGET`, `MECHANIC_BYPASSED` or `NO_ROUTE_FOUND` in the fast audit;
+- Classic 09 was the latest gameplay blocker and is fixed;
+- `.github/workflows/full-audit.yml` now exists and runs `FULL_AUDIT=1 npm run audit:courses` on authored/physics/auditor changes and via manual dispatch;
+- the first Full Audit run has been started for the current slice. **Do not declare external-beta approval until that run finishes successfully and manual desktop/mobile play is completed.**
+
+### Beta approval gate
+
+The project owner can send the Pages link to friends only after all of these are true:
+
+1. normal CI green;
+2. Full Audit green on the current authored slice;
+3. one complete manual desktop playthrough with no blocker-level issue;
+4. one complete mobile/touch playthrough with no blocker-level issue;
+5. feedback submission flow works in the deployed Pages build.
+
+When these are satisfied, the handoff should explicitly say **FRIENDS BETA: GO**. Until then it should say **FRIENDS BETA: HOLD**.
+
+Current status: **FRIENDS BETA: HOLD** — waiting for Full Audit result and manual desktop/mobile validation.
 
 ### Latest Classic 09 work
 
@@ -148,11 +164,13 @@ npm run audit:courses
 npm run audit:originality
 ```
 
-Before approving the block, run the long solver:
+Long solver / block certification:
 
 ```bash
 FULL_AUDIT=1 npm run audit:courses
 ```
+
+GitHub Actions now includes `.github/workflows/full-audit.yml`, which runs the long solver automatically when authored campaign files, shared physics, course validation or the auditor change. It also supports `workflow_dispatch` for manual certification runs.
 
 The solver is a critic, not the designer. Never lower star targets merely to turn warnings green. First inspect whether the solver found a route that bypasses the intended decision.
 
@@ -223,16 +241,17 @@ Do not spend this milestone on multiplayer, ranked/MMR, smart bots as a player f
 
 ## Immediate next steps — resume here
 
-**The campaign has just reached 10/10 Classic + 5/5 Troll clean in the normal fast CI audit. Do not immediately author more levels.**
+**The campaign is 10/10 Classic + 5/5 Troll clean in the normal fast CI audit. A dedicated Full Audit workflow has just been added and its first certification run is in progress. Do not immediately author more levels.**
 
-1. Run/obtain a **FULL_AUDIT=1** result for the current 15-hole slice. If the long solver exposes a shortcut/bypass, fix the affected authored level and re-run normal CI.
-2. Manually play all 15 holes in sequence on desktop, evaluating fun, readability, repetition, difficulty curve and whether each stated teaching/trap idea is actually felt.
+1. Inspect the current **Full Audit** GitHub Actions run. If it exposes a shortcut/bypass, fix only the affected authored level and re-run normal CI + Full Audit.
+2. Once Full Audit is green, manually play all 15 holes in sequence on desktop, evaluating fun, readability, repetition, difficulty curve and whether each teaching/trap idea is actually felt.
 3. Repeat the whole slice on mobile/touch; pay special attention to narrow corridors, aiming precision, UI obstruction and restart/next-level flow.
-4. Only if manual play looks good, open the Pages beta to a small group of friends.
-5. Collect per-level feedback and rebuild only levels that real data identifies as weak/repetitive/spiky. Do not regenerate the campaign wholesale.
-6. Validate Community Maps end-to-end with a few maps/testers (publish → discover → play → rate → self-rating blocked).
-7. Build the secure DEV/review dashboard only after enough feedback exists.
-8. Author block 2 only when block 1 is genuinely strong.
+4. Verify the deployed feedback/report flow once more.
+5. If steps 1–4 have no blocker, change this README to **FRIENDS BETA: GO** and send the Pages URL to a small group of friends.
+6. Collect per-level feedback and rebuild only levels that real data identifies as weak/repetitive/spiky. Do not regenerate the campaign wholesale.
+7. Validate Community Maps end-to-end with a few maps/testers (publish → discover → play → rate → self-rating blocked).
+8. Build the secure DEV/review dashboard only after enough feedback exists.
+9. Author block 2 only when block 1 is genuinely strong.
 
 ## Development principle
 
