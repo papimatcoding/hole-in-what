@@ -24,7 +24,7 @@ export class CommunityPlayScene extends Phaser.Scene{
     setupDesignCamera(this);this.cameras.main.setBackgroundColor("#0b0f14");
     this.add.text(38,42,"‹",{fontFamily:"system-ui",fontSize:"34px",color:"#eef4f8"}).setDepth(30).setInteractive({useHandCursor:true}).on("pointerup",()=>this.scene.start("community-maps"));
     this.add.text(270,72,"CARGANDO MAPA…",{fontFamily:"system-ui",fontSize:"14px",fontStyle:"bold",color:"#a8bac6"}).setOrigin(.5).setName("loading");
-    sharpenSceneText(this);void this.load();
+    sharpenSceneText(this);void this.loadMap();
   }
 
   update(time:number,delta:number):void{
@@ -34,7 +34,7 @@ export class CommunityPlayScene extends Phaser.Scene{
     drawCourse(this.course,this.detail!.level,this.sim.state);drawDynamicCourse(this.dynamic,this.detail!.level,time/1000);
   }
 
-  private async load():Promise<void>{
+  private async loadMap():Promise<void>{
     this.detail=await CommunityMaps.get(this.mapId);
     const loading=this.children.getByName("loading") as Phaser.GameObjects.Text|null;
     if(!this.detail){loading?.setText("NO SE PUDO CARGAR");return;}
