@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { BETA_TESTING } from "../config/beta";
 import { DESIGN_HEIGHT, DESIGN_WIDTH, setupDesignCamera, sharpenSceneText } from "../config/display";
 import { levelsForMode } from "../data/campaign";
 import { BetaFeedbackSystem } from "../systems/BetaFeedbackSystem";
@@ -25,6 +26,10 @@ export class MenuScene extends Phaser.Scene {
       fontFamily:"system-ui, sans-serif",fontSize:"14px",color:"#8f9dab"
     }).setOrigin(.5);
 
+    if(BETA_TESTING)this.add.text(DESIGN_WIDTH/2,207,"BETA TEST · TODOS LOS HOYOS ABIERTOS",{
+      fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#8fb8cf"
+    }).setOrigin(.5);
+
     this.makeModeButton("CLASSIC","classic",285);
     this.makeModeButton("HARD","troll",400);
     this.makeSimpleButton("PERSONALIZAR",520,()=>this.scene.start("cosmetics"));
@@ -43,7 +48,7 @@ export class MenuScene extends Phaser.Scene {
     const openBeta=()=>this.scene.start("editor");beta.on("pointerup",openBeta);betaText.on("pointerup",openBeta);
     beta.on("pointerover",()=>beta.setFillStyle(0x1a2631));beta.on("pointerout",()=>beta.setFillStyle(0x111922));
 
-    this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-48,"CAMPAÑA BETA · CORE SLICE",{
+    this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-48,BETA_TESTING?"CAMPAÑA BETA · TESTER MODE":"CAMPAÑA · CORE SLICE",{
       fontFamily:"system-ui, sans-serif",fontSize:"12px",color:"#657282"
     }).setOrigin(.5);
     sharpenSceneText(this);
@@ -51,7 +56,7 @@ export class MenuScene extends Phaser.Scene {
 
   private makeModeButton(label:string,mode:GameMode,y:number):void{
     const levels=levelsForMode(mode),stars=SaveSystem.totalStars(levels.map(level=>level.id));
-    const locked=mode==="troll"&&!SaveSystem.isTrollUnlocked();
+    const locked=mode==="troll"&&!BETA_TESTING&&!SaveSystem.isTrollUnlocked();
     const bg=this.add.rectangle(270,y,390,92,locked?0x121820:0x18212a).setStrokeStyle(2,locked?0x27313b:0x2d3a47);
     const title=this.add.text(105,y-12,label,{
       fontFamily:"system-ui, sans-serif",fontSize:"24px",fontStyle:"bold",color:locked?"#697480":"#f5f7fa"
@@ -65,7 +70,7 @@ export class MenuScene extends Phaser.Scene {
       return;
     }
 
-    const progress=this.add.text(435,y+16,`★ ${stars} / ${levels.length*3}`,{
+    const progress=this.add.text(435,y+16,BETA_TESTING?`BETA · ★ ${stars} / ${levels.length*3}`:`★ ${stars} / ${levels.length*3}`,{
       fontFamily:"system-ui, sans-serif",fontSize:"14px",color:"#c9d4df"
     }).setOrigin(1,.5);
     const open=():void=>{this.scene.start("level-select",{mode});};
