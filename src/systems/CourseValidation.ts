@@ -35,6 +35,7 @@ const clamp = (v: number, min: number, max: number): number => Math.max(min, Mat
 const dist = (a: Vec2, b: Vec2): number => Math.hypot(a.x - b.x, a.y - b.y);
 const normalizeAngle = (angle: number): number => ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
 const gridKey = (gx: number, gy: number): string => `${gx}:${gy}`;
+const includesMovingSnapshot = (state: CourseValidationState): boolean => state.label.startsWith("moving@");
 
 function movingWallRect(wall: MovingWallDef, seconds = 0): RectDef {
   const q = Math.sin(seconds * (wall.speed ?? 1.15) + (wall.phase ?? 0)) * wall.amplitude;
@@ -91,7 +92,7 @@ function activeFlag(flags: boolean[] | undefined, index: number): boolean {
 
 function blockingRects(level: LevelDefinition, state: CourseValidationState): RectDef[] {
   const out: RectDef[] = [...(level.walls ?? [])];
-  for (const wall of level.movingWalls ?? []) out.push(movingWallRect(wall, state.time ?? 0));
+  if (includesMovingSnapshot(state)) for (const wall of level.movingWalls ?? []) out.push(movingWallRect(wall, state.time ?? 0));
   (level.popWalls ?? []).forEach((wall, i) => { if (activeFlag(state.activePopWalls, i)) out.push(wall); });
   return out;
 }
@@ -105,13 +106,13 @@ function hazardRects(level: LevelDefinition, state: CourseValidationState): Rect
 function blockers(level: LevelDefinition, state: CourseValidationState): CircleBlocker[] {
   const out: CircleBlocker[] = [];
   (level.bumpers ?? []).forEach((b, i) => out.push({ label: `bumper[${i}]`, x: b.x, y: b.y, r: b.r }));
-  (level.movingBumpers ?? []).forEach((b, i) => { const p = movingBumperPoint(b, state.time ?? 0); out.push({ label: `movingBumper[${i}]`, x: p.x, y: p.y, r: b.r }); });
+  if (includesMovingSnapshot(state)) (level.movingBumpers ?? []).forEach((b, i) => { const p = movingBumperPoint(b, state.time ?? 0); out.push({ label: `movingBumper[${i}]`, x: p.x, y: p.y, r: b.r }); });
   (level.popBumpers ?? []).forEach((b, i) => { if (activeFlag(state.activePopBumpers, i)) out.push({ label: `popBumper[${i}]`, x: b.x, y: b.y, r: b.r }); });
   return out;
 }
 
 export function courseStateVariants(level: LevelDefinition): CourseValidationState[] {
-  const variants: CourseValidationState[] = [{ label: "initial", time: 0 }];
+  const variants: CourseValidationState[] = [{ label: "initial" }];
   const allWalls = (level.popWalls ?? []).map(() => true);
   const allBumpers = (level.popBumpers ?? []).map(() => true);
   const allVoids = (level.popVoids ?? []).map(() => true);
@@ -119,7 +120,7 @@ export function courseStateVariants(level: LevelDefinition): CourseValidationSta
   (level.popBumpers ?? []).forEach((_, i) => variants.push({ label: `popBumper[${i}]`, activePopBumpers: allBumpers.map((__, j) => i === j) }));
   (level.popVoids ?? []).forEach((_, i) => variants.push({ label: `popVoid[${i}]`, activePopVoids: allVoids.map((__, j) => i === j) }));
   if (allWalls.length + allBumpers.length + allVoids.length > 1) variants.push({ label: "all-traps", activePopWalls: allWalls, activePopBumpers: allBumpers, activePopVoids: allVoids });
-  for (const t of [0.8, 1.6, 2.4]) if ((level.movingWalls?.length ?? 0) + (level.movingBumpers?.length ?? 0) > 0) variants.push({ label: `moving@${t.toFixed(1)}s`, time: t });
+  for (const t of [0, 0.8, 1.6, 2.4]) if ((level.movingWalls?.length ?? 0) + (level.movingBumpers?.length ?? 0) > 0) variants.push({ label: `moving@${t.toFixed(1)}s`, time: t });
   return variants;
 }
 
