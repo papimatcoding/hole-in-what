@@ -50,7 +50,7 @@ path(c9,pt(420,580),pt(468,450),pt(220,390),pt(220,250),pt(106,154));
 
 // Chapter exam: the lower gate removes the full-power bypass so the bumper shortcut is part of mastery, followed by sand placement and the reverse finish.
 const c10=base("classic",10,pt(104,850),pt(430,136),3,4,"bumper");
-c10.walls=[r(28,672,286,24),r(250,474,262,24),r(28,268,286,24),r(350,204,162,24),r(300,650,24,104)];
+c10.walls=[r(28,672,286,24),r(250,474,262,24),r(28,268,286,24),r(350,204,162,24),r(326,650,24,104)];
 c10.sand=[r(54,350,164,124)];
 c10.bumpers=[{x:404,y:736,r:34}];
 path(c10,pt(404,736),pt(404,570),pt(160,520),pt(132,394),pt(386,244),pt(326,184),pt(430,136));
