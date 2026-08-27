@@ -3,6 +3,7 @@ import { BETA_TESTING } from "../config/beta";
 import { DESIGN_HEIGHT, DESIGN_WIDTH, setupDesignCamera, sharpenSceneText } from "../config/display";
 import { levelsForMode } from "../data/campaign";
 import { BetaFeedbackSystem } from "../systems/BetaFeedbackSystem";
+import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
 import { SaveSystem } from "../systems/SaveSystem";
 import type { GameMode } from "../types";
 
@@ -73,10 +74,11 @@ export class MenuScene extends Phaser.Scene {
     const progress=this.add.text(435,y+16,BETA_TESTING?`BETA · ★ ${stars} / ${levels.length*3}`:`★ ${stars} / ${levels.length*3}`,{
       fontFamily:"system-ui, sans-serif",fontSize:"14px",color:"#c9d4df"
     }).setOrigin(1,.5);
-    const open=():void=>{this.scene.start("level-select",{mode});};
-    bg.setInteractive({useHandCursor:true}).on("pointerup",open);
-    title.setInteractive({useHandCursor:true}).on("pointerup",open);
-    progress.setInteractive({useHandCursor:true}).on("pointerup",open);
+    const open=async():Promise<void>=>{if(BETA_TESTING)await BetaTelemetry.ensureTester(true);this.scene.start("level-select",{mode});};
+    const run=()=>{void open();};
+    bg.setInteractive({useHandCursor:true}).on("pointerup",run);
+    title.setInteractive({useHandCursor:true}).on("pointerup",run);
+    progress.setInteractive({useHandCursor:true}).on("pointerup",run);
     bg.on("pointerover",()=>bg.setFillStyle(0x202b36));
     bg.on("pointerout",()=>bg.setFillStyle(0x18212a));
   }
