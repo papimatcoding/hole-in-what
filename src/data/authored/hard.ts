@@ -21,7 +21,7 @@ path(h2,pt(438,700),pt(154,530),pt(154,406),pt(110,160));trap(h2,"bumper-ambush"
 const h3=base("troll",3,pt(270,842),pt(420,142),3,4,"void");
 h3.walls=[r(28,470,150,24),r(362,470,150,24),r(28,286,318,24)];
 h3.popVoids=[{x:190,y:558,w:160,h:132,triggerX:270,triggerY:724,triggerRadius:72}];
-path(h3,pt(142,708),pt(150,520),pt(270,430),pt(404,388),pt(404,232),pt(420,142));trap(h3,"false-bridge-collapse");
+path(h3,pt(142,708),pt(150,520),pt(270,430),pt(404,388),pt(404,232),pt(420,142));trap(h3,"floor-drop");
 
 // 04 — Two-stage joke: solving the first shutter reveals a second one later in the route.
 const h4=base("troll",4,pt(270,848),pt(270,144),3,4,"wall");
