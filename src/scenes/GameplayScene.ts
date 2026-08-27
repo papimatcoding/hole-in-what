@@ -11,11 +11,11 @@ import { drawCourse, drawDynamicCourse } from "../systems/CourseRenderer";
 import {
   GOLF_PHYSICS,
   GolfSimulation,
-  powerFromPhysicalPull,
   type SimulationEvent
 } from "../systems/GolfSimulation";
 import { MECHANIC_TUTORIALS, markMechanicSeen, unseenMechanics, type MechanicId } from "../systems/MechanicTutorialSystem";
 import { SaveSystem } from "../systems/SaveSystem";
+import { resolveShotPull, SHOT_GRAB_RADIUS } from "../systems/ShotInputSystem";
 import { formatRequirement, starsForRun } from "../systems/StarScoring";
 import type { GameSceneData, LevelDefinition } from "../types";
 
@@ -23,7 +23,6 @@ interface TrailParticle { x:number;y:number;life:number;maxLife:number;size:numb
 
 const BALL_R=GOLF_PHYSICS.ballRadius;
 const AIR_VISUAL_SCALE=.18;
-const TOUCH_GRAB_RADIUS=88;
 const CONTROL_TUTORIAL_KEY="troll-golf-control-onboarding-v1";
 
 export class GameplayScene extends Phaser.Scene {
@@ -119,7 +118,7 @@ export class GameplayScene extends Phaser.Scene {
     this.timeText=this.add.text(498,42,"0.0 s",{fontFamily:"system-ui, sans-serif",fontSize:"15px",color:"#f5f7fa"}).setOrigin(1,0).setDepth(20);
 
     const back=this.add.rectangle(43,86,50,44,0x111920,.88).setStrokeStyle(1,0x344754).setDepth(20).setInteractive({useHandCursor:true});
-    const backText=this.add.text(43,82,"‹",{fontFamily:"system-ui, sans-serif",fontSize:"34px",color:"#f5f7fa"}).setOrigin(.5).setDepth(21);
+    this.add.text(43,82,"‹",{fontFamily:"system-ui, sans-serif",fontSize:"34px",color:"#f5f7fa"}).setOrigin(.5).setDepth(21);
     back.on("pointerdown",()=>back.setScale(.97)).on("pointerout",()=>back.setScale(1)).on("pointerup",()=>{back.setScale(1);this.scene.start("level-select",{mode:this.mode,page:Math.floor(this.levelIndex/10)});});
 
     if(BETA_TESTING){
@@ -127,14 +126,14 @@ export class GameplayScene extends Phaser.Scene {
       this.betaLevelButton(442,84,"‹",this.levelIndex>0,()=>this.goRelative(-1));
       this.betaLevelButton(496,84,"›",this.levelIndex<levels.length-1,()=>this.goRelative(1));
       this.add.text(469,113,`${this.mode==="troll"?"H":"C"}${String(this.levelIndex+1).padStart(2,"0")}`,{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#7d91a0"}).setOrigin(.5).setDepth(20);
-      const report=this.add.rectangle(62,136,88,34,0x17242d,.94).setStrokeStyle(1,0x557184).setDepth(20).setInteractive({useHandCursor:true});
+      const report=this.add.rectangle(62,136,104,40,0x17242d,.94).setStrokeStyle(1,0x557184).setDepth(20).setInteractive({useHandCursor:true});
       const reportText=this.add.text(62,136,"⚑ REPORTAR",{fontFamily:"system-ui, sans-serif",fontSize:"9px",fontStyle:"bold",color:"#afd2e4"}).setOrigin(.5).setDepth(21);
       report.on("pointerdown",()=>{report.setScale(.97);reportText.setScale(.97);}).on("pointerout",()=>{report.setScale(1);reportText.setScale(1);}).on("pointerup",()=>{report.setScale(1);reportText.setScale(1);this.openReport();});
     }
   }
 
   private betaLevelButton(x:number,y:number,label:string,enabled:boolean,action:()=>void):void{
-    const bg=this.add.rectangle(x,y,46,38,enabled?0x16232d:0x10171d,.92).setStrokeStyle(1,enabled?0x496273:0x252f37).setDepth(20);
+    const bg=this.add.rectangle(x,y,50,42,enabled?0x16232d:0x10171d,.92).setStrokeStyle(1,enabled?0x496273:0x252f37).setDepth(20);
     const text=this.add.text(x,y-1,label,{fontFamily:"system-ui, sans-serif",fontSize:"21px",fontStyle:"bold",color:enabled?"#dce8ef":"#46535d"}).setOrigin(.5).setDepth(21);
     if(!enabled)return;
     bg.setInteractive({useHandCursor:true}).on("pointerdown",()=>{bg.setScale(.96);text.setScale(.96);}).on("pointerout",()=>{bg.setScale(1);text.setScale(1);}).on("pointerup",()=>{bg.setScale(1);text.setScale(1);action();});
@@ -171,20 +170,20 @@ export class GameplayScene extends Phaser.Scene {
     AudioFeedback.unlock();this.recoverStoppedState();
     if(this.reportOpen||this.tutorialCard||this.sim.state.moving||this.sinking||this.voidAnimating||this.sim.isAirborne())return;
     const p=pointerToDesign(this,pointer),b=this.sim.state.ball;
-    if(Phaser.Math.Distance.Between(p.x,p.y,b.x,b.y)<=TOUCH_GRAB_RADIUS){this.dragPointer=pointer;this.drawAim(p.x,p.y);}
+    if(Phaser.Math.Distance.Between(p.x,p.y,b.x,b.y)<=SHOT_GRAB_RADIUS){this.dragPointer=pointer;this.drawAim(p.x,p.y);}
   }
   private pointerMove(pointer:Phaser.Input.Pointer):void{if(!this.dragPointer||this.reportOpen||this.sim.state.moving||this.sinking)return;const p=pointerToDesign(this,pointer);this.drawAim(p.x,p.y);}
   private pointerUp(pointer:Phaser.Input.Pointer):void{
     if(!this.dragPointer||this.reportOpen||this.sim.state.moving||this.sinking)return;
-    const p=pointerToDesign(this,pointer),b=this.sim.state.ball,dx=b.x-p.x,dy=b.y-p.y,len=Math.hypot(dx,dy);this.dragPointer=null;this.aim.clear();
-    if(len<12)return;const angle=Math.atan2(dy,dx),power=powerFromPhysicalPull(len);if(!this.sim.launch(angle,power))return;
+    const p=pointerToDesign(this,pointer),b=this.sim.state.ball,pull=resolveShotPull(b,p);this.dragPointer=null;this.aim.clear();
+    if(pull.length<12)return;const angle=Math.atan2(pull.dy,pull.dx),power=pull.power;if(!this.sim.launch(angle,power))return;
     this.strokes+=1;this.strokeText.setText(`Golpes ${this.strokes}`);this.hideControlHint();try{localStorage.setItem(CONTROL_TUTORIAL_KEY,"1");}catch{/* optional */}
     AudioFeedback.play("shot",.65+power*.45);this.impact(b.x,b.y,0xcbe8ff,18,.35);
   }
   private drawAim(x:number,y:number):void{
-    const b=this.sim.state.ball;let dx=b.x-x,dy=b.y-y;const len=Math.hypot(dx,dy)||1,power=powerFromPhysicalPull(len),pull=Math.min(len,GOLF_PHYSICS.maxPull/GOLF_PHYSICS.dragGain);dx/=len;dy/=len;
-    this.aim.clear();this.aim.lineStyle(4,0x8bc5ff,.92);this.aim.beginPath();this.aim.moveTo(b.x,b.y);this.aim.lineTo(b.x-dx*pull,b.y-dy*pull);this.aim.strokePath();this.aim.fillStyle(0xedf7ff,.72);
-    const reach=68+power*108;for(let i=1;i<=8;i+=1){const q=i/8;this.aim.fillCircle(b.x+dx*reach*q,b.y+dy*reach*q,3.4-q*1.5);}
+    const b=this.sim.state.ball,pullData=resolveShotPull(b,{x,y});if(pullData.length<.001){this.aim.clear();return;}const pull=Math.min(pullData.length,GOLF_PHYSICS.maxPull/GOLF_PHYSICS.dragGain);
+    this.aim.clear();this.aim.lineStyle(4,0x8bc5ff,.92);this.aim.beginPath();this.aim.moveTo(b.x,b.y);this.aim.lineTo(b.x-pullData.unitX*pull,b.y-pullData.unitY*pull);this.aim.strokePath();this.aim.fillStyle(0xedf7ff,.72);
+    const reach=68+pullData.power*108;for(let i=1;i<=8;i+=1){const q=i/8;this.aim.fillCircle(b.x+pullData.unitX*reach*q,b.y+pullData.unitY*reach*q,3.4-q*1.5);}
   }
 
   private consume(events:SimulationEvent[]):void{
