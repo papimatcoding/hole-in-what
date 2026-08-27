@@ -19,7 +19,7 @@ path(h2,pt(438,700),pt(154,530),pt(154,406),pt(110,160));trap(h2,"bumper-ambush"
 // The learned route is a real two-stage dogleg: escape through the lower-left opening, climb past the vertical fin, then switch all the way right through the upper opening.
 // This alternating-gate silhouette makes the trap change the run instead of merely firing while a one-shot pinball route still wins.
 const h3=base("troll",3,pt(420,840),pt(430,150),3,4,"void");
-h3.walls=[r(170,650,342,24),r(170,450,24,224),r(28,300,332,24)];
+h3.walls=[r(170,650,342,24),r(170,450,24,190),r(28,300,332,24)];
 h3.popVoids=[{x:292,y:690,w:200,h:84,triggerX:420,triggerY:770,triggerRadius:55}];
 path(h3,pt(128,716),pt(128,424),pt(414,390),pt(414,260),pt(430,150));trap(h3,"safe-lane-collapse");
 
