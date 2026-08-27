@@ -1,16 +1,16 @@
 import type { GameMode } from "../types";
 
 const ENDPOINT="https://xtekdrkqgfjnnwawyoim.supabase.co/functions/v1/beta-feedback";
-export const BETA_BUILD_ID="beta-block-1-friends-rc4";
+export const BETA_BUILD_ID="beta-block-1-friends-rc5";
 const TESTER_KEY="troll-golf-beta-tester-id-v1";
 const ALIAS_KEY="troll-golf-beta-tester-alias-v1";
-const ASKED_ALIAS_KEY="troll-golf-beta-tester-alias-asked-v1";
 const LEVEL_SENT_KEY="troll-golf-beta-level-surveys-v1";
 const GAME_SENT_KEY="troll-golf-beta-game-surveys-v1";
 const ATTEMPTS_KEY="troll-golf-beta-attempts-v1";
 
 export interface LeaderboardEntry{rank:number;name:string;strokes:number;timeMs:number;isYou:boolean;}
 export type BetaReportCategory="bug"|"too-easy"|"too-hard"|"repetitive"|"object"|"other";
+export type BetaSupportCategory="comment"|"bug"|"suggestion"|"other";
 
 function safeGet(key:string):string|null{try{return localStorage.getItem(key);}catch{return null;}}
 function safeSet(key:string,value:string):void{try{localStorage.setItem(key,value);}catch{/* beta telemetry must never break gameplay */}}
@@ -26,23 +26,25 @@ function saveSet(key:string,set:Set<string>):void{safeSet(key,JSON.stringify([..
 async function post<T extends {ok?:boolean;duplicate?:boolean}>(payload:Record<string,unknown>):Promise<T|null>{
   try{
     const res=await fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload),keepalive:true});
-    if(!res.ok)return null;
+    if(!res.ok){try{return await res.json() as T;}catch{return null;}}
     return await res.json() as T;
   }catch{return null;}
 }
 function attemptMap():Record<string,number>{try{const raw=safeGet(ATTEMPTS_KEY);const parsed=raw?JSON.parse(raw):{};return parsed&&typeof parsed==="object"?parsed:{};}catch{return{};}}
+async function registerTester():Promise<boolean>{
+  const result=await post({type:"tester",testerId:testerId(),alias:alias(),userAgent:navigator.userAgent,screenW:window.screen.width,screenH:window.screen.height});
+  return result?.ok===true;
+}
 
 export const BetaTelemetry={
   testerId,
   alias,
-  async ensureTester(askAlias=false):Promise<void>{
-    const id=testerId();
-    if(askAlias&&safeGet(ASKED_ALIAS_KEY)!=="1"){
-      safeSet(ASKED_ALIAS_KEY,"1");
-      const name=window.prompt("Beta de Troll Golf · nombre/apodo opcional","")?.trim().slice(0,40)??"";
-      if(name)safeSet(ALIAS_KEY,name);
-    }
-    await post({type:"tester",testerId:id,alias:alias(),userAgent:navigator.userAgent,screenW:window.screen.width,screenH:window.screen.height});
+  async ensureTester(_askAlias=false):Promise<void>{await registerTester();},
+  async setAlias(value:string):Promise<boolean>{
+    const name=value.trim().replace(/\s+/g," ").slice(0,40);
+    if(!name)return false;
+    safeSet(ALIAS_KEY,name);
+    return registerTester();
   },
   beginAttempt(levelId:string):number{
     const map=attemptMap(),key=`${BETA_BUILD_ID}:${levelId}`;map[key]=(map[key]??0)+1;safeSet(ATTEMPTS_KEY,JSON.stringify(map));return map[key]!;
@@ -55,6 +57,11 @@ export const BetaTelemetry={
   async submitReport(input:{levelId:string;mode:GameMode;category:BetaReportCategory;note?:string;strokes?:number|null;timeMs?:number|null;}):Promise<boolean>{
     await this.ensureTester(false);
     const result=await post({type:"report",testerId:testerId(),buildId:BETA_BUILD_ID,...input});
+    return result?.ok===true;
+  },
+  async submitSupport(input:{category:BetaSupportCategory;message:string;}):Promise<boolean>{
+    await this.ensureTester(false);
+    const result=await post({type:"support",testerId:testerId(),buildId:BETA_BUILD_ID,category:input.category,message:input.message});
     return result?.ok===true;
   },
   async leaderboard(levelId:string):Promise<LeaderboardEntry[]>{
