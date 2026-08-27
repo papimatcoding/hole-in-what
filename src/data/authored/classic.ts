@@ -19,17 +19,17 @@ const c4=base("classic",4,pt(92,836),pt(430,156),2,3,"wall");
 c4.walls=[r(28,588,324,26),r(188,346,324,26),r(330,462,26,126)];
 path(c4,pt(428,690),pt(428,520),pt(150,468),pt(150,274),pt(430,156));
 
-// First bumper lesson: alternating shelves create a safe long route; the bumper compresses it into the mastery line.
+// First bumper lesson: the bumper sits on the fast right-hand setup line; the long route around the shelves remains safe.
 const c5=base("classic",5,pt(270,836),pt(422,166),2,3,"bumper");
 c5.walls=[r(28,600,292,24),r(220,370,292,24),r(348,212,24,120)];
-c5.bumpers=[{x:382,y:676,r:36}];
-path(c5,pt(382,676),pt(430,548),pt(168,330),pt(300,274),pt(422,166));
+c5.bumpers=[{x:448,y:690,r:32}];
+path(c5,pt(448,690),pt(430,548),pt(168,330),pt(300,274),pt(422,166));
 
-// Same mechanic, different question: the two bumpers live on the alternating exits and reward controlled rebounds.
+// Same mechanic, different question: controlled rebound setup, followed by a side-entry finish that kills the old one-shot pinball line.
 const c6=base("classic",6,pt(420,836),pt(108,166),2,3,"bumper");
-c6.walls=[r(248,564,264,24),r(28,332,250,24),r(150,190,24,120)];
+c6.walls=[r(248,564,264,24),r(28,332,250,24),r(28,220,210,24)];
 c6.bumpers=[{x:142,y:650,r:34},{x:398,y:432,r:32}];
-path(c6,pt(142,650),pt(398,432),pt(360,270),pt(108,166));
+path(c6,pt(142,650),pt(398,432),pt(300,280),pt(108,166));
 
 // Geometry exam. Solver mastery is genuinely two strokes, so the stars say two.
 const c7=base("classic",7,pt(104,840),pt(430,150),2,3,"wall");
@@ -42,11 +42,11 @@ c8.sand=[r(80,566,380,112)];
 c8.walls=[r(190,426,322,24),r(28,286,184,24)];
 path(c8,pt(126,522),pt(126,388),pt(420,344),pt(420,246),pt(112,154));
 
-// Sand application: the useful first line crosses the slow pocket, then a central screen kills the old one-shot diagonal.
+// Sand application: the direct diagonal now meets the central screen, forcing a real setup after crossing the slow pocket.
 const c9=base("classic",9,pt(424,840),pt(106,154),3,4,"sand");
 c9.sand=[r(138,520,224,100)];
-c9.walls=[r(28,642,270,24),r(300,392,24,118),r(278,300,234,24)];
-path(c9,pt(250,574),pt(270,500),pt(270,350),pt(390,254),pt(106,154));
+c9.walls=[r(28,642,270,24),r(244,392,24,150),r(278,300,234,24)];
+path(c9,pt(330,574),pt(220,500),pt(220,350),pt(390,254),pt(106,154));
 
 // Chapter exam: bumper shortcut, sand placement and a final reverse gate. No new rule.
 const c10=base("classic",10,pt(104,850),pt(430,136),3,4,"bumper");
