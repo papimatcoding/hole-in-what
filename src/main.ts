@@ -7,6 +7,8 @@ import { UpdateRequiredScene } from "./scenes/UpdateRequiredScene";
 import { MenuScene } from "./scenes/MenuScene";
 import { PatchNotesScene } from "./scenes/PatchNotesScene";
 import { GlobalSurveyScene } from "./scenes/GlobalSurveyScene";
+import { PlayerProfileScene } from "./scenes/PlayerProfileScene";
+import { AssistanceScene } from "./scenes/AssistanceScene";
 import { LevelSelectScene } from "./scenes/LevelSelectScene";
 import { GameplayScene } from "./scenes/GameplayScene";
 import { ResultsScene } from "./scenes/ResultsScene";
@@ -29,9 +31,10 @@ const config:Phaser.Types.Core.GameConfig={
   width:renderWidth,
   height:renderHeight,
   backgroundColor:"#0d1117",
-  scene:[BootScene,MaintenanceScene,UpdateRequiredScene,MenuScene,PatchNotesScene,GlobalSurveyScene,LevelSelectScene,GameplayScene,ResultsScene,CosmeticsScene,ShopScene,RewardsScene,EditorScene,LevelPreviewScene,CommunityMapsScene,CommunityPublishScene,CommunityPlayScene],
+  scene:[BootScene,MaintenanceScene,UpdateRequiredScene,MenuScene,PatchNotesScene,GlobalSurveyScene,PlayerProfileScene,AssistanceScene,LevelSelectScene,GameplayScene,ResultsScene,CosmeticsScene,ShopScene,RewardsScene,EditorScene,LevelPreviewScene,CommunityMapsScene,CommunityPublishScene,CommunityPlayScene],
   scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH,width:renderWidth,height:renderHeight},
-  render:{antialias:true,roundPixels:false}
+  render:{antialias:true,roundPixels:false},
+  dom:{createContainer:true}
 };
 
 const game=new Phaser.Game(config);
