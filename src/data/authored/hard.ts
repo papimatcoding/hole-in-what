@@ -15,13 +15,13 @@ h2.walls=[r(28,612,332,24),r(186,330,326,24)];
 h2.popBumpers=[{x:430,y:520,r:44,triggerX:432,triggerY:690,triggerRadius:150}];
 path(h2,pt(438,700),pt(154,530),pt(154,406),pt(110,160));trap(h2,"bumper-ambush");
 
-// 03 — False highway. The cup sits almost straight above the tee, but the tempting right lane collapses as the ball commits to it.
-// The learned route is a real two-stage dogleg: escape through the lower-left opening, climb past the vertical fin, then switch all the way right through the upper opening.
-// This alternating-gate silhouette makes the trap change the run instead of merely firing while a one-shot pinball route still wins.
-const h3=base("troll",3,pt(420,840),pt(430,150),3,4,"void");
-h3.walls=[r(170,650,342,24),r(170,450,24,190),r(28,300,332,24)];
-h3.popVoids=[{x:292,y:690,w:200,h:84,triggerX:420,triggerY:770,triggerRadius:55}];
-path(h3,pt(128,716),pt(128,424),pt(414,390),pt(414,260),pt(430,150));trap(h3,"safe-lane-collapse");
+// 03 — False bridge. At spawn the middle line really looks open; committing straight makes the floor disappear directly ahead.
+// After learning the joke, the player escapes around either side of the collapse, then has to switch back through the middle gate and finish through the upper-right opening.
+// The trap is therefore the first strategic fact of the hole instead of a decoration behind a pre-existing dogleg.
+const h3=base("troll",3,pt(270,842),pt(420,142),3,4,"void");
+h3.walls=[r(28,470,150,24),r(362,470,150,24),r(28,286,318,24)];
+h3.popVoids=[{x:190,y:558,w:160,h:132,triggerX:270,triggerY:724,triggerRadius:72}];
+path(h3,pt(142,708),pt(150,520),pt(270,430),pt(404,388),pt(404,232),pt(420,142));trap(h3,"false-bridge-collapse");
 
 // 04 — Two-stage joke: solving the first shutter reveals a second one later in the route.
 const h4=base("troll",4,pt(270,848),pt(270,144),3,4,"wall");
