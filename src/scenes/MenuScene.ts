@@ -27,10 +27,11 @@ export class MenuScene extends Phaser.Scene {
     this.add.text(DESIGN_WIDTH/2,108,"TROLL GOLF",{fontFamily:"system-ui, sans-serif",fontSize:"42px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
     this.add.text(DESIGN_WIDTH/2,150,"MINIGOLF · 3 ESTRELLAS",{fontFamily:"system-ui, sans-serif",fontSize:"12px",color:"#8f9dab"}).setOrigin(.5);
 
-    const alias=BetaTelemetry.alias();
-    const identity=this.add.text(DESIGN_WIDTH/2,178,alias?`JUGADOR · ${alias}   ✎`:"JUGADOR · ELIGE TU NOMBRE   ✎",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:alias?"#c9d9e3":"#e0bc70"}).setOrigin(.5).setInteractive({useHandCursor:true});
-    identity.on("pointerup",()=>this.scene.start("player-profile"));
-    if(BETA_TESTING)this.add.text(DESIGN_WIDTH/2,202,"BETA TEST · TODOS LOS HOYOS ABIERTOS",{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#8fb8cf"}).setOrigin(.5);
+    const alias=BetaTelemetry.alias(),identityRest=alias?0x141f27:0x292317,identityHover=alias?0x20313c:0x3a301d;
+    const identityBg=this.add.rectangle(270,184,390,42,identityRest).setStrokeStyle(1,alias?0x3b5362:0x7a6537);
+    const identity=this.add.text(DESIGN_WIDTH/2,184,alias?`JUGADOR · ${alias}   ✎`:"ELIGE TU NOMBRE DE JUGADOR   ✎",{fontFamily:"system-ui, sans-serif",fontSize:alias?"13px":"14px",fontStyle:"bold",color:alias?"#c9d9e3":"#f0cd7b"}).setOrigin(.5);
+    this.wirePress(identityBg,identity,184,410,50,()=>this.scene.start("player-profile"),identityRest,identityHover);
+    if(BETA_TESTING)this.add.text(DESIGN_WIDTH/2,218,"BETA TEST · TODOS LOS HOYOS ABIERTOS",{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#8fb8cf"}).setOrigin(.5);
 
     this.makeModeButton("CLASSIC","classic",260);
     this.makeModeButton("HARD","troll",354);
