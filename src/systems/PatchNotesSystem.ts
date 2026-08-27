@@ -10,6 +10,19 @@ const READ_KEY="troll-golf-last-read-patch-v1";
 
 export const PATCH_NOTES:PatchNote[]=[
   {
+    id:"friends-rc4",
+    title:"FRIENDS BETA RC4 · QUALITY PASS",
+    date:"27 AGO 2026",
+    summary:"Mejoramos la fiabilidad de la beta y corregimos problemas detectados con feedback real.",
+    bullets:[
+      "El juego detecta si tu pestaña está en una build antigua y pide actualizar antes de seguir.",
+      "La encuesta global ahora es una experiencia completa dentro del juego, sin prompts del navegador.",
+      "HARD 03 rediseñado: la trampa del suelo obliga a cambiar la ruta si caes en la lectura obvia.",
+      "Patch Notes siguen marcados como SIN LEER hasta que abras esta pantalla.",
+      "RC4 usa un bucket de telemetría nuevo para comparar datos limpios."
+    ]
+  },
+  {
     id:"friends-rc3",
     title:"FRIENDS BETA RC3 · COMMUNITY",
     date:"27 AGO 2026",
