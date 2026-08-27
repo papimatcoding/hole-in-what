@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test:hole": "tsx scripts/holePhysicsCheck.ts",
     "test:mechanics": "tsx scripts/mechanicIntegrityCheck.ts",
+    "test:mechanic-behavior": "tsx scripts/mechanicBehaviorCheck.ts",
     "test:geometry": "tsx scripts/courseGeometryCheck.ts",
     "test:clearance": "tsx scripts/courseClearanceCheck.ts",
     "audit:courses": "tsx scripts/courseAudit.ts",
