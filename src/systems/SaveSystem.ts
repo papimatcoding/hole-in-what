@@ -13,8 +13,8 @@ import type {
   WalletSave
 } from "../types";
 
-const STORAGE_KEY = "troll-golf-save-authored-reboot-v1";
-const PREVIOUS_STORAGE_KEY = "troll-golf-save-procedural-v1";
+const STORAGE_KEY = "troll-golf-save-beta-step3-v1";
+const PREVIOUS_STORAGE_KEYS = ["troll-golf-save-authored-reboot-v1","troll-golf-save-procedural-v1"];
 const FRESH_START_COINS = 80;
 const LEGACY_DEV_GRANT = 250;
 
@@ -39,8 +39,12 @@ function parseSave(raw:string):SaveData{
 function load():SaveData{
   try{
     const raw=localStorage.getItem(STORAGE_KEY);if(raw)return parseSave(raw);
-    const previous=localStorage.getItem(PREVIOUS_STORAGE_KEY);
-    if(previous){const old=parseSave(previous),fresh:SaveData={version:4,levels:{},cosmetics:old.cosmetics,wallet:old.wallet};persist(fresh);return fresh;}
+    for(const key of PREVIOUS_STORAGE_KEYS){
+      const previous=localStorage.getItem(key);
+      if(!previous)continue;
+      const old=parseSave(previous),fresh:SaveData={version:4,levels:{},cosmetics:old.cosmetics,wallet:old.wallet};
+      persist(fresh);return fresh;
+    }
     return emptySave();
   }catch{return emptySave();}
 }
