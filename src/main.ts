@@ -1,6 +1,8 @@
 import Phaser from "phaser";
 import "./styles.css";
 import { DESIGN_HEIGHT, DESIGN_WIDTH, RENDER_SCALE } from "./config/display";
+import { BootScene } from "./scenes/BootScene";
+import { MaintenanceScene } from "./scenes/MaintenanceScene";
 import { MenuScene } from "./scenes/MenuScene";
 import { LevelSelectScene } from "./scenes/LevelSelectScene";
 import { GameplayScene } from "./scenes/GameplayScene";
@@ -12,6 +14,7 @@ import { EditorScene } from "./scenes/EditorScene";
 import { LevelPreviewScene } from "./scenes/LevelPreviewScene";
 import { CommunityMapsScene } from "./scenes/CommunityMapsScene";
 import { CommunityPlayScene } from "./scenes/CommunityPlayScene";
+import { LiveOps } from "./systems/LiveOpsSystem";
 
 const renderWidth=Math.round(DESIGN_WIDTH*RENDER_SCALE);
 const renderHeight=Math.round(DESIGN_HEIGHT*RENDER_SCALE);
@@ -22,9 +25,10 @@ const config:Phaser.Types.Core.GameConfig={
   width:renderWidth,
   height:renderHeight,
   backgroundColor:"#0d1117",
-  scene:[MenuScene,LevelSelectScene,GameplayScene,ResultsScene,CosmeticsScene,ShopScene,RewardsScene,EditorScene,LevelPreviewScene,CommunityMapsScene,CommunityPlayScene],
+  scene:[BootScene,MaintenanceScene,MenuScene,LevelSelectScene,GameplayScene,ResultsScene,CosmeticsScene,ShopScene,RewardsScene,EditorScene,LevelPreviewScene,CommunityMapsScene,CommunityPlayScene],
   scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH,width:renderWidth,height:renderHeight},
   render:{antialias:true,roundPixels:false}
 };
 
-new Phaser.Game(config);
+const game=new Phaser.Game(config);
+LiveOps.start(game);
