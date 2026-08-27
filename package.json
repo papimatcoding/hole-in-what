@@ -16,7 +16,8 @@
     "audit:originality": "tsx scripts/courseOriginalityAudit.ts",
     "audit:human": "tsx scripts/audit2.ts",
     "audit:human:full": "AUDIT2_MODE=full tsx scripts/audit2.ts",
-    "audit:human:strict": "AUDIT2_MODE=full AUDIT2_STRICT=1 tsx scripts/audit2.ts"
+    "audit:human:strict": "AUDIT2_MODE=full AUDIT2_STRICT=1 tsx scripts/audit2.ts",
+    "audit:design": "tsx scripts/audit2Design.ts"
   },
   "dependencies": {
     "phaser": "4.2.1"
