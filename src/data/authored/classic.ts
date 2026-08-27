@@ -45,7 +45,7 @@ path(c8,pt(126,522),pt(126,388),pt(420,344),pt(420,246),pt(112,154));
 // Sand application: the direct diagonal now meets the central screen, forcing a real setup after crossing the slow pocket.
 const c9=base("classic",9,pt(424,840),pt(106,154),3,4,"sand");
 c9.sand=[r(138,520,224,100)];
-c9.walls=[r(28,642,270,24),r(244,392,24,150),r(278,300,234,24)];
+c9.walls=[r(28,642,270,24),r(244,392,24,120),r(278,300,234,24)];
 path(c9,pt(330,574),pt(220,500),pt(220,350),pt(390,254),pt(106,154));
 
 // Chapter exam: bumper shortcut, sand placement and a final reverse gate. No new rule.
