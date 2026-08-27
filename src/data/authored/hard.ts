@@ -1,28 +1,25 @@
 import type { LevelDefinition } from "../../types";
 import { base, path, pt, r, trap } from "./authoring";
 
-/**
- * HARD block 1: every hole trolls from the first attempt.
- * The surprise escalates, but every trap is deterministic and readable after reveal.
- */
+/** HARD block 1: every first attempt breaks an expectation; every second attempt has a learned answer. */
 
-// 01 — The obvious lane closes as you commit to it. Second attempt: use the left bank.
+// 01 — Commit to the obvious right lane and it closes. A second upper gate removes the old free HIO.
 const h1=base("troll",1,pt(126,836),pt(420,160),2,3,"wall");
-h1.walls=[r(246,382,24,310)];
-h1.popWalls=[{x:286,y:548,w:198,h:24,triggerX:384,triggerY:650,triggerRadius:118}];
-path(h1,pt(426,720),pt(426,470),pt(184,310),pt(420,160));trap(h1,"gate-pop");
+h1.walls=[r(246,382,24,310),r(28,292,280,24)];
+h1.popWalls=[{x:286,y:548,w:198,h:24,triggerX:360,triggerY:674,triggerRadius:150}];
+path(h1,pt(426,720),pt(426,470),pt(346,340),pt(420,160));trap(h1,"gate-pop");
 
-// 02 — The comfortable landing zone grows teeth. Learn to miss the ambush on purpose.
-const h2=base("troll",2,pt(420,840),pt(110,160),2,3,"bumper");
+// 02 — The lower lane looks safe until a bumper wakes up. The final cup sits opposite the upper exit.
+const h2=base("troll",2,pt(420,840),pt(420,160),2,3,"bumper");
 h2.walls=[r(28,612,258,24),r(254,330,258,24)];
-h2.popBumpers=[{x:360,y:492,r:38,triggerX:332,triggerY:610,triggerRadius:116}];
-path(h2,pt(120,716),pt(120,520),pt(410,410),pt(110,160));trap(h2,"bumper-ambush");
+h2.popBumpers=[{x:346,y:502,r:42,triggerX:332,triggerY:610,triggerRadius:122}];
+path(h2,pt(420,690),pt(160,520),pt(160,400),pt(420,160));trap(h2,"bumper-ambush");
 
-// 03 — The short route literally disappears. The learned route goes around the left shoulder.
-const h3=base("troll",3,pt(420,844),pt(112,150),3,4,"void");
+// 03 — The obvious vertical route becomes floorless. Once revealed, route left around the spine and return right.
+const h3=base("troll",3,pt(420,844),pt(430,150),3,4,"void");
 h3.walls=[r(246,296,26,408),r(28,486,164,24)];
-h3.popVoids=[{x:286,y:500,w:198,h:146,triggerX:390,triggerY:686,triggerRadius:126}];
-path(h3,pt(184,760),pt(208,640),pt(208,448),pt(112,334),pt(112,150));trap(h3,"safe-lane-collapse");
+h3.popVoids=[{x:286,y:500,w:198,h:146,triggerX:394,triggerY:692,triggerRadius:138}];
+path(h3,pt(188,758),pt(208,634),pt(208,438),pt(208,260),pt(430,150));trap(h3,"safe-lane-collapse");
 
 // 04 — Two-stage joke: solving the first shutter reveals a second one later in the route.
 const h4=base("troll",4,pt(270,848),pt(270,144),3,4,"wall");
@@ -33,12 +30,12 @@ h4.popWalls=[
 ];
 path(h4,pt(420,730),pt(420,534),pt(158,392),pt(408,250),pt(270,144));trap(h4,"cross-gate");
 
-// 05 — First combined exam. A moving gate telegraphs timing, then a late pop-bumper punishes the obvious finish.
+// 05 — Timing exam: the only middle crossing is a moving shutter; then two learned traps guard the finish.
 const h5=base("troll",5,pt(96,848),pt(430,140),4,5,"moving");
-h5.walls=[r(28,682,286,24),r(228,456,284,24),r(28,250,286,24)];
-h5.movingWalls=[{x:310,y:564,w:150,h:24,axis:"x",amplitude:54,speed:1.2,phase:.4}];
-h5.popBumpers=[{x:126,y:342,r:36,triggerX:142,triggerY:500,triggerRadius:112}];
-h5.popWalls=[{x:360,y:224,w:92,h:22,triggerX:350,triggerY:324,triggerRadius:94}];
-path(h5,pt(404,742),pt(398,582),pt(138,514),pt(126,342),pt(404,210),pt(430,140));trap(h5,"late-combo");
+h5.walls=[r(28,682,286,24),r(28,520,162,24),r(350,520,162,24),r(228,310,284,24)];
+h5.movingWalls=[{x:210,y:520,w:110,h:24,axis:"x",amplitude:45,speed:1.2,phase:.4}];
+h5.popBumpers=[{x:132,y:396,r:36,triggerX:156,triggerY:470,triggerRadius:102}];
+h5.popWalls=[{x:354,y:238,w:104,h:22,triggerX:362,triggerY:292,triggerRadius:92}];
+path(h5,pt(408,744),pt(408,610),pt(278,566),pt(170,456),pt(170,356),pt(390,260),pt(430,140));trap(h5,"late-combo");
 
 export const HARD_AUTHORED:LevelDefinition[]=[h1,h2,h3,h4,h5];
