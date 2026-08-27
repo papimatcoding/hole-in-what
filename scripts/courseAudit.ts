@@ -56,15 +56,15 @@ function candidateShots(level:LevelDefinition,state:GolfSimulationState):Simulat
   for(let d=0;d<360;d+=18)for(const power of[.45,.62,.78,.94])out.push({angle:rad(d),power});return out;
 }
 function blindCandidateShots(level:LevelDefinition,state:GolfSimulationState):SimulationShot[]{
-  const b=state.ball,out:SimulationShot[]=[],direct=Math.atan2(level.hole.y-b.y,level.hole.x-b.x),powers=[.32,.46,.60,.74,.88,1];
-  for(const offset of[-45,-32,-22,-14,-8,-4,0,4,8,14,22,32,45])for(const power of powers)out.push({angle:wrap(direct+rad(offset)),power});
-  for(let d=0;d<360;d+=15)for(const power of[.42,.58,.76,.94])out.push({angle:rad(d),power});
+  const b=state.ball,out:SimulationShot[]=[],direct=Math.atan2(level.hole.y-b.y,level.hole.x-b.x),powers=[.42,.62,.82,1];
+  for(const offset of[-32,-18,-8,0,8,18,32])for(const power of powers)out.push({angle:wrap(direct+rad(offset)),power});
+  for(let d=0;d<360;d+=30)for(const power of[.50,.75,1])out.push({angle:rad(d),power});
   return out;
 }
 
 function solve(level:LevelDefinition,maxDepth:number,mode:"guided"|"blind"):SolvedRun|null{
   let beam:SearchNode[]=[{state:createGolfSimulationState(level),strokes:0,time:0,shots:[],score:0}];
-  const width=mode==="guided"?170:82;
+  const width=mode==="guided"?170:36;
   for(let depth=1;depth<=maxDepth;depth++){
     const dedupe=new Map<string,SearchNode>();let solved:SolvedRun|null=null;
     for(const node of beam)for(const shot of mode==="guided"?candidateShots(level,node.state):blindCandidateShots(level,node.state)){
@@ -127,7 +127,8 @@ function warningsFor(level:LevelDefinition,best:SolvedRun|null,blind:SolvedRun|n
 function shotLabel(s:SimulationShot):string{return`${Math.round(deg(s.angle))}°@${s.power.toFixed(2)}`;}
 function audit(level:LevelDefinition):AuditRow{
   const clearance=analyzeCourseClearance(level),clearanceBlockingStates=clearance.blockingStates.filter(x=>!x.startsWith("moving@"));
-  const hio=denseHoleInOne(level),guided=hio??solve(level,Math.max(5,(level.twoStar.maxStrokes??4)+1),"guided"),blind=hio??solve(level,Math.max(5,(level.twoStar.maxStrokes??4)+1),"blind"),best=guided,naive=naiveTrapProbe(level),robust=solutionRobustness(level,best),difficulty=difficultyScore(level,best,robust),warnings=warningsFor(level,best,blind,robust,clearanceBlockingStates);
+  const maxGuidedDepth=Math.max(5,(level.twoStar.maxStrokes??4)+1);
+  const hio=denseHoleInOne(level),guided=hio??solve(level,maxGuidedDepth,"guided"),blind=hio??solve(level,Math.min(3,maxGuidedDepth),"blind"),best=guided,naive=naiveTrapProbe(level),robust=solutionRobustness(level,best),difficulty=difficultyScore(level,best,robust),warnings=warningsFor(level,best,blind,robust,clearanceBlockingStates);
   return{id:level.id,target:level.threeStar.maxStrokes??0,twoStar:level.twoStar.maxStrokes??0,bestKnownStrokes:best?.strokes??null,blindKnownStrokes:blind?.strokes??null,bestKnownTime:best?Number(best.time.toFixed(2)):null,holeInOne:Boolean(hio)||best?.strokes===1,primaryMechanic:level.primaryMechanic??null,mechanicUsed:mechanicWasUsed(level,best),naiveTrapTriggered:naive,trapsTriggered:best?.state.triggeredTraps??[],solvable:Boolean(best)&&clearanceBlockingStates.length===0,bestShots:best?.shots.map(shotLabel)??[],blindShots:blind?.shots.map(shotLabel)??[],robustness:robust===null?null:Number(robust.toFixed(2)),difficultyScore:difficulty,clearanceBlockingStates,warnings,status:classify(level,best,naive,clearanceBlockingStates)};
 }
 
