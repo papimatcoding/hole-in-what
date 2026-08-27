@@ -58,14 +58,22 @@ export class ResultsScene extends Phaser.Scene{
     const retry=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex}),prev=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex-1}),next=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex+1});
     if(this.resultData.stars<3){this.makeButton("REINTENTAR",620,retry,true);if(canNext)this.makeButton("SIGUIENTE",696,next,false);}else{if(canNext)this.makeButton("SIGUIENTE",620,next,true);this.makeButton("REINTENTAR",696,retry,false);}
     if(BETA_TESTING){this.nav(126,768,"‹ ANTERIOR",canPrev,prev);this.add.text(270,768,`${this.resultData.mode==="troll"?"H":"C"} ${String(this.resultData.levelIndex+1).padStart(2,"0")} / ${String(levels.length).padStart(2,"0")}`,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:"#8193a1"}).setOrigin(.5);this.nav(414,768,"SIGUIENTE ›",canNext,next);}
-    this.add.text(270,812,"NIVELES",{fontFamily:"system-ui",fontSize:"14px",fontStyle:"bold",color:"#aeb9c5"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(this.resultData.levelIndex/10)}));
-    if(BETA_TESTING){this.add.text(175,858,"🏆 RANKING",{fontFamily:"system-ui",fontSize:"12px",fontStyle:"bold",color:"#e5d293"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>{void this.openLeaderboard();});this.add.text(365,858,"⚑ REPORTAR",{fontFamily:"system-ui",fontSize:"12px",fontStyle:"bold",color:"#8fb8cf"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.openFeedback());}
+    this.smallAction(270,812,"NIVELES",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(this.resultData.levelIndex/10)}),150,0x172129,"#c8d3dc");
+    if(BETA_TESTING){this.smallAction(175,858,"🏆 RANKING",()=>{void this.openLeaderboard();},166,0x211f1a,"#e5d293");this.smallAction(365,858,"⚑ REPORTAR",()=>this.openFeedback(),166,0x17242d,"#a9d1e5");}
     sharpenSceneText(this);
     if(BETA_TESTING&&!BetaTelemetry.levelSurveyDone(this.resultData.levelId))this.time.delayedCall(280,()=>this.openSurvey());
   }
 
-  private makeButton(label:string,y:number,action:()=>void,primary:boolean):void{const bg=this.add.rectangle(270,y,334,62,primary?0x253847:0x172129).setStrokeStyle(2,primary?0x67869c:0x344454).setInteractive({useHandCursor:true});const t=this.add.text(270,y,label,{fontFamily:"system-ui",fontSize:"17px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5).setInteractive({useHandCursor:true});bg.on("pointerup",action);t.on("pointerup",action);}
-  private nav(x:number,y:number,label:string,enabled:boolean,action:()=>void):void{const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:enabled?"#a9c3d3":"#46525b"}).setOrigin(.5);if(enabled)t.setInteractive({useHandCursor:true}).on("pointerup",action);}
+  private makeButton(label:string,y:number,action:()=>void,primary:boolean):void{
+    const rest=primary?0x253847:0x172129,hover=primary?0x345064:0x22303b,bg=this.add.rectangle(270,y,350,66,rest).setStrokeStyle(2,primary?0x7598af:0x405363).setInteractive({useHandCursor:true}),t=this.add.text(270,y,label,{fontFamily:"system-ui",fontSize:"17px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
+    bg.on("pointerover",()=>bg.setFillStyle(hover));bg.on("pointerdown",()=>{bg.setScale(.985);t.setScale(.985);});bg.on("pointerout",()=>{bg.setFillStyle(rest).setScale(1);t.setScale(1);});bg.on("pointerup",()=>{bg.setFillStyle(rest).setScale(1);t.setScale(1);action();});
+  }
+  private nav(x:number,y:number,label:string,enabled:boolean,action:()=>void):void{
+    const bg=this.add.rectangle(x,y,130,42,enabled?0x151f27:0x0f151a).setStrokeStyle(1,enabled?0x354958:0x222c33),t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:enabled?"#b8cfdd":"#46525b"}).setOrigin(.5);if(!enabled)return;bg.setInteractive({useHandCursor:true}).on("pointerdown",()=>bg.setScale(.98)).on("pointerout",()=>bg.setScale(1)).on("pointerup",()=>{bg.setScale(1);action();});
+  }
+  private smallAction(x:number,y:number,label:string,action:()=>void,w:number,fill:number,color:string):void{
+    const bg=this.add.rectangle(x,y,w,42,fill).setStrokeStyle(1,0x3a4c59).setInteractive({useHandCursor:true}),t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"12px",fontStyle:"bold",color}).setOrigin(.5);bg.on("pointerdown",()=>{bg.setScale(.98);t.setScale(.98);}).on("pointerout",()=>{bg.setScale(1);t.setScale(1);}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);action();});
+  }
 
   private openSurvey():void{
     if(this.surveyPanel)return;this.quick={fun:0,originality:0,difficulty:0};this.surveyBug=false;this.surveySurprise=false;this.surveySubmitting=false;
@@ -86,9 +94,9 @@ export class ResultsScene extends Phaser.Scene{
   private segmentRow(children:Phaser.GameObjects.GameObject[],label:string,y:number,labels:string[],values:number[],key:QuickKey):void{
     children.push(this.add.text(66,y,label,{fontFamily:"system-ui",fontSize:"10px",fontStyle:"bold",color:"#c9d5de"}).setOrigin(0,.5));
     const start=labels.length===5?260:250,spacing=labels.length===5?40:72;
-    labels.forEach((label,i)=>{const x=start+i*spacing,w=labels.length===5?32:64,bg=this.add.rectangle(x,y,w,32,0x17242d).setStrokeStyle(1,0x405767).setInteractive({useHandCursor:true});const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:labels.length===5?"10px":"8px",fontStyle:"bold",color:"#dfe8ee"}).setOrigin(.5);children.push(bg,t);bg.on("pointerup",()=>{this.quick[key]=values[i]!;for(const obj of children)if(obj instanceof Phaser.GameObjects.Rectangle&&Math.abs(obj.y-y)<1&&obj.width<=70)obj.setFillStyle(obj===bg?0x45677a:0x17242d);this.queueSurveySubmit();});});
+    labels.forEach((label,i)=>{const x=start+i*spacing,w=labels.length===5?32:64,bg=this.add.rectangle(x,y,w,34,0x17242d).setStrokeStyle(1,0x405767).setInteractive({useHandCursor:true});const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:labels.length===5?"10px":"8px",fontStyle:"bold",color:"#dfe8ee"}).setOrigin(.5);children.push(bg,t);bg.on("pointerup",()=>{this.quick[key]=values[i]!;for(const obj of children)if(obj instanceof Phaser.GameObjects.Rectangle&&Math.abs(obj.y-y)<1&&obj.width<=70)obj.setFillStyle(obj===bg?0x45677a:0x17242d);this.queueSurveySubmit();});});
   }
-  private chip(children:Phaser.GameObjects.GameObject[],x:number,y:number,label:string,action:()=>void):Phaser.GameObjects.Rectangle{const bg=this.add.rectangle(x,y,112,32,0x17242d).setStrokeStyle(1,0x3b5060).setInteractive({useHandCursor:true});const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"9px",fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5);children.push(bg,t);bg.on("pointerup",action);return bg;}
+  private chip(children:Phaser.GameObjects.GameObject[],x:number,y:number,label:string,action:()=>void):Phaser.GameObjects.Rectangle{const bg=this.add.rectangle(x,y,112,38,0x17242d).setStrokeStyle(1,0x3b5060).setInteractive({useHandCursor:true});const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"9px",fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5);children.push(bg,t);bg.on("pointerup",action);return bg;}
   private queueSurveySubmit():void{if(!this.quick.fun||!this.quick.originality||!this.quick.difficulty||this.surveySubmitting)return;this.surveySubmitting=true;this.time.delayedCall(450,()=>{if(this.surveyPanel)void this.submitSurvey();});}
   private async submitSurvey():Promise<void>{const ok=await BetaTelemetry.submitLevelFeedback({levelId:this.resultData.levelId,mode:this.resultData.mode,fun:this.quick.fun,originality:this.quick.originality,difficulty:this.quick.difficulty,surprise:this.resultData.mode==="troll"?(this.surveySurprise?5:3):null,tags:this.surveyBug?["bug"]:[],comment:""});this.closeSurvey();this.toast(ok?"✓ FEEDBACK ENVIADO":"NO SE PUDO ENVIAR",ok);if(ok&&this.allCurrentLevelsCompleted()&&!BetaTelemetry.gameSurveyDone())this.time.delayedCall(350,()=>{void this.openGameSurvey();});}
   private closeSurvey():void{this.surveyPanel?.destroy(true);this.surveyPanel=null;this.surveySubmitting=false;}
@@ -96,10 +104,16 @@ export class ResultsScene extends Phaser.Scene{
   private openFeedback():void{
     if(this.feedbackPanel)return;const children:Phaser.GameObjects.GameObject[]=[];children.push(this.add.rectangle(270,480,540,960,0x05080b,.82).setInteractive(),this.add.rectangle(270,480,430,430,0x111a22,.99).setStrokeStyle(2,0x405668),this.add.text(270,304,"REPORTE RÁPIDO",{fontFamily:"system-ui",fontSize:"17px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5),this.add.text(270,334,"1 toque. Nota sólo si eliges OTRO.",{fontFamily:"system-ui",fontSize:"10px",color:"#8da0ad"}).setOrigin(.5));
     const choices:[string,BetaFeedbackCategory][]=[["BUG","bug"],["MUY FÁCIL","too-easy"],["MUY DIFÍCIL","too-hard"],["REPETITIVO","repetitive"],["OBJETO SOBRA","object"],["OTRO","other"]];
-    choices.forEach(([label,category],i)=>{const x=170+(i%2)*200,y=392+Math.floor(i/2)*68,bg=this.add.rectangle(x,y,170,48,0x1a2731).setStrokeStyle(1,0x496173).setInteractive({useHandCursor:true});const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:"#dfe9ef"}).setOrigin(.5);children.push(bg,t);bg.on("pointerup",()=>this.saveFeedback(category));});
+    choices.forEach(([label,category],i)=>{const x=170+(i%2)*200,y=392+Math.floor(i/2)*68,bg=this.add.rectangle(x,y,170,50,0x1a2731).setStrokeStyle(1,0x496173).setInteractive({useHandCursor:true});const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:"#dfe9ef"}).setOrigin(.5);children.push(bg,t);bg.on("pointerup",()=>{void this.saveFeedback(category);});});
     children.push(this.add.text(270,632,"CERRAR",{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:"#8596a4"}).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.closeFeedback()));this.feedbackPanel=this.add.container(0,0,children).setDepth(220);
   }
-  private saveFeedback(category:BetaFeedbackCategory):void{const note=category==="other"?(window.prompt("Cuéntanos qué pasó","")??""):"";BetaFeedbackSystem.add({levelId:this.resultData.levelId,mode:this.resultData.mode,levelIndex:this.resultData.levelIndex,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs},category,note);this.closeFeedback();this.toast("✓ REPORTE GUARDADO",true);}
+  private async saveFeedback(category:BetaFeedbackCategory):Promise<void>{
+    const note=category==="other"?(window.prompt("Cuéntanos qué pasó","")??""):"";
+    BetaFeedbackSystem.add({levelId:this.resultData.levelId,mode:this.resultData.mode,levelIndex:this.resultData.levelIndex,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs},category,note);
+    this.closeFeedback();
+    const sent=await BetaTelemetry.submitReport({levelId:this.resultData.levelId,mode:this.resultData.mode,category,note,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs});
+    this.toast(sent?"✓ REPORTE ENVIADO":"✓ GUARDADO LOCAL · SIN RED",true);
+  }
   private closeFeedback():void{this.feedbackPanel?.destroy(true);this.feedbackPanel=null;}
 
   private async openLeaderboard():Promise<void>{
