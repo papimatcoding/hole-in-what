@@ -10,9 +10,10 @@ export interface LiveStatus{
   etaText:string;
   message:string;
   updatedAt:string|null;
+  currentBuildId:string|null;
 }
 
-const DEFAULT_STATUS:LiveStatus={maintenance:false,patchLabel:"BETA",etaText:"",message:"Estamos aplicando una actualización.",updatedAt:null};
+const DEFAULT_STATUS:LiveStatus={maintenance:false,patchLabel:"BETA",etaText:"",message:"Estamos aplicando una actualización.",updatedAt:null,currentBuildId:null};
 let cachedStatus:LiveStatus={...DEFAULT_STATUS};
 let cachedOnline:number|null=null;
 let timer:number|null=null;
@@ -34,15 +35,18 @@ function readStatus(data:Partial<LiveStatus>|null|undefined):LiveStatus{
     patchLabel:typeof data?.patchLabel==="string"&&data.patchLabel?data.patchLabel:DEFAULT_STATUS.patchLabel,
     etaText:typeof data?.etaText==="string"?data.etaText:"",
     message:typeof data?.message==="string"&&data.message?data.message:DEFAULT_STATUS.message,
-    updatedAt:typeof data?.updatedAt==="string"?data.updatedAt:null
+    updatedAt:typeof data?.updatedAt==="string"?data.updatedAt:null,
+    currentBuildId:typeof data?.currentBuildId==="string"&&data.currentBuildId?data.currentBuildId:null
   };
 }
 
 function notifyOnline():void{for(const fn of listeners)fn(cachedOnline);}
+function needsUpdate(status:LiveStatus):boolean{return Boolean(status.currentBuildId&&status.currentBuildId!==BETA_BUILD_ID);}
 
 export const LiveOps={
   status():LiveStatus{return{...cachedStatus};},
   online():number|null{return cachedOnline;},
+  needsUpdate():boolean{return needsUpdate(cachedStatus);},
   setContext(value:string|null):void{contextOverride=value?.slice(0,48)??null;},
   onOnline(fn:(count:number|null)=>void):()=>void{listeners.add(fn);fn(cachedOnline);return()=>listeners.delete(fn);},
   async fetchStatus():Promise<LiveStatus>{
@@ -67,7 +71,8 @@ export const LiveOps={
       const result=await this.heartbeat(active);
       const now=game.scene.getScenes(true)[0]?.scene.key;
       if(result.status.maintenance&&now!=="maintenance")game.scene.start("maintenance",{status:result.status});
-      else if(!result.status.maintenance&&now==="maintenance")game.scene.start("menu");
+      else if(!result.status.maintenance&&needsUpdate(result.status)&&now!=="update-required")game.scene.start("update-required",{status:result.status});
+      else if(!result.status.maintenance&&!needsUpdate(result.status)&&now==="maintenance")game.scene.start("menu");
     };
     void tick();
     timer=window.setInterval(()=>{void tick();},HEARTBEAT_MS);
