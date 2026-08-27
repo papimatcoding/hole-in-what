@@ -69,7 +69,7 @@ export class MenuScene extends Phaser.Scene {
     this.wirePress(bg,text,y,410,60,action,rest,hover);
   }
 
-  private wirePress(bg:Phaser.GameObjects.Rectangle,labels:Phaser.GameObjects.GameObject|Phaser.GameObjects.GameObject[],y:number,w:number,h:number,action:()=>void,rest:number,hover:number):void{
+  private wirePress(bg:Phaser.GameObjects.Rectangle,labels:Phaser.GameObjects.Text|Phaser.GameObjects.Text[],y:number,w:number,h:number,action:()=>void,rest:number,hover:number):void{
     const items=Array.isArray(labels)?labels:[labels],zone=this.add.zone(270,y,w,h).setInteractive({useHandCursor:true});
     const scale=(value:number):void=>{bg.setScale(value);for(const item of items)item.setScale(value);};
     zone.on("pointerover",()=>bg.setFillStyle(hover));
