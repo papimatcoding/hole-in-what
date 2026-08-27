@@ -16,9 +16,10 @@ export const PATCH_NOTES:PatchNote[]=[
     summary:"Community Maps deja de ser un prototipo y pasa a tener un flujo social claro.",
     bullets:[
       "Borradores guardados, selección explícita, playtest y publicación.",
-      "Community Play con el mismo control y feedback base que campaña.",
+      "Community Play con el mismo control, cosméticos y feedback base que campaña.",
       "Valoración general por estrellas, tendencia, jugadas y jugadores activos.",
       "Comentarios y reportes de mapas comunitarios.",
+      "Tiro asistido cerca de bordes y botones de feedback con hitboxes más grandes.",
       "Nueva pestaña de parches con aviso de contenido sin leer."
     ]
   },
