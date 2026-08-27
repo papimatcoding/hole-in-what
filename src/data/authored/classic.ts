@@ -28,8 +28,8 @@ path(c4,pt(428,690),pt(428,520),pt(150,468),pt(150,274),pt(430,156));
 // 05 — Bumper introduction. The bumper is the fast route around the elbow, not decoration.
 const c5=base("classic",5,pt(116,836),pt(422,166),2,3,"bumper");
 c5.walls=[r(28,520,250,24),r(302,306,210,24),r(278,306,24,238)];
-c5.bumpers=[{x:300,y:558,r:34}];
-path(c5,pt(300,690),pt(300,558),pt(424,448),pt(422,166));
+c5.bumpers=[{x:300,y:590,r:34}];
+path(c5,pt(300,700),pt(300,590),pt(424,448),pt(422,166));
 
 // 06 — Apply bumper knowledge differently: choose which bumper creates the better exit angle.
 const c6=base("classic",6,pt(420,836),pt(108,166),2,3,"bumper");
