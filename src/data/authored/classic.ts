@@ -19,9 +19,9 @@ const c4=base("classic",4,pt(92,836),pt(430,156),2,3,"wall");
 c4.walls=[r(28,588,324,26),r(188,346,324,26),r(330,462,26,126)];
 path(c4,pt(428,690),pt(428,520),pt(150,468),pt(150,274),pt(430,156));
 
-// First bumper lesson: the lower shelf blocks the direct diagonal, making the bumper the fast setup while keeping the hole visually open.
+// First bumper lesson: the lower shelf blocks the direct diagonal and the right guard kills the outer double-bank HIO, while the intended bumper setup stays open.
 const c5=base("classic",5,pt(116,836),pt(422,166),2,3,"bumper");
-c5.walls=[r(210,548,24,164),r(326,320,24,174),r(88,300,144,24),r(28,714,248,24)];
+c5.walls=[r(210,548,24,164),r(326,320,24,174),r(88,300,144,24),r(28,714,248,24),r(470,500,24,220)];
 c5.bumpers=[{x:390,y:626,r:32}];
 path(c5,pt(390,626),pt(426,510),pt(270,420),pt(238,258),pt(422,166));
 
