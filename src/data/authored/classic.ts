@@ -44,13 +44,13 @@ path(c7,pt(420,724),pt(420,548),pt(118,402),pt(118,218),pt(430,150));
 
 // 08 — Sand introduction. The strip catches overpowered shots and teaches controlled placement.
 const c8=base("classic",8,pt(270,842),pt(416,154),3,4,"sand");
-c8.sand=[r(74,470,392,190)];
+c8.sand=[r(74,516,392,144)];
 c8.walls=[r(28,368,330,24),r(358,368,24,134)];
-path(c8,pt(330,676),pt(348,548),pt(420,430),pt(416,154));
+path(c8,pt(330,676),pt(348,570),pt(420,430),pt(416,154));
 
 // 09 — Sand becomes a route decision: short risky route through sand vs longer dry bank route.
 const c9=base("classic",9,pt(424,840),pt(106,154),3,4,"sand");
-c9.sand=[r(238,430,244,232)];
+c9.sand=[r(300,430,176,178)];
 c9.walls=[r(28,608,250,24),r(278,318,234,24),r(190,318,24,174)];
 path(c9,pt(192,708),pt(182,538),pt(182,388),pt(106,154));
 
