@@ -1,5 +1,6 @@
 name: Full Audit
 
+# Long solver used to certify authored blocks before external beta.
 on:
   push:
     branches: [dev]
