@@ -2,7 +2,7 @@
 
 Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 
-> **SOURCE OF TRUTH / CHAT HANDOFF — 2026-08-27**
+> **SOURCE OF TRUTH / CHAT HANDOFF — 2026-08-28**
 >
 > Read this file first when continuing in another chat. Update it after any meaningful change to campaign state, architecture, validation, backend/live ops, beta status or immediate priorities.
 
@@ -63,7 +63,7 @@ Gameplay is **device-invariant**; presentation does not have to be.
 - touch/mobile keeps larger touch targets and the compact vertical flow that already works well;
 - never fix desktop UX by creating a second gameplay/input implementation.
 
-Current desktop UX work lives on `feature/pc-ui-ux`. Its first pass covers the browser shell, main menu, level select, Results/post-hole survey, player profile, Assistance, Community discovery, Patch Notes and the global survey. The post-hole survey now uses explicit **ENVIAR / SALTAR** rather than auto-submitting as soon as the third answer is clicked. Player alias edits are stored locally immediately and synced to the backend afterwards, while `tester_id` remains unchanged.
+The first desktop UX pass was promoted to `dev` through PR #4 (`feature/pc-ui-ux`). It covers the browser shell, main menu, level select, Results/post-hole survey, player profile, Assistance, Community discovery, Patch Notes and the global survey. The post-hole survey uses explicit **ENVIAR / SALTAR** rather than auto-submitting as soon as the third answer is clicked. Player alias edits are stored locally immediately and synced to the backend afterwards, while `tester_id` remains unchanged. PR #3 (`feature/desktop-ui-feedback`) is an older superseded pass and should not be used as the current source of truth.
 
 ## Physics authority
 
@@ -429,12 +429,12 @@ Historical ideas such as ~40 Classic + ~40 HARD, competitive online up to 10, bo
 
 ## Immediate next steps — resume here
 
-**Block 1 is frozen. Audit 2.1 is merged into `dev`. Desktop UX and Block 2 mechanic certification are now separate feature branches so neither needs maintenance while iterating.**
+**Block 1 remains frozen. Audit 2.1, the first Block 2 mechanic contracts (ice, booster, portal) and the first desktop UX pass are all merged into `dev`. Block 2 authoring can now begin on a fresh feature branch without touching the frozen first block.**
 
-1. Finish and certify `feature/pc-ui-ux`; manually inspect it on a real desktop before promotion to `dev`.
-2. Finish PR #2 (`feature/block-2-mechanics`) and certify ice, booster and portal behavior contracts before authoring Block 2 holes.
+1. Do a final post-merge desktop/mobile smoke check of current `dev` and confirm GitHub Pages still presents the responsive UI correctly; no gameplay retuning is implied by this check.
+2. Close/ignore superseded PR #3 (`feature/desktop-ui-feedback`); PR #4 is the desktop source of truth.
 3. Run Community Maps end-to-end with at least two testers: create → draft → playtest → publish → discover → play → rate → comment → report → creator delete / self-rating blocked.
-4. Start authored Block 2 holes only after the first mechanic contracts are merged; keep level work on feature branches.
+4. Start authored Block 2 holes on a new feature branch, using the now-certified ice / booster / portal contracts before adding further mechanics.
 5. Use Audit 2.1 to rank candidate holes by difficulty/originality and recommend changes, then manually play them before promotion.
 6. When reviewing beta feedback, query Supabase, create an aggregated/non-identifying snapshot and feed it to `audit2Design.ts`.
 7. Build a private DEV/review dashboard only when enough fresh beta/community data exists to justify it.
