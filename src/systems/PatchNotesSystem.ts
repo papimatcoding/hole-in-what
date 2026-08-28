@@ -10,6 +10,18 @@ const READ_KEY="troll-golf-last-read-patch-v1";
 
 export const PATCH_NOTES:PatchNote[]=[
   {
+    id:"friends-rc6",
+    title:"FRIENDS BETA RC6",
+    date:"28 AGO 2026",
+    summary:"Nuevos hoyos y mejoras para probar la beta.",
+    bullets:[
+      "Añadidos Classic 11–13 con hielo y boosters.",
+      "Arreglados los campos de nombre y comentarios.",
+      "La encuesta global ahora pregunta antes de abrirse y da una recompensa única de 5 gemas.",
+      "Vuelve el modo mantenimiento con comprobación y recarga automática."
+    ]
+  },
+  {
     id:"friends-ui-polish-1",
     title:"FRIENDS BETA · UI",
     date:"27 AGO 2026",
@@ -17,7 +29,7 @@ export const PATCH_NOTES:PatchNote[]=[
     bullets:[
       "Mejorada la interfaz y legibilidad en PC.",
       "Las encuestas post-nivel ahora se envían manualmente.",
-      "Corregida la edición del nombre de jugador."
+      "Añadida la pantalla para editar el nombre de jugador."
     ]
   },
   {
@@ -36,7 +48,7 @@ export const PATCH_NOTES:PatchNote[]=[
     date:"27 AGO 2026",
     summary:"Mejoras de perfil y Community Maps.",
     bullets:[
-      "El nombre de jugador ya se puede ver y editar dentro del juego.",
+      "El nombre de jugador ya se puede ver desde el juego.",
       "Añadida Asistencia al jugador.",
       "Ya puedes eliminar tus propios Community Maps."
     ]
