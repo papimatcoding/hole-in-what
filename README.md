@@ -12,10 +12,16 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 
 - Public Pages: `https://papimatcoding.github.io/troll-golf/`
 - Pages source: `dev`
-- current public **runtime code** head: `9816d0044f8acb4f01b8d850544c0eb7caf39d94`
-- runtime promotion: PR #8, **BETA UX hotfix · editable fields + ES/EN**
-- post-merge `dev` CI: run `33167542495` — **SUCCESS**
-- post-merge Pages deploy: run `33167542462` — **SUCCESS**
+- current public **runtime code** head: `1310062e4840642f81b22e6417faa6fc871ccdd4`
+- latest runtime promotion: PR #12, **BETA RC6 · modernize in-hole report**
+- previous telemetry hotfix: PR #11, **BETA RC6 · preserve shot input kind**
+- UX/i18n foundation: PR #8, **BETA UX hotfix · editable fields + ES/EN**
+- PR #11 feature smoke: run `33168448479` — **SUCCESS**
+- PR #12 feature smoke: run `33168710796` — **SUCCESS**
+- PR #11 public Pages: run `33168521414` — **SUCCESS**
+- PR #11 public CI: run `33168521423` — **SUCCESS**
+- PR #12 public Pages: run `33168834819` — **SUCCESS**
+- PR #12 public CI: run `33168834814` — **running at last handoff query**; typecheck/build/mechanics/contracts/geometry/clearance were already green and campaign simulation was in progress
 - emergency rollback anchor before RC6 campaign promotion: `8075b162dc2b3e7b73b2fd0d36e6fbc5248120f4`
 - maintenance: **OFF**
 - backend patch label: **BETA RC6**
@@ -25,24 +31,26 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 
 Documentation-only commits may move the `dev` branch SHA beyond the runtime-code SHA above without changing the deployed game code. Do not rename the repository or Pages path during RC6. Legacy `troll-golf-*` localStorage keys intentionally remain stable so existing anonymous beta identity/progression is not reset.
 
-The original RC6 campaign promotion landed as `e90bf9b194044fb7af86a73e282a81bdc3133a9d`. Before the independent cohort started, approved direct-`dev` hotfixes corrected boot branding, expanded post-hole originality/difficulty ratings to true 1–5 controls and made HARD previews spoiler-safe. After that pre-cohort exception, use the normal feature flow again.
+The original RC6 campaign promotion landed as `e90bf9b194044fb7af86a73e282a81bdc3133a9d`. Before the broader independent cohort starts, approved beta-unblock fixes have corrected boot branding, 1–5 post-hole ratings, spoiler-safe HARD previews, editable DOM fields, ES/EN, shot input classification and the in-hole report UX. From here, treat `dev` as the human-validation build rather than an exploratory scratchpad.
 
-### RC6 UX/i18n unblock — MERGED
+### RC6 UX / reporting unblock — MERGED
 
-PR #8 is on public `dev`. It was presentation/UI-only and did not change campaign geometry, physics, save schema, Supabase schema or beta build ID.
+PR #8 established the shared DOM/i18n layer. PR #11 and PR #12 close two data-quality/testing gaps found while preparing the real cohort.
 
-It adds/fixes:
+Current player-facing beta flow includes:
 
-- the shared Phaser DOM-overlay alignment problem affecting editable player-facing fields;
 - Player Profile name editing;
 - Assistance textarea;
 - Community comment/report textareas;
-- result/report detail textarea instead of a browser prompt in the active Results flow;
+- Results report detail textarea;
+- in-hole quick report with explicit category selection + optional textarea + explicit SEND/CLOSE;
+- **no browser `window.prompt()` in the active Results or in-hole report flows**;
 - persistent **ES / EN** selector in the main menu;
 - Spanish default for fresh Spanish/Catalan browser locales and English otherwise;
-- translated normal external-tester flow: menu, campaign navigation/objectives, gameplay onboarding/tutorials, results/feedback, profile/support, global survey and Community browsing/play/comments/reports.
+- translated normal tester flow, including gameplay/tutorial text and the remaining `TOCA` → `TAP` case;
+- client-side report guards that close the report panel before awaiting the network request, preventing the obvious same-panel repeat-tap duplicate path.
 
-Artificial checks and deployment are green. The remaining acceptance gate is **real browser validation on mobile/touch and desktop** because CI cannot prove DOM visibility, focus, keyboard behavior or readable localisation.
+Artificial checks are green. The remaining acceptance gate is **real browser validation on mobile/touch and desktop** because CI cannot prove DOM visibility, focus, keyboard behavior, readable localisation or real browser pointer classification.
 
 ## Workflow
 
@@ -56,7 +64,7 @@ Any human-discovered problem on `dev` returns to a new `feature/**` branch, pass
 
 ## Campaign artificial certification — CLOSED
 
-The live 18-hole RC6 campaign is already certified. Do not reopen geometry because of unrelated UX/i18n work.
+The live 18-hole RC6 campaign is already certified. Do not reopen geometry because of unrelated UX/i18n/telemetry work.
 
 Accepted campaign Full Audit: run `33158002310`.
 
@@ -104,9 +112,9 @@ Keep the known-bad RC5 HARD03 fixture against accepted RC5.1 permanently so futu
 
 > Mathematical solution ≠ synthetic human model ≠ real human validation.
 
-## Audit V3 — active shadow work
+## Audit V3.1 — active shadow work
 
-Separate branch: **`feature/audit-v3`**. Draft PR #7: **Audit V3 · troll cognition + human/map intelligence**. Do not merge it solely because RC6 beta is live.
+Separate branch: **`feature/audit-v3`**. Draft PR #7: **Audit V3 · troll cognition + human/map intelligence**. Keep it shadow-only while calibration continues; do not merge it solely because RC6 beta is live.
 
 V3 adds blind/curious/suspicious belief agents, HARD bait→consequence→comprehension→mastery reasoning, troll-quality metrics, accidental terminal detection, map intelligence, human/artificial metric fusion and anonymised first-attempt/retry/device/route-cluster aggregates.
 
@@ -116,9 +124,26 @@ First full V3 shadow calibration: run `33164327421` — **SUCCESS**.
 - no accidental terminal states;
 - no structurally similar map pairs;
 - HARD advisory scores: H01 83, H02 74, H03 87, H04 60, H05 78;
-- H04 emitted `WEAK_CONSEQUENCE:15%`, currently treated as a **model limitation**, not a geometry defect: H04 has chained consequence and V3 currently overweights immediate post-trigger displacement.
+- H04 emitted `WEAK_CONSEQUENCE:15%`, treated as a **model limitation**, not a geometry defect: H04 has chained consequence and the original V3 proxy overweights immediate post-trigger displacement.
 
-Next V3 calibration work: **consequence look-ahead / chained-state reasoning**, then memory across attempts. Longer-term enabling architecture: a shared declarative **Trigger → Action** world-state engine consumed by runtime and Audit V3. Do not alter H04 geometry merely to satisfy the current proxy.
+### V3.1 consequence look-ahead — IMPLEMENTED, certification pending
+
+`feature/audit-v3` now contains `scripts/audit3LookAhead.ts` and integrated V3.1 reporting. It compares post-trap agency with a hidden-trap counterfactual and measures second-shot opportunity loss so chained consequences such as H04 can be represented instead of judged only by immediate displacement.
+
+Current certification candidate: `4e61ec0e213c5e8d8bc56077c0f05a619b13fdce`, Full Audit run `33168040095`.
+
+At the last handoff query:
+
+- typecheck/build/mechanics/contracts/geometry/clearance: **SUCCESS**;
+- full adversarial campaign audit: **SUCCESS**;
+- Audit 2 full human-model report: still running;
+- V3.1 shadow step, design advice, originality and artifact upload: pending behind Audit 2.
+
+Do **not** call V3.1 calibrated until that complete run finishes and the H01–H05 deltas are inspected. Specific calibration risk: the current counterfactual removes all hidden pop traps in a level, which could over-attribute later consequences on multi-trap holes. Desired result is that H04 gains credible chained-consequence signal without absurdly inflating H01/H03/H05.
+
+After consequence look-ahead is accepted, next model work is **memory/learning across attempts**. Longer-term enabling architecture remains a shared declarative **Trigger → Action** world-state engine consumed by runtime and Audit V3.
+
+Do not alter H04 geometry merely to satisfy the audit proxy.
 
 ## Physics authority
 
@@ -130,17 +155,41 @@ Core constants currently include ball radius 13, max pull 172, power 7.4, grass 
 
 Detailed contract: `docs/beta-telemetry.md`.
 
-Latest RC6 personal smoke snapshot in Supabase, all from alias `Matkiller`:
+### Current RC6 snapshot
+
+Alias `Matkiller` personal/self-test data:
 
 - **33 attempts**;
 - **10 completed attempts**;
 - **49 shots**;
 - **10 completed run rows**;
 - **8 level-feedback rows**;
-- **1 game-feedback row**;
-- no independent external tester with RC6 gameplay activity at the latest query.
+- **1 game-feedback row**.
+
+There is also one **anonymous session outside alias `Matkiller`**. Do not assume it is an independent external tester; it may simply be another browser/session until provenance is known.
+
+That session currently provides one useful integrity smoke:
+
+- desktop / non-coarse pointer classification;
+- Classic 01, first attempt;
+- completed in **4 strokes / 44.371 s / 1★ / 0 voids**;
+- `beta_attempts` completion values and the parallel `beta_runs` row agree;
+- **4 shot rows** are linked to the attempt;
+- no level/game feedback.
 
 Exclude `Matkiller` when calibrating against independent external players unless developer/self-test behavior is intentionally being studied.
+
+### Input-kind data-quality fix
+
+All telemetry shots recorded **before PR #11** in the currently queried RC6 dataset are `input_kind = unknown` (49 Matkiller shots + the 4-shot anonymous desktop session). Therefore those historical rows cannot support touch-vs-mouse conclusions.
+
+PR #11 now adds a client fallback that:
+
+1. preserves Phaser's supplied `touch` / `mouse` / `pen` kind when available;
+2. otherwise remembers the latest real browser pointer event type;
+3. only then falls back to coarse-device classification (`touch`) or desktop (`mouse`).
+
+The fix keeps the same RC6 build ID. Its human acceptance test is still pending: make at least one **new desktop shot** and one **new mobile/touch shot** on the public build and query Supabase to confirm `mouse` / `touch`, not `unknown`.
 
 ### Exact telemetry linkage
 
@@ -151,7 +200,7 @@ The client generates one anonymous attempt UUID per level attempt.
 - completed/abandoned summary state is written back to the same `beta_attempts` row;
 - `beta_runs` is a parallel completed-result record used for leaderboard/result aggregates.
 
-**Important correction:** `beta_runs` currently has **no `attempt_id` column**. The run upload sends an `attemptId` to the Edge Function, but that ID is currently used to update the completed attempt row rather than being persisted on `beta_runs`.
+**Important:** `beta_runs` currently has **no `attempt_id` column**. The run upload sends an `attemptId` to the Edge Function, but that ID is currently used to update the completed attempt row rather than being persisted on `beta_runs`.
 
 Do not describe the database as a literal `attempt → shots → run` foreign-key chain. Direct traceability is currently **attempt ↔ shots**, plus completed-attempt summary and a parallel run record. If future analysis genuinely needs exact run-row linkage, add it deliberately through a reviewed Supabase schema/function change instead of assuming it already exists.
 
@@ -161,15 +210,20 @@ Uploads are best-effort/asynchronous and must never block gameplay. Do not colle
 
 The current self-test game survey says overall fun 3/5, controls 4/5, variety 2/5, difficulty curve 3/5, HARD 3/5, would keep playing yes, favourite H05, worst C11, and asks for **more levels / more variety**.
 
-Treat this as useful owner smoke, not balance authority. Do not redesign C11 or the campaign from one developer row; external human evidence is still missing.
+Treat this as useful owner smoke, not balance authority. Do not redesign C11 or the campaign from one developer row; meaningful external human evidence is still missing.
 
-### Report duplicate observation
+### Report duplicate history and current mitigation
 
-The personal smoke produced four `troll-05` report rows in two near-simultaneous pairs (`bug` ×2 and `object` ×2). These rows predate the PR #8 public head.
+The older personal smoke produced four `troll-05` report rows in two near-simultaneous pairs (`bug` ×2 and `object` ×2). Those rows predate the current reporting flows.
 
-Current Results report code closes/destroys its report panel synchronously before awaiting the network request, so the obvious double-tap path is reduced in the deployed version. The backend report endpoint still has no request-id/idempotency key, so exact server-side duplicate protection does not exist.
+Now both active reporting routes reduce the obvious accidental duplicate path:
 
-Before changing backend schema, re-test one report on the current public PR #8 build and confirm whether exactly one row arrives. If duplicates still reproduce, fix them on a fresh `feature/**` branch and prefer explicit idempotency rather than post-hoc data cleanup.
+- Results report destroys/closes its panel before awaiting the network request;
+- PR #12 in-hole report has explicit category selection, optional textarea, a submitting/closed guard and closes before awaiting the network request.
+
+The Supabase report endpoint still has **no request-id/idempotency key**, so server-side exact duplicate protection does not exist. Do not add backend schema/function complexity unless a duplicate is reproducible on the current public build.
+
+Human acceptance: send exactly one in-hole report on current RC6 and confirm exactly one `beta_reports` row arrives.
 
 ## Community Maps
 
@@ -179,7 +233,7 @@ Current supported loop:
 
 Editing invalidates old playtest certification. Creator self-rating is blocked and creator deletion is server-validated. Do not expand to multi-hole community courses until the current loop survives real multi-user beta.
 
-The current public UX specifically needs human verification that Community comment and report DOM textareas are visible, focusable and writable on real touch and desktop browsers.
+The public UX specifically needs human verification that Community comment and report DOM textareas are visible, focusable and writable on real touch and desktop browsers.
 
 ## HARD design principles
 
@@ -197,13 +251,13 @@ Never spoil HARD solutions in selectors, previews, tutorials, Patch Notes or tra
 
 ## Immediate next steps — resume here
 
-1. **Human-smoke the current public runtime head `9816d004…` on mobile/touch first.** Verify Profile name editing, on-screen keyboard, Assistance textarea, Community comment/report fields, Results report detail field, no browser `prompt()` in the normal tester flow, ES/EN switching + persistence, readable English and spoiler-safe HARD previews.
+1. **Human-smoke public runtime `1310062e…` on mobile/touch first.** Verify Profile name editing, on-screen keyboard, Assistance textarea, Community comment/report fields, Results report detail field, **in-hole quick-report category + textarea + SEND**, no browser prompt, ES/EN switching + persistence, `TOCA`/`TAP`, readable English and spoiler-safe HARD previews.
 2. Repeat the critical UI/form checks on a **desktop browser**.
-3. During that smoke, send exactly one test report and one editable-text submission. Then query Supabase and verify exactly one expected row arrives per action.
-4. Re-check telemetry after the smoke: attempt start → shots → attempt completion/abandon; confirm attempt UUID linkage in `beta_attempts`/`beta_shots` and completed summary integrity.
-5. If mobile + desktop smoke are green, share the same public beta URL with the broader independent/PlayMyGame cohort. Keep **BETA RC6 / `hole-in-what-beta-rc6`** so the cohort remains one dataset.
-6. Watch external completion/abandonment, first-attempt vs retry lift, strokes/time, touch-vs-mouse gaps, route clusters, level ratings and qualitative comments. Exclude `Matkiller` from external calibration.
-7. Any human-discovered problem on public `dev` returns to a new `feature/**` branch; do not exploratory-fix live `dev` once external testing is active.
-8. In parallel, continue **Audit V3 consequence look-ahead**, especially chained consequence on H04. Keep V3 shadow-only until calibrated against real players.
-9. After RC6 evidence is reviewed, author the next **small** Classic/HARD content batch with stronger mechanic/visual variety instead of a huge content dump.
-10. Promote accepted `dev` to `main` only when content and polish justify an official release.
+3. Make at least one new gameplay shot on each device class; query Supabase and verify `input_kind = touch` on mobile and `input_kind = mouse` on desktop rather than `unknown`.
+4. During the smoke, send exactly **one** in-hole test report and one other editable-text submission. Query Supabase and verify exactly one expected row arrives per action.
+5. Re-check telemetry: attempt start → shots → attempt completion/abandon; confirm attempt UUID linkage in `beta_attempts`/`beta_shots` and completed summary/run consistency.
+6. If mobile + desktop smoke are green, share the same public beta URL with the broader independent/PlayMyGame cohort. Keep **BETA RC6 / `hole-in-what-beta-rc6`** so the cohort remains one dataset.
+7. Watch external completion/abandonment, first-attempt vs retry lift, strokes/time, touch-vs-mouse gaps, route clusters, level ratings and qualitative comments. Exclude `Matkiller` from external calibration.
+8. Any human-discovered problem on public `dev` returns to a new `feature/**` branch; do not exploratory-fix live `dev` once external testing is active.
+9. Separately, finish Full Audit run `33168040095` and inspect V3.1 chained-consequence deltas before calling the model calibrated. Keep V3 shadow-only.
+10. After RC6 evidence is reviewed, author the next **small** Classic/HARD content batch with stronger mechanic/visual variety instead of a huge content dump. Promote accepted `dev` to `main` only when content and polish justify an official release.
