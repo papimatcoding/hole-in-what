@@ -14,14 +14,15 @@ export const PATCH_NOTES:PatchNote[]=[
     id:"beta-rc6",
     title:"BETA RC6",
     date:"28 AGO 2026",
-    summary:"Nuevo nombre, nuevos hoyos y mejoras para seguir probando la beta.",
+    summary:"Nuevo nombre, nuevos hoyos y una beta más cómoda de probar.",
     bullets:[
       "Troll Golf ahora se llama Hole in What?.",
       "Añadidos Classic 11–13 con hielo y boosters.",
-      "Arreglados los campos de nombre y comentarios.",
+      "HARD 01 ahora tiene una solución aprendida mucho más cómoda en táctil.",
+      "Arreglados los campos de nombre, comentarios y reportes con texto dentro del juego.",
       "La encuesta global ahora pregunta antes de abrirse y da una recompensa única de 5 gemas.",
-      "Mejoradas las métricas anónimas de juego para detectar problemas de balance y abandono.",
-      "Vuelve el modo mantenimiento con comprobación y recarga automática."
+      "Mejoradas las métricas anónimas para detectar problemas de balance y abandono.",
+      "El modo mantenimiento comprueba cuándo vuelve el juego y recarga la nueva versión automáticamente."
     ]
   },
   {
