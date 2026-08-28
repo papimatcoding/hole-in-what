@@ -19,6 +19,15 @@ let language:GameLanguage=detectDefault();
 
 function translateDynamic(value:string):string{
   let match:RegExpMatchArray|null;
+  if(value==="TOCA")return "TAP";
+  if(value==="No hace falta completar el hoyo.")return "You do not need to complete the hole.";
+  if(value==="MUY FÁCIL")return "TOO EASY";
+  if(value==="MUY DIFÍCIL")return "TOO HARD";
+  if(value==="REPETITIVO")return "REPETITIVE";
+  if(value==="OBJETO SOBRA")return "UNNEEDED OBJECT";
+  if(value==="ELIGE UNA CATEGORÍA")return "CHOOSE A CATEGORY";
+  if(value==="✓ GUARDADO LOCAL · SIN RED")return "✓ SAVED LOCALLY · OFFLINE";
+  if((match=value.match(/^REPORTAR · (.+)$/)))return `REPORT · ${match[1]}`;
   if((match=value.match(/^JUGADOR · (.+)\s+✎$/)))return `PLAYER · ${match[1]}   ✎`;
   if((match=value.match(/^AHORA ERES · (.+)$/)))return `YOU ARE NOW · ${match[1]}`;
   if((match=value.match(/^ID ANÓNIMA · (.+)$/)))return `ANONYMOUS ID · ${match[1]}`;
