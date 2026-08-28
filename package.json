@@ -19,9 +19,9 @@
     "audit:human:full": "AUDIT2_MODE=full tsx scripts/audit2.ts",
     "audit:human:strict": "AUDIT2_MODE=full AUDIT2_STRICT=1 tsx scripts/audit2.ts",
     "audit:design": "tsx scripts/audit2Design.ts",
-    "audit:v3": "tsx scripts/audit3.ts",
-    "audit:v3:full": "AUDIT3_MODE=full tsx scripts/audit3.ts",
-    "audit:v3:strict": "AUDIT3_MODE=full AUDIT3_STRICT=1 tsx scripts/audit3.ts",
+    "audit:v3": "tsx scripts/audit3.ts && tsx scripts/audit3LookAhead.ts",
+    "audit:v3:full": "AUDIT3_MODE=full tsx scripts/audit3.ts && tsx scripts/audit3LookAhead.ts",
+    "audit:v3:strict": "AUDIT3_MODE=full AUDIT3_STRICT=1 tsx scripts/audit3.ts && tsx scripts/audit3LookAhead.ts",
     "audit:v3:standalone": "npm run audit:human:full && npm run audit:v3:full"
   },
   "dependencies": {
