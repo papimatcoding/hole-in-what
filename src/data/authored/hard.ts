@@ -3,10 +3,11 @@ import { base, path, pt, r, trap } from "./authoring";
 
 /** HARD block 1: every first attempt breaks an expectation; every second attempt has a learned answer. */
 
-// 01 — Commit to the obvious right lane and it closes. A second upper gate removes the old free HIO.
+// 01 — Commit to the obvious right lane and it closes. The trigger is deliberately tighter than RC5 so
+// the learned left-side route has a comfortable touch margin without making the obvious right commit safe.
 const h1=base("troll",1,pt(126,836),pt(420,160),2,3,"wall");
 h1.walls=[r(246,382,24,310),r(28,292,280,24)];
-h1.popWalls=[{x:286,y:548,w:198,h:24,triggerX:360,triggerY:674,triggerRadius:150}];
+h1.popWalls=[{x:286,y:548,w:198,h:24,triggerX:360,triggerY:674,triggerRadius:126}];
 path(h1,pt(426,720),pt(426,470),pt(346,340),pt(420,160));trap(h1,"gate-pop");
 
 // 02 — The obvious lower-right lane wakes a bumper; the learned route exits left and finishes on the opposite side.
