@@ -17,13 +17,14 @@ c11.ice=[r(70,560,400,150)];
 c11.walls=[r(28,390,360,24)];
 path(c11,pt(400,640),pt(420,470),pt(420,340),pt(420,160));
 
-// 12 — Ice application as a route decision. The central island creates two real families:
-// a long grass route on the left and a shorter ice lane on the right. The upper right shelf
-// prevents the original broad one-shot wraparound while leaving both route families spacious.
-const c12=base("classic",12,pt(270,842),pt(270,154),2,3,"ice");
-c12.walls=[r(190,340,160,350),r(28,520,86,24),r(330,248,182,24)];
-c12.ice=[r(362,350,116,354)];
-path(c12,pt(418,730),pt(420,300),pt(300,220),pt(270,154));
+// 12 — Ice application through a broad setup shot. The L-shaped upper barrier kills the direct
+// diagonal without creating a narrow gate: the player crosses the large ice lake toward the open
+// left landing area, deliberately controls where the ball stops, then finishes from that setup.
+// A slower grass-heavy route around the lower/left edge remains available for recovery.
+const c12=base("classic",12,pt(420,842),pt(110,154),2,3,"ice");
+c12.walls=[r(220,330,292,24),r(220,330,24,180)];
+c12.ice=[r(80,540,400,180)];
+path(c12,pt(140,620),pt(150,470),pt(160,300),pt(110,154));
 
 // 13 — First booster lesson. Entering the pad on a useful line turns acceleration into a
 // shortcut through the right-side opening. The second pass deliberately widens the pad/opening
