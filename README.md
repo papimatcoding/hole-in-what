@@ -12,15 +12,15 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 
 - Public Pages: `https://papimatcoding.github.io/troll-golf/`
 - Pages source: `dev`
-- current public **runtime code** head: `9377551d78e0fb29e82b1b88bb44836e7dee2d03`
-- latest runtime promotion: PR #14, **BETA RC6 · fix Phaser DOM drift**
+- current public **runtime code** head: `02357338a6eadbd4480c47d2cf0b9ef15e81a044`
+- latest runtime change: **direct RC6 experience hotfix** `02357338…`, explicitly requested as an exception to the normal feature workflow so new testers would not keep hitting already-known UX problems;
+- hotfix public Pages run `33180376039` — **SUCCESS**;
+- hotfix public CI run `33180375917` — **SUCCESS** including typecheck, build, physics, mechanic contracts, geometry, clearance, full campaign simulation and originality;
 - previous runtime fixes:
+  - PR #14, Phaser DOM drift;
   - PR #12, modern in-hole report;
   - PR #11, preserve shot input kind;
   - PR #8, editable DOM fields + ES/EN foundation.
-- PR #14 feature smoke: run `33169927639` — **SUCCESS**
-- PR #14 public Pages: run `33170005536` — **SUCCESS**
-- PR #14 public CI: run `33170005527` — **SUCCESS**
 - emergency rollback anchor before RC6 campaign promotion: `8075b162dc2b3e7b73b2fd0d36e6fbc5248120f4`
 - maintenance: **OFF**
 - backend patch label: **BETA RC6**
@@ -30,17 +30,56 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 
 Documentation-only commits may move the `dev` branch SHA beyond the runtime-code SHA above without changing the deployed game code. Do not rename the repository or Pages path during RC6. Legacy `troll-golf-*` localStorage keys intentionally remain stable so existing anonymous beta identity/progression is not reset.
 
-The original RC6 campaign promotion landed as `e90bf9b194044fb7af86a73e282a81bdc3133a9d`. Before the broader independent cohort starts, approved beta-unblock fixes have corrected boot branding, 1–5 post-hole ratings, spoiler-safe HARD previews, editable fields, ES/EN, shot input classification, in-hole reporting and the Phaser DOM alignment issue found by real mobile smoke.
+## RC6 experience hotfix — deployed directly to `dev`
+
+This was an explicit owner-approved exception to the default `feature/** → dev → main` flow because all three items were already harming the experience of people entering the current beta.
+
+### 1. HARD preview no longer sells the trap
+
+The previous HARD preview hid latent geometry but still displayed phrases such as **`TRAMPA OCULTA`**, **`JUEGA PARA DESCUBRIR LA TRAMPA`** and counts of **visible** objects. That was geometrically spoiler-safe but psychologically spoiler-heavy: it told players to enter each HARD hole looking for the trick instead of making a genuine first read.
+
+Hotfix behavior:
+
+- HARD cards show the start-visible miniature, level ID and star targets only;
+- no `TRAMPA`, `OCULTA`, `VISIBLE`, `SIN SPOILERS` or discovery language;
+- footer is neutral (`HARD`);
+- latent `popWalls`, `popBumpers` and `popVoids` remain absent from the miniature;
+- Classic preview/editor behavior is unchanged.
+
+Principle: **HARD must surprise through play, not announce that a surprise exists.**
+
+### 2. Gameplay HUD no longer treats a shot release as a button click
+
+External human feedback reported that when the ball reached the HUD area, dragging it and releasing over a UI button could accidentally trigger the button.
+
+Root cause: gameplay HUD buttons executed their action on `pointerup` without requiring the same pointer to have begun its press on that button.
+
+Hotfix behavior:
+
+- back, beta previous/next and in-hole REPORT buttons now arm only from their own `pointerdown`;
+- a pointer that began elsewhere and merely releases over a button cannot activate it;
+- when a stationary ball is physically underneath a button, a pointer-down inside the ball grab radius prioritises the shot gesture instead of arming the HUD button.
+
+This is a gameplay-input fix only; physics and level geometry are unchanged.
+
+### 3. Exact duplicate beta reports are suppressed client + server
+
+RC6 produced a real external duplicate report pair only ~15 ms apart, proving the old client-only close/submitting guards were insufficient.
+
+Current mitigation:
+
+- client `BetaTelemetry.submitReport()` coalesces identical in-flight reports and suppresses identical recently successful submissions for 3 seconds;
+- Supabase has a `BEFORE INSERT` trigger on `beta_reports` that serialises identical report fingerprints and rejects an exact duplicate within 3 seconds;
+- the DB guard is backward-compatible with already deployed clients;
+- a transactional smoke confirmed first identical insert = **1 row**, immediate second identical insert = **0 rows**.
+
+Do not delete historical duplicate rows; preserve them as evidence of the previous behavior.
 
 ## RC6 human validation status
 
-### DOM forms — fix deployed, human re-check pending
+### DOM forms
 
-Real mobile smoke on 2026-08-28 proved that the HTML input/textarea elements were visible but horizontally displaced relative to Phaser UI. The profile input and Assistance textarea showed the same offset, proving this was a shared renderer problem rather than scene-specific layout.
-
-Root cause: Phaser **4.2.1** upstream issue `phaserjs/phaser#7329` / PR `#7330`. Scene-level `DOMElement`s with the default centered origin drift when `camera.zoom != 1` because the renderer applies the origin offset twice. Hole in What? deliberately uses a high-DPI design camera zoom (`RENDER_SCALE`, normally 2), so the bug is visible on real devices.
-
-PR #14 applies a narrow RC6 workaround in `src/styles.css`:
+Real mobile smoke exposed Phaser 4.2.1 DOMElement origin drift under camera zoom. PR #14 deployed the CSS workaround:
 
 ```css
 #game input,
@@ -49,9 +88,7 @@ PR #14 applies a narrow RC6 workaround in `src/styles.css`:
 }
 ```
 
-This matches the transform origin used by Phaser's correct parent-container render path and preserves the existing high-DPI/camera architecture. It affects only player form fields; gameplay, physics, campaign geometry, saves, telemetry schema and backend build ID are unchanged.
-
-**Human acceptance still required:** refresh the current public build on the same mobile device and verify Profile + Assistance alignment first, then Results/in-hole report and one Community textarea. Repeat critical fields on desktop.
+Human re-check remains useful for Profile, Assistance, Results/in-hole report and Community textareas on touch + desktop, especially keyboard/focus behavior.
 
 ### Current player-facing beta flow
 
@@ -60,11 +97,11 @@ This matches the transform origin used by Phaser's correct parent-container rend
 - Community comment/report textareas;
 - Results report detail textarea;
 - in-hole quick report with explicit category + optional textarea + SEND/CLOSE;
-- no browser `window.prompt()` in the active Results or in-hole report flows;
+- no browser `window.prompt()` in active Results or in-hole report flows;
 - persistent ES/EN selector;
 - Spanish default for fresh Spanish/Catalan locales, English otherwise;
 - translated normal tester flow;
-- report panels close/guard before awaiting network requests to reduce accidental duplicate sends.
+- neutral HARD preview with no trap-signposting language.
 
 ## Workflow — default project rule
 
@@ -73,15 +110,52 @@ Unless the project owner explicitly says otherwise, **all work follows this prom
 **`feature/**` → artificial review → `dev` → human review → `main`**
 
 - `feature/**`: active development and **artificial acceptance only**. Technical smoke for normal changes; Full Audit for campaign/simulation/design-affecting work. Feature branches are not the public human-test build.
-- `dev` during beta: receives work only after the relevant artificial checks pass. It is the **human-validation / public beta build**, where real players validate touch/mouse behavior, readability, fun, fairness and forms. Human-discovered problems return to a fresh `feature/**` branch and must pass artificial review again before coming back to `dev`.
-- `main` during beta: do not promote ordinary beta iteration here. `main` receives the game when the beta is considered complete and the build is accepted as the real shipped game.
+- `dev` during beta: receives work after relevant artificial checks pass. It is the **human-validation / public beta build**. Human-discovered problems normally return to a fresh `feature/**` branch and must pass artificial review before coming back to `dev`.
+- `main` during beta: do not promote ordinary beta iteration here. `main` receives the game when beta is complete and the build is accepted as the real shipped game.
 - **After beta completion:** `main` becomes the player/release build and `dev` becomes the ongoing **developer build** for future development and human validation before later promotions to `main`.
 
-Do not bypass a stage, push exploratory fixes straight through the chain, or treat an artificial PASS as human acceptance unless the owner explicitly requests an exception.
+Do not bypass a stage unless the owner explicitly requests an exception. The 2026-08-28 RC6 experience hotfix above is such an explicit exception and should not be treated as a new default.
+
+## Current human feedback snapshot — RC6 external only
+
+Exclude legacy `Matkiller` and every alias prefixed `DEV |` from external-cohort interpretation.
+
+At the latest 2026-08-28 snapshot there are **5 external RC6 browser/tester identities** with activity, all currently classified desktop:
+
+- **39 attempts**;
+- **20 completed attempts**;
+- **17 level ratings**;
+- at least one tester progressed cleanly through Classic 01–10 before reporting the HUD overlap/input problem at C11;
+- new post-PR #11 external shot telemetry contains **73 `mouse` shots**; the only 4 external `unknown` shots are from the older pre-fix session.
+
+Current rating signal is small-N but directionally strong:
+
+| Mode | Ratings | Avg fun | Avg originality | Avg difficulty | Avg surprise |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Classic | 13 | **2.08/5** | **2.23/5** | 1.92/5 | — |
+| HARD | 4 | **4.25/5** | **4.00/5** | 1.75/5 | **4.00/5** |
+
+Per-level external signal currently includes:
+
+- C01: 2.0 fun / 1.0 originality / 1.0 difficulty;
+- C02: 2.0 / 1.0 / 1.0;
+- C03: **1.5 / 1.5 / 1.0**;
+- C09–C10: 3.0 fun in the first fuller external run;
+- H01: 3 fun / 3 originality / 3 surprise;
+- H03: **5 fun / 5 originality / 5 surprise**;
+- H04: **4 fun / 4 originality / 5 surprise**;
+- H05: **5 fun / 4 originality** in the newest external rating.
+
+Interpretation, not yet a redesign decision:
+
+- Classic is succeeding at being accessible but currently reads as **too plain / low-variety**, especially C01–C03;
+- the problem is not simply “make Classic harder”; early difficulty being low is expected for teaching levels;
+- HARD is currently expressing the identity/fun of the game much more strongly;
+- the small sample is enough to guide the next feature discussion, but not enough to blindly rewrite individual levels.
 
 ## Campaign artificial certification — CLOSED
 
-The live 18-hole RC6 campaign is certified. Do not reopen geometry because of unrelated UX/i18n/telemetry work.
+The live 18-hole RC6 campaign is certified. Do not reopen geometry solely because of unrelated UX/i18n/telemetry work.
 
 Accepted campaign Full Audit: run `33158002310`.
 
@@ -148,26 +222,11 @@ Next cognition work: **memory / learning across attempts**. Future foundation: s
 
 Detailed contract: `docs/beta-telemetry.md`.
 
-### Current known data
-
-Legacy developer/self-test alias `Matkiller` currently has:
-
-- 33 attempts;
-- 10 completed attempts;
-- 49 shots;
-- 10 completed run rows;
-- 8 level-feedback rows;
-- 1 game-feedback row.
-
-There is also one other anonymous browser/session with C01 completed in **4 strokes / 44.371 s / 1★**, with attempt/run summary consistency and four linked shot rows. Do not automatically treat that browser as an independent tester without provenance.
-
 The current developer mobile smoke alias is **`DEV | Matkiller444`**. Treat aliases prefixed `DEV |` as developer/self-test data, alongside the legacy `Matkiller` alias; do not let them enter external-cohort calibration.
 
 ### Input-kind fix
 
-Historical RC6 shots recorded before PR #11 are `input_kind = unknown`, so they cannot support touch-vs-mouse conclusions.
-
-PR #11 now preserves Phaser pointer type, falls back to the latest browser pointer event, then finally coarse-device classification. Human acceptance is pending: make one **new mobile shot** and one **new desktop shot** and confirm Supabase records `touch` / `mouse`, not `unknown`.
+Historical RC6 shots before PR #11 are `input_kind = unknown`. New external desktop data validates the fix: **73 post-fix external shots are currently `mouse`**. Mobile/touch still needs a new real-device shot confirming `touch`.
 
 ### Exact linkage
 
@@ -177,10 +236,6 @@ PR #11 now preserves Phaser pointer type, falls back to the latest browser point
 - `beta_runs` is a parallel completed-result record.
 
 `beta_runs` currently has **no `attempt_id` column**. Do not describe the DB as a literal attempt→shots→run foreign-key chain.
-
-### Report duplicates
-
-Older `troll-05` developer smoke produced duplicate report pairs. Current Results and in-hole report flows reduce the obvious client double-tap path. Supabase still has no report idempotency key, so the acceptance test remains: send exactly one current-build report and verify exactly one row arrives before adding backend complexity.
 
 ## Community Maps
 
@@ -202,18 +257,19 @@ A good troll trap:
 6. rewards knowledge more than pixel precision;
 7. creates “qué cabrón”, not “esto es random”.
 
-Never spoil HARD solutions in selectors, previews, tutorials, Patch Notes or translations.
+Never spoil HARD solutions **or the mere existence/location/type of a trap** in selectors, previews, tutorials, Patch Notes or translations. A neutral start-state preview is allowed; trap-signposting language is not.
 
 ## Immediate next steps — resume here
 
-1. **Refresh public runtime `9377551d…` on the same mobile device.** Re-check Profile input and Assistance textarea alignment. This is the immediate gate created by the 2026-08-28 screenshot smoke.
-2. If aligned, check one Results/in-hole report textarea and one Community textarea on mobile; verify keyboard/focus remains usable.
-3. Make at least one new mobile gameplay shot. Query Supabase and confirm `input_kind = touch`, not `unknown`.
-4. Send exactly one in-hole test report and verify exactly one `beta_reports` row arrives.
-5. Repeat critical form checks and one gameplay shot on desktop; confirm `input_kind = mouse`.
-6. Keep developer/self-test rows (`Matkiller` and `DEV |*`) excluded from independent-cohort calibration.
-7. If mobile + desktop smoke are green, share the same RC6 URL with the broader independent/PlayMyGame cohort. Keep `hole-in-what-beta-rc6` so the cohort remains one dataset.
-8. Watch completion/abandonment, first-attempt vs retry lift, strokes/time, touch-vs-mouse gaps, route clusters, ratings and qualitative comments.
-9. In parallel, continue Audit V3 with **memory across attempts**; keep V3.1 shadow-only until calibrated against humans.
-10. After RC6 evidence is reviewed, author the next **small** Classic/HARD content batch with stronger mechanic/visual variety rather than a huge dump.
-11. When the beta is complete and the game is accepted for release, promote the accepted `dev` build to `main`; from that point onward `main` is the player/release build and `dev` is the ongoing developer build.
+1. **Human-check public runtime `02357338…`.** Open HARD preview and confirm it no longer mentions traps/hidden/visible/spoilers/discovery.
+2. In gameplay, deliberately start a ball drag and release over BACK / level arrows / REPORT. The shot gesture must not activate the HUD button. Also test a stationary ball sitting underneath a HUD button if reproducible.
+3. Send a normal in-hole report and confirm one expected DB row. The server exact-duplicate guard is already transactionally smoke-tested; keep watching real reports for recurrence.
+4. Finish the mobile DOM re-check and make a fresh mobile shot; confirm `input_kind = touch`.
+5. **Then return to the normal workflow.** Discuss and scope the next `feature/**` work from human evidence before coding it.
+6. Main feature discussion should distinguish:
+   - improving Classic's early fun/identity/variety without destroying its teaching role;
+   - adding genuinely new mechanics/visual variety rather than only more holes with the same pieces;
+   - deciding the next small Classic/HARD content batch;
+   - Trigger → Action architecture and future troll vocabulary;
+   - Audit V3 memory/learning work in parallel, still shadow-only.
+7. Keep collecting external RC6 data while feature work happens. Do not promote beta iteration to `main` until the beta is complete and accepted.
