@@ -41,57 +41,71 @@ async function registerTester():Promise<boolean>{
   const result=await post({type:"tester",testerId:testerId(),alias:alias(),userAgent:null,screenW:bucket(window.innerWidth),screenH:bucket(window.innerHeight),deviceClass:deviceClass(),pointerCoarse:coarsePointer()});
   return result?.ok===true;
 }
+let testerReady:Promise<boolean>|null=null;
+const attemptStarts=new Map<string,Promise<unknown>>();
+async function ensureRegistered():Promise<void>{
+  testerReady??=registerTester();
+  const ok=await testerReady;
+  if(!ok)testerReady=null;
+}
+async function waitForAttempt(attemptId:string):Promise<void>{
+  const pending=attemptStarts.get(attemptId);
+  if(pending)await pending;
+  else await ensureRegistered();
+}
 
 export const BetaTelemetry={
   testerId,
   alias,
-  async ensureTester(_askAlias=false):Promise<void>{await registerTester();},
+  async ensureTester(_askAlias=false):Promise<void>{await ensureRegistered();},
   async setAlias(value:string):Promise<boolean>{
     const name=value.trim().replace(/\s+/g," ").slice(0,40);
     if(!name)return false;
-    safeSet(ALIAS_KEY,name);void registerTester();return alias()===name;
+    safeSet(ALIAS_KEY,name);testerReady=null;void ensureRegistered();return alias()===name;
   },
   beginAttempt(levelId:string,mode?:GameMode):string{
     const resolvedMode=mode??(levelId.startsWith("troll-")?"troll":"classic");
     const map=attemptMap(),key=`${BETA_BUILD_ID}:${levelId}`;map[key]=(map[key]??0)+1;safeSet(ATTEMPTS_KEY,JSON.stringify(map));
     const attemptId=newUuid(),attemptNumber=map[key]!;
-    void this.ensureTester(false).then(()=>post({type:"attempt_start",testerId:testerId(),buildId:BETA_BUILD_ID,attemptId,attemptNumber,levelId,mode:resolvedMode}));
+    const start=ensureRegistered().then(()=>post({type:"attempt_start",testerId:testerId(),buildId:BETA_BUILD_ID,attemptId,attemptNumber,levelId,mode:resolvedMode}));
+    attemptStarts.set(attemptId,start);void start.finally(()=>attemptStarts.delete(attemptId));
     return attemptId;
   },
   attempts(levelId:string):number{return attemptMap()[`${BETA_BUILD_ID}:${levelId}`]??1;},
   async submitShot(input:{attemptId:string;levelId:string;mode:GameMode;shotIndex:number;inputKind:BetaInputKind;startX:number;startY:number;angleDeg:number;power:number;endX:number;endY:number;durationMs:number;outcome:BetaShotOutcome;eventKinds?:string[]}):Promise<void>{
-    await this.ensureTester(false);
+    await waitForAttempt(input.attemptId);
     await post({type:"shot",testerId:testerId(),buildId:BETA_BUILD_ID,...input});
   },
   async endAttempt(input:{attemptId:string;levelId:string;mode:GameMode;completed:boolean;exitReason:string;strokes:number;timeMs:number;voids:number;}):Promise<void>{
-    await this.ensureTester(false);
+    await waitForAttempt(input.attemptId);
     await post({type:"attempt_end",testerId:testerId(),buildId:BETA_BUILD_ID,...input});
   },
   async submitRun(input:{attemptId?:string;levelId:string;mode:GameMode;strokes:number;timeMs:number;stars:number;trapsTriggered?:string[];mechanicsUsed?:string[];voids?:number;}):Promise<void>{
-    await this.ensureTester(false);
+    await ensureRegistered();
+    if(input.attemptId)await waitForAttempt(input.attemptId);
     await post({type:"run",testerId:testerId(),buildId:BETA_BUILD_ID,levelId:input.levelId,mode:input.mode,attemptId:input.attemptId??null,attempts:this.attempts(input.levelId),strokes:input.strokes,timeMs:input.timeMs,stars:input.stars,trapsTriggered:input.trapsTriggered??[],mechanicsUsed:input.mechanicsUsed??[],voids:input.voids??0,completed:true});
   },
   async submitReport(input:{levelId:string;mode:GameMode;category:BetaReportCategory;note?:string;strokes?:number|null;timeMs?:number|null;}):Promise<boolean>{
-    await this.ensureTester(false);
+    await ensureRegistered();
     const result=await post({type:"report",testerId:testerId(),buildId:BETA_BUILD_ID,...input});return result?.ok===true;
   },
   async submitSupport(input:{category:BetaSupportCategory;message:string;}):Promise<boolean>{
-    await this.ensureTester(false);
+    await ensureRegistered();
     const result=await post({type:"support",testerId:testerId(),buildId:BETA_BUILD_ID,category:input.category,message:input.message});return result?.ok===true;
   },
   async leaderboard(levelId:string):Promise<LeaderboardEntry[]>{
-    await this.ensureTester(false);
+    await ensureRegistered();
     const data=await post<{ok?:boolean;entries?:LeaderboardEntry[]}>({type:"leaderboard",testerId:testerId(),buildId:BETA_BUILD_ID,levelId});return data?.ok&&Array.isArray(data.entries)?data.entries:[];
   },
   levelSurveyDone(levelId:string):boolean{return loadSet(LEVEL_SENT_KEY).has(`${BETA_BUILD_ID}:${levelId}`);},
   async submitLevelFeedback(input:{levelId:string;mode:GameMode;fun:number;originality:number;difficulty:number;surprise?:number|null;tags?:string[];comment?:string;}):Promise<boolean>{
-    await this.ensureTester(false);
+    await ensureRegistered();
     const result=await post({type:"level_feedback",testerId:testerId(),buildId:BETA_BUILD_ID,...input});
     if(result?.ok){const set=loadSet(LEVEL_SENT_KEY);set.add(`${BETA_BUILD_ID}:${input.levelId}`);saveSet(LEVEL_SENT_KEY,set);}return result?.ok===true;
   },
   gameSurveyDone():boolean{return loadSet(GAME_SENT_KEY).has(BETA_BUILD_ID);},
   async submitGameFeedback(input:{overallFun:number;controls:number;variety:number;difficultyCurve:number;hardMode?:number|null;wouldKeepPlaying:boolean;favouriteLevel?:string;worstLevel?:string;ideas?:string;}):Promise<boolean>{
-    await this.ensureTester(false);
+    await ensureRegistered();
     const result=await post({type:"game_feedback",testerId:testerId(),buildId:BETA_BUILD_ID,...input});
     if(result?.ok){const set=loadSet(GAME_SENT_KEY);set.add(BETA_BUILD_ID);saveSet(GAME_SENT_KEY,set);}return result?.ok===true;
   }
