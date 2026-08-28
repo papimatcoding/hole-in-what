@@ -18,9 +18,9 @@ Difficulty may dip when a new mechanic is introduced. The important rule is that
 | C08 | Teach | Sand and loss of speed | Certified second intentional reset; inspect edge-rest advice manually |
 | C09 | Apply | Use sand placement to plan the next shot | Certified |
 | C10 | Exam | Bumper + sand + reverse finish | Certified Block 1 finale |
-| C11 | Teach | Ice changes stopping distance | Current candidate uses one short crossable ice band + grass braking |
-| C12 | Apply | Repeat ice stopping/setup control | Current candidate uses two staggered short bands separated by grass |
-| C13 | Teach | Booster alignment | Current Full model already strong; leave unchanged unless regression appears |
+| C11 | Teach | Ice changes stopping distance | **Certified:** one short ice band + grass braking; timeout risk removed |
+| C12 | Apply | Repeat ice stopping/setup control | **Certified:** two staggered bands + grass braking; timeout risk removed |
+| C13 | Teach | Booster alignment | Certified; strong touch margin and no regression after ice changes |
 
 ### Block 1 rhythm
 
@@ -32,7 +32,7 @@ Do not make C05 artificially hard just to remove the C04→C05 numerical dip. Th
 
 `ice teach → ice apply → booster teach → booster apply → combine → exam`
 
-C11–13 are allowed to reset raw difficulty after C10. They still need strategic purpose and safe stopping behaviour; do not convert a teaching hole into a precision gate merely to make a graph monotonic.
+C11–13 deliberately reset raw difficulty after C10. The accepted Full Audit keeps the ice strategically relevant while removing long low-friction timeout states.
 
 ## HARD · current structure
 
@@ -40,11 +40,11 @@ HARD should mean **surprise first attempt, understanding second attempt**, not p
 
 | Hole | Role | Troll lesson | Direction |
 |---|---|---|---|
-| H01 | Teach troll language | Obvious lane closes | Next review target after Batch C; baseline learned route is too narrow on touch |
-| H02 | Apply | Obvious lane wakes a bumper | Leave unless Full evidence shows a real problem |
+| H01 | Teach troll language | Obvious lane closes | Current Batch D candidate reduces trigger radius 150→126 to widen learned touch route while preserving the trap |
+| H02 | Apply | Obvious lane wakes a bumper | Certified baseline; leave unless Full evidence shows a regression |
 | H03 | Escalate | False bridge / floor collapse | RC5.1 accepted regression baseline; do not casually retune |
-| H04 | Combine | Two-stage gate joke | Leave unless Full evidence shows a real problem |
-| H05 | Exam | Ambush + moving crossing + final guard | Current chapter finale |
+| H04 | Combine | Two-stage gate joke | Certified baseline; leave unless Full evidence shows a regression |
+| H05 | Exam | Ambush + moving crossing + final guard | Certified baseline chapter finale |
 
 Target rhythm: `surprise tutorial → application → stronger trap → chained trap → chapter exam`.
 
@@ -79,20 +79,23 @@ Only C06 required a design change. Accepted Full result after the bumper-route c
 - mechanic-relevance warning removed;
 - PASS.
 
-### Batch C · C11–13 — IN PROGRESS
+### Batch C · C11–13 — CLOSED
 
-C13 already has strong human margins. C11/C12 were REVIEW because random/recovery shots could remain moving on large ice regions long enough to hit the simulation timeout.
+The original large ice regions produced moving-timeout recovery failures. The accepted band-based version passed Full Audit across the complete 18-hole campaign:
 
-First reduced-lake pass improved execution but retained timeout risk:
+- C11: touch 98%, casual 84%, tolerance 75%, recovery 100%, PASS;
+- C12: touch 71%, casual 62%, tolerance 54%, recovery 94%, PASS;
+- C13: touch 91%, casual 81%, tolerance 73%, recovery 97%, PASS;
+- no `MOVING_TIMEOUT_RISK` on C11 or C12;
+- ice remains the relevant primary mechanic;
+- 0 originality pairs flagged;
+- H03 regression fixture remains PASS.
 
-- C11: touch 97%, tolerance 75%, timeout 11%;
-- C12: touch 95%, tolerance 68%, timeout 14%.
+### Batch D · H01–05 — IN PROGRESS
 
-Current candidate replaces those lakes with short ice bands and grass braking. Close the batch only from the next completed Full Audit.
+Baseline Full Audit left H01 as the only campaign REVIEW: touch 29%, tolerance 32%, with the trap still meaningful at 43% consequence. H02–H05 are already PASS.
 
-### Batch D · H01–05 — NEXT
-
-Start with H01 only. Do not mix HARD edits into Batch C. H02–H05 remain unchanged unless their own Full evidence justifies intervention.
+Current candidate changes only H01 trigger radius from 150 to 126. Accept it only if Full Audit materially improves touch/tolerance while preserving the obvious-lane trap and without introducing cheese or H03 regressions.
 
 ## After existing-level certification
 
@@ -100,6 +103,6 @@ Only after A–D are closed:
 
 1. compare authored order with Audit difficulty, real-beta completion/abandonment and player feedback;
 2. reorder only if progression evidence supports it and save compatibility can be preserved safely;
-3. author additional levels in small groups;
-4. Full Audit each group;
-5. promote the closed candidate to `dev` for real human beta testing.
+3. prepare the current closed feature candidate for `dev` human beta;
+4. after the beta cohort produces real telemetry, decide whether the next milestone is another small level batch or targeted fixes;
+5. continue adding content in small Full-Audit-certified groups before any official `main` release.
