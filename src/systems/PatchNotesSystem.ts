@@ -6,6 +6,7 @@ export interface PatchNote{
   bullets:string[];
 }
 
+// Legacy key retained so the rebrand does not make old notes unread again for existing testers.
 const READ_KEY="troll-golf-last-read-patch-v1";
 
 export const PATCH_NOTES:PatchNote[]=[
@@ -13,11 +14,13 @@ export const PATCH_NOTES:PatchNote[]=[
     id:"beta-rc6",
     title:"BETA RC6",
     date:"28 AGO 2026",
-    summary:"Nuevos hoyos y mejoras para seguir probando la beta.",
+    summary:"Nuevo nombre, nuevos hoyos y mejoras para seguir probando la beta.",
     bullets:[
+      "Troll Golf ahora se llama Hole in What?.",
       "Añadidos Classic 11–13 con hielo y boosters.",
       "Arreglados los campos de nombre y comentarios.",
       "La encuesta global ahora pregunta antes de abrirse y da una recompensa única de 5 gemas.",
+      "Mejoradas las métricas anónimas de juego para detectar problemas de balance y abandono.",
       "Vuelve el modo mantenimiento con comprobación y recarga automática."
     ]
   },
