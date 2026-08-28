@@ -12,59 +12,82 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 
 - Public Pages: `https://papimatcoding.github.io/troll-golf/`
 - Pages source: `dev`
-- current `dev` HEAD before the UX/i18n candidate: `a87ef6d080f0023d918f36a9f726a082ef1a2763`
-- latest live runtime hotfix code before that docs head: `e4419d9fcc234986b0ece7526321083c6ece704c`
-- previous known-good / emergency rollback anchor: `8075b162dc2b3e7b73b2fd0d36e6fbc5248120f4`
+- current live `dev` HEAD: **`9816d0044f8acb4f01b8d850544c0eb7caf39d94`**
+- previous `dev` before the UX/i18n promotion: `a87ef6d080f0023d918f36a9f726a082ef1a2763`
+- emergency pre-RC6 rollback anchor: `8075b162dc2b3e7b73b2fd0d36e6fbc5248120f4`
 - maintenance: **OFF**
 - backend patch label: **BETA RC6**
-- backend build ID: `hole-in-what-beta-rc6`
+- backend build ID: **`hole-in-what-beta-rc6`**
 - live campaign: **Classic 01–13 + HARD 01–05**
 - product name: **Hole in What?**
 
-Do not rename the repository or Pages path during RC6. Legacy `troll-golf-*` localStorage keys intentionally remain stable so existing beta identity/progression is not reset.
+Do not rename the repository or Pages path during RC6. Keep legacy `troll-golf-*` localStorage keys stable so beta identity/progression is not reset.
 
-The original RC6 campaign promotion landed as `e90bf9b194044fb7af86a73e282a81bdc3133a9d`. Before the independent cohort started, explicitly approved direct-`dev` hotfixes corrected boot branding, expanded post-hole originality/difficulty ratings to true 1–5 controls, and made HARD previews spoiler-safe with a direct MENU exit plus separate EDITOR action. After that exception, use the normal feature flow again.
+The original RC6 campaign promotion landed as `e90bf9b194044fb7af86a73e282a81bdc3133a9d`. Earlier pre-cohort direct-`dev` exceptions fixed boot branding, expanded post-hole originality/difficulty to 1–5, and made HARD previews spoiler-safe. The normal feature workflow is now restored.
 
-### Active beta UX/i18n candidate
+### RC6 UX + ES/EN hotfix — LIVE
 
-Current branch: **`feature/beta-input-i18n`**, created from `dev` `a87ef6d…`.
+PR **#8 · `BETA UX hotfix · editable fields + ES/EN`** was merged from `feature/beta-input-i18n` into `dev` by SHA-protected squash merge.
 
-Purpose: remove two blockers before sharing RC6 with a broader international tester cohort.
+Accepted feature head: **`60fde96209068b24a0cb146a5ee119319f20211e`**  
+Resulting `dev` commit: **`9816d0044f8acb4f01b8d850544c0eb7caf39d94`**
 
-1. **Editable in-game text fields.** The name input, Community comment editor, support textarea and report-detail textareas already existed as Phaser DOM elements, but the page CSS was centering/padding the canvas independently of Phaser's absolute DOM overlay. The candidate removes that competing flex/padding layout and makes Phaser ScaleManager the sole canvas + DOM positioning authority. This is a root fix for the whole form family rather than separate per-scene hacks.
-2. **Spanish / English player UI.** A persistent `ES / EN` selector is now in the main menu. First visit defaults Spanish for Spanish/Catalan browser locales and English otherwise; an explicit user choice is stored under the legacy-compatible `troll-golf-language` key. The translation layer covers the normal external-tester path: menu, campaign navigation/objectives, gameplay onboarding and mechanic tutorials, results/post-hole feedback, profile/support, global survey and Community browsing/play/comments/reports. Developer-only authoring surfaces may remain Spanish until they become a public-player requirement.
+Artificial validation:
 
-Implementation is deliberately presentation-only: no campaign geometry, physics, save schema or beta build ID changes.
+- feature smoke run **`33167445521`** — SUCCESS;
+- Pages run **`33167542462`** — SUCCESS;
+- post-merge `dev` CI run **`33167542495`** — SUCCESS;
+- post-merge CI passed typecheck, build, hole physics, mechanic integrity/behavior, authored geometry, clearance, full authored-campaign simulation and originality;
+- backend rechecked after promotion: maintenance OFF, `BETA RC6`, build `hole-in-what-beta-rc6`.
 
-Artificial smoke runs already green during implementation include `33166999405` and `33167107047`; the final dictionary/engine split must also be green before promotion. **DOM visibility/focus cannot be proven by CI and must be verified by real touch + desktop browsers after the candidate reaches `dev`.**
+What changed:
 
-### Audit V3 — active internal model work
+1. **Shared in-game DOM input fix.** Player-name input, Community comment editor, Assistance textarea and report-detail textareas already existed. The real bug was layout: CSS independently centered/padded the canvas while Phaser ScaleManager positioned its absolute DOM overlay. The live fix removes that competing layout and makes Phaser the sole canvas + DOM positioning authority.
+2. **Spanish / English selector.** Main menu now exposes persistent `ES / EN`. Fresh Spanish/Catalan browser locales default ES; other locales default EN; explicit choice persists under `troll-golf-language`.
+3. **External-tester English path.** Translation covers menu, campaign navigation/objectives, control + mechanic onboarding, results/post-hole feedback, profile/support, global survey, and Community browse/play/comments/reports. Developer-only authoring surfaces may remain Spanish until they become a public-player requirement.
 
-Separate branch: **`feature/audit-v3`**. Draft PR #7: **Audit V3 · troll cognition + human/map intelligence**. Do not merge it just because the beta UX hotfix is ready.
+No campaign geometry, GolfSimulation physics, save schema, Supabase schema or beta build ID changed.
 
-Audit V3 keeps every useful V2 signal and adds:
+**Important:** CI cannot prove real DOM focus/mobile keyboard behavior. The current human gate is to verify these fields on the actual Pages build, mobile/touch first and then desktop. See `docs/beta-ux-i18n-rc6.md`.
 
-- blind / curious / suspicious belief agents without privileged `designPath` or hidden-trigger knowledge;
-- HARD lifecycle reasoning: bait → consequence → comprehension → mastery;
+## Audit V3 / V3.1 — active internal model work
+
+Separate branch: **`feature/audit-v3`**. Draft PR **#7 · `Audit V3 · troll cognition + human/map intelligence`**. This is internal QA/design tooling and is not part of the player bundle.
+
+V3 preserves V2 as the authoritative campaign base and adds:
+
+- blind / curious / suspicious belief agents without privileged `designPath`, hidden trigger coordinates or troll intent;
+- HARD lifecycle reasoning: **bait → consequence → comprehension → mastery**;
 - bait strength, consequence, causal clarity, learned fairness, bypass resistance, trap originality, knowledge-gain potential and advisory Troll Score;
 - tooling-only troll intent (`soft`, `hard`, `terminal`) outside runtime `LevelDefinition`;
-- possible accidental terminal/softlock detection;
+- accidental terminal/softlock detection;
 - map intelligence: visible blocked/hazard footprint, hidden trap footprint, connectivity, spatial entropy, symmetry, density/layout context and structural-neighbour similarity;
-- human/artificial metric fusion where synthetic execution is a prior and real beta evidence increasingly dominates with sample size;
-- explicit model-vs-human disagreement as a diagnostic instead of averaging players away;
-- boosted anonymised telemetry snapshot including first attempt vs retry, mobile vs desktop completion and coarse first-shot route clusters.
+- artificial/human metric fusion where the synthetic model is a prior and real beta evidence increasingly dominates with sample size;
+- boosted anonymous telemetry aggregate with first-attempt vs retry, device completion and coarse first-shot route clusters.
 
-First full V3 shadow calibration: run **`33164327421`**, success.
+First V3.0 Full Audit: **run `33164327421` — SUCCESS**.
 
-- **18/18 PASS · 0 REVIEW · 0 BLOCKER** inherited from the certified V2 campaign;
-- no accidental terminal states;
+- 18/18 PASS · 0 REVIEW · 0 BLOCKER inherited from certified V2;
+- no accidental terminals;
 - no structurally similar map pairs;
-- HARD advisory scores: H01 83, H02 74, H03 87, H04 60, H05 78;
-- H04 emitted `WEAK_CONSEQUENCE:15%`, but this is treated as a **model limitation**, not an automatic geometry issue: H04 has chained consequence and current V3 overweights immediate post-trigger displacement.
+- HARD advisory Troll Scores: H01 83, H02 74, H03 87, H04 60, H05 78;
+- H04 emitted `WEAK_CONSEQUENCE:15%`; this was treated as a model limitation, not a geometry failure, because H04 is a chained/two-stage joke.
 
-Next V3 calibration work is **consequence look-ahead** / chained-state reasoning: evaluate how a trigger changes the *next* shot and later state, then add memory across attempts. Longer-term enabling architecture is a shared declarative **Trigger → Action** world-state engine consumed by runtime and Audit V3.
+### V3.1 consequence look-ahead
 
-See `docs/audit-v3.md` on the V3 branch.
+Current V3 work adds **one-stroke post-trigger look-ahead** rather than measuring only immediate displacement.
+
+- new `scripts/audit3LookAhead.ts`;
+- compares a triggered real state against the same first shot on a counterfactual copy with hidden pop traps removed;
+- samples the next shot without `designPath` or hidden intent;
+- measures best progress, breadth of safe progress and survival to estimate **next-shot agency**;
+- derives `optionLoss`, `consequenceV31` and `trollScoreV31` while preserving V3.0 numbers for calibration;
+- may emit `CHAINED_CONSEQUENCE` when delayed loss of options explains an apparently weak immediate trap;
+- remains **shadow-only** and is not a new strict gate.
+
+Integrated V3.1 smoke head `a90376ef43b46eaabf8067b9c011d75f96a023a5` passed run **`33167831026`**. A follow-up workflow commit `4e61ec0e213c5e8d8bc56077c0f05a619b13fdce` explicitly makes Full Audit run the complete V3.1 stack; its Full Audit calibration is the current artificial task. Do not change H04 geometry merely to improve this proxy.
+
+Longer-term enabling architecture after V3.1 calibration: a shared declarative **Trigger → Action** world-state engine for delayed events, false holes, state swaps, cages/terminal traps and future HARD authoring. Runtime and Audit must consume the same state engine rather than reimplementing trap behavior.
 
 ## Official workflow — CLOSED
 
@@ -75,8 +98,8 @@ See `docs/audit-v3.md` on the V3 branch.
 All active development and all artificial acceptance happen here.
 
 - implement/fix levels, mechanics, UI, telemetry and internal tooling;
-- technical smoke for normal changes;
-- Full Audit for campaign/simulation/design-affecting work;
+- normal technical smoke for normal changes;
+- Full Audit for campaign/simulation/design-affecting changes;
 - no human pre-merge gate;
 - no public Pages deployment.
 
@@ -85,34 +108,33 @@ All active development and all artificial acceptance happen here.
 Public developer/beta build and Pages source.
 
 - receives feature work after artificial checks pass;
-- humans validate real touch/mouse behavior, readability, fun, fairness and forms;
+- humans validate real touch/mouse behavior, readability, fun, fairness, forms and language;
 - telemetry + qualitative feedback expose failures artificial models cannot prove;
 - once cohort testing is active, do not use `dev` as an exploratory scratchpad.
 
-If humans find an issue on `dev`, create a **new `feature/**` fix**, pass the relevant artificial gates, then promote it back to `dev`.
+Any human-discovered problem on `dev` returns to a fresh `feature/**` branch.
 
 ### `main`
 
-Official shipped state only. Promote accepted `dev` when content/polish are sufficient for a real release.
-
-There is no normal `release/**` stage. See `docs/release-process.md`.
+Official shipped state only. Promote an accepted `dev` when content and polish justify a real release. There is no normal `release/**` stage.
 
 ## Campaign artificial certification — CLOSED
 
-The live 18-hole RC6 campaign is already certified. Do not reopen geometry because of unrelated UX/i18n work.
+The live 18-hole RC6 campaign is already certified. Do not reopen geometry because of unrelated UI/i18n/model work.
 
-Accepted campaign Full Audit: run `33158002310`.
+Accepted campaign geometry: **`466b5297c4f6517092dac8c09b1c05532cc21736`**  
+Accepted campaign Full Audit: **run `33158002310`**
 
 - **18/18 PASS · 0 REVIEW · 0 BLOCKER** synthetic human model;
 - Classic strict solver: 13/13 clean, 0 bypass, 0 no-route;
 - HARD strict solver: 5/5 clean, 0 bypass, 0 no-route, 0 warnings;
-- authored mechanics / behavior contracts PASS;
+- mechanics / behavior contracts PASS;
 - geometry PASS;
 - persistent-trap clearance PASS;
 - permanent HARD03 RC5→RC5.1 regression PASS;
 - originality: **0 structurally similar pairs**.
 
-Key final synthetic metrics:
+Key final metrics:
 
 - C06 touch 86%, casual 77%, tolerance 85%, human 86%, recovery 100%;
 - C11 touch 98%, casual 84%, tolerance 75%, human 90%, recovery 100%;
@@ -122,13 +144,11 @@ Key final synthetic metrics:
 
 Campaign order remains intentional. C04→C05 and C10→C11 are teaching resets, not automatic balance errors. Human beta may still reject any level.
 
-Full history: `docs/campaign-audit-2026-08-28.md` and `docs/campaign-progression.md`.
-
 ## Audit policy
 
 Audit is an internal critic, not an oracle. Fast smoke is technical evidence only; only Full Audit may accept/reject campaign design before `dev`.
 
-Current V2 authority:
+V2 authoritative stack:
 
 ```bash
 FULL_AUDIT=1 npm run audit:courses
@@ -137,21 +157,13 @@ npm run audit:design
 npm run audit:originality
 ```
 
-Core authorities:
+Audit V3 runs in shadow on top of that evidence until calibrated. Mathematical solution ≠ synthetic human model ≠ real human validation.
 
-- `src/systems/GolfSimulation.ts` — single physics authority;
-- `scripts/courseAudit.ts` — strict/adversarial solver;
-- `scripts/audit2.ts` — synthetic human execution;
-- `scripts/audit2Design.ts` — difficulty/design advice;
-- `scripts/courseOriginalityAudit.ts` — structural originality.
-
-Permanent rule: keep the known-bad RC5 HARD03 fixture against accepted RC5.1 so future model calibration cannot regress silently.
-
-> Mathematical solution ≠ synthetic human model ≠ real human validation.
+Permanent rule: keep the known-bad RC5 HARD03 fixture against accepted RC5.1 so future Audit calibration cannot silently regress.
 
 ## Physics authority
 
-`src/systems/GolfSimulation.ts` is the single physics authority for campaign, audits and Community Maps. Phaser owns rendering/input/audio/haptics/FX and must not implement a second gameplay physics model.
+`src/systems/GolfSimulation.ts` is the **single gameplay-physics authority** for campaign, audits and Community Maps. Phaser owns rendering, input, audio/haptics and FX; it must not implement a second physics model.
 
 Core constants currently include ball radius 13, max pull 172, power 7.4, grass friction 0.9875, ice friction 0.9982, sand friction 0.955 and stop speed 18.
 
@@ -161,19 +173,19 @@ Procedural generation is tooling only, never campaign fallback content.
 
 Detailed contract: `docs/beta-telemetry.md`.
 
-RC6 links the same anonymous attempt UUID across:
+RC6 links one anonymous attempt UUID across:
 
 **attempt → shots → completed run**
 
-- `tester_id` is a random browser UUID;
+- tester ID is a random browser UUID;
 - alias is optional and separate;
 - changing alias does not change tester ID;
-- client uses coarse device/pointer + rounded viewport, not full physical pointer trajectories;
+- coarse device/pointer + rounded viewport are used instead of physical pointer trajectories;
 - uploads are asynchronous/best-effort and must never block gameplay.
 
-The current personal smoke identity `Matkiller` should be excluded when calibrating against independent external players unless developer/self-test behavior is intentionally being studied. At the last explicit external-cohort query, excluding `Matkiller` produced **0 external players / 0 external attempts**, so human-fusion conclusions must not pretend a cohort already exists.
+Known self-test alias **`Matkiller`** must be excluded from independent-cohort calibration unless intentionally studying developer/self-test behavior. At the last explicit query excluding it, external sample remained 0 players / 0 attempts.
 
-Audit V3's boosted aggregate adds first-attempt/retry completion, device split and coarse first-shot route clusters without exporting tester IDs.
+Audit V3's boosted aggregate adds first-attempt/retry completion, mobile/desktop split and coarse first-shot route clusters without exporting tester IDs.
 
 ## Community Maps
 
@@ -181,13 +193,13 @@ Current supported loop:
 
 **Editor → explicit draft → playtest → publish → discover → play → rate/comment/report**
 
-Editing invalidates old playtest certification. Creator self-rating is blocked and creator deletion is server-validated. Do not expand to multi-hole community courses until the current loop survives real multi-user beta.
+Editing invalidates prior playtest certification. Creator self-rating is blocked and creator deletion is server validated. Do not expand to multi-hole community courses until the current single-hole loop survives real multi-user beta.
 
-The UX/i18n candidate specifically needs human verification that Community comment and report DOM textareas are now visible, focusable and writable on real touch and desktop browsers.
+The live RC6 UX fix now specifically requires human validation that Community comment/report fields are visible, focusable and writable.
 
 ## HARD design principles
 
-A good troll trap:
+A good trap:
 
 1. makes an obvious read attractive;
 2. surprises a first attempt;
@@ -201,21 +213,19 @@ Never spoil HARD solutions in selectors, previews, tutorials, Patch Notes or tra
 
 ## Immediate next steps — resume here
 
-1. **Finish `feature/beta-input-i18n` artificial smoke.** If green, open a PR to `dev`; this feature does not need Full Campaign Audit because it changes presentation/UI only and smoke still checks physics/mechanics/geometry/clearance regressions.
-2. Merge the exact accepted UX/i18n head to `dev` through PR/squash with expected-head protection. Keep backend label/build ID as **BETA RC6 / `hole-in-what-beta-rc6`**; do not fragment telemetry for this presentation hotfix.
-3. Verify post-merge `dev` CI and Pages deployment.
-4. Human-test the public Pages build on **mobile/touch first, then desktop**:
-   - Player Profile name field visible, tappable/clickable, keyboard opens, text can be edited and saved;
-   - Assistance textarea visible and writable;
-   - Community comment field visible, write/save/edit works;
-   - Results/community report detail textareas visible and writable;
+1. **Human-test the live Pages build now**, mobile/touch first, then desktop:
+   - Player Profile name field visible, focusable, keyboard opens, edit/save works;
+   - Assistance textarea visible/writable;
+   - Community comment textarea visible, write/save/edit works;
+   - Results + Community report-detail textareas visible/writable;
    - no browser `prompt()` flows;
-   - ES/EN selector changes the player flow and persists after reload;
-   - fresh Spanish/Catalan browser defaults ES; fresh other-language browser defaults EN;
-   - English campaign onboarding/objectives/results/surveys/Community are understandable and HARD spoilers remain hidden.
-5. After human smoke, query Supabase to verify alias/comment/report/telemetry behavior as appropriate and separate `Matkiller` self-test rows from external cohort calibration.
-6. If this is green, share the same public beta URL with the broader independent/PlayMyGame cohort.
-7. In parallel/after the beta unblock, continue **Audit V3 consequence look-ahead**, especially H04 chained consequence. Do **not** alter H04 geometry merely to satisfy the current V3 proxy.
-8. Next major HARD architecture after V3 look-ahead: shared declarative **Trigger → Action** state transitions for delayed events, false holes, state swaps and intentional terminal traps.
-9. Any new human issue on `dev` returns to a fresh `feature/**` branch.
-10. Promote accepted `dev` to `main` only when content and polish justify an official release.
+   - ES/EN selector switches the player flow and persists after reload;
+   - English onboarding/objectives/results/survey/Community are understandable;
+   - HARD preview/spoiler protections remain intact.
+2. After that smoke, inspect Supabase rows produced by the real client and verify alias/comment/report/attempt linkage as relevant.
+3. If green, share the same public URL with the broader independent / PlayMyGame cohort. Keep build ID `hole-in-what-beta-rc6` so all RC6 evidence stays one dataset.
+4. Any issue discovered by humans on `dev` becomes a fresh `feature/**` fix.
+5. In parallel, complete the Full Audit calibration of **Audit V3.1 consequence look-ahead**, especially H04. Calibrate the model, not the level, unless independent evidence says H04 is actually bad.
+6. After V3.1, add memory across attempts and then the shared declarative **Trigger → Action** state engine before authoring the next generation of complex HARD traps.
+7. Author the next Classic/HARD batch in small increments after the RC6 evidence review rather than one huge block.
+8. Promote accepted `dev` to `main` only when content/polish justify an official release.
