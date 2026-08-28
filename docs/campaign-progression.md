@@ -1,52 +1,52 @@
-# Campaign progression
+# Hole in What? · campaign progression
 
 The campaign should feel deliberately authored rather than sorted by raw solver difficulty. Each hole needs a role: **teach**, **apply**, **combine**, **exam**, or **troll escalation**.
 
-Difficulty is allowed to dip when a new mechanic is introduced. The important rule is that the dip is intentional and followed by meaningful application.
+Difficulty may dip when a new mechanic is introduced. The important rule is that the dip is intentional and followed by meaningful application.
 
 ## Classic · current structure
 
-| Hole | Role | Main lesson | Direction |
+| Hole | Role | Main lesson | Current direction |
 |---|---|---|---|
-| C01 | Teach | Basic angle/power and wall reading | Very forgiving opener |
-| C02 | Apply | Route selection around a wall | Slightly tighter than C01 |
-| C03 | Apply | Commit to a side / obstacle reading | Keep readable on touch |
-| C04 | Exam | First multi-shot placement problem | First real difficulty peak |
-| C05 | Teach | Bumper introduction | Intentional reset after C04; bumper must feel useful, not punishing |
-| C06 | Apply | Deliberate rebound setup | Primary bumper must matter to a competitive route |
-| C07 | Exam | Geometry / placement under pressure | Bridge from bumper block into broader course reading |
-| C08 | Teach | Sand and loss of speed | Second intentional reset; generous first contact |
-| C09 | Apply | Use sand placement to plan the next shot | More commitment than C08 |
-| C10 | Exam | Bumper + sand + reverse finish | Clear Block 1 finale |
-| C11 | Teach | Ice changes stopping distance | Intentional Block 2 reset; strategy over precision |
-| C12 | Apply | Ice setup / stopping control | Must avoid long moving-timeout outcomes |
-| C13 | Teach | Booster alignment | Robust introduction; future holes should demand application |
+| C01 | Teach | Basic angle/power and wall reading | Certified opener; leave alone unless human beta evidence disagrees |
+| C02 | Apply | Route selection around a wall | Certified; watch edge-rest advice during human testing |
+| C03 | Apply | Commit to a side / obstacle reading | Certified; readable on touch |
+| C04 | Exam | First multi-shot placement problem | Certified first difficulty peak |
+| C05 | Teach | Bumper introduction | Certified intentional reset after C04 |
+| C06 | Apply | Deliberate bumper rebound | **Certified after redesign:** bumper now matters to a robust route |
+| C07 | Exam | Geometry / placement under pressure | Certified bridge into broader course reading |
+| C08 | Teach | Sand and loss of speed | Certified second intentional reset; inspect edge-rest advice manually |
+| C09 | Apply | Use sand placement to plan the next shot | Certified |
+| C10 | Exam | Bumper + sand + reverse finish | Certified Block 1 finale |
+| C11 | Teach | Ice changes stopping distance | Current candidate uses one short crossable ice band + grass braking |
+| C12 | Apply | Repeat ice stopping/setup control | Current candidate uses two staggered short bands separated by grass |
+| C13 | Teach | Booster alignment | Current Full model already strong; leave unchanged unless regression appears |
 
-### Block 1 target rhythm
+### Block 1 rhythm
 
-`easy → easy+ → medium → peak → reset → medium → medium+ → reset → medium+ → exam`
+`easy → easy+ → medium → peak → reset → application → exam → reset → application → exam`
 
-Do not make C05 harder just to remove the C04→C05 numerical dip. If C05 teaches bumpers cleanly, the reset is desirable. Improve execution margin and mechanic relevance first.
+Do not make C05 artificially hard just to remove the C04→C05 numerical dip. The reset is part of teaching a new mechanic.
 
-### Block 2 target rhythm
+### Block 2 current rhythm
 
 `ice teach → ice apply → booster teach → booster apply → combine → exam`
 
-C11–13 are not expected to continue C10's raw difficulty. They start a new learning wave. However, a mastery HIO should demonstrate the mechanic rather than bypass it accidentally.
+C11–13 are allowed to reset raw difficulty after C10. They still need strategic purpose and safe stopping behaviour; do not convert a teaching hole into a precision gate merely to make a graph monotonic.
 
 ## HARD · current structure
 
-HARD should not mean pixel-perfect. Its identity is **surprise on the first attempt, understanding on the second**.
+HARD should mean **surprise first attempt, understanding second attempt**, not pixel-perfect execution.
 
 | Hole | Role | Troll lesson | Direction |
 |---|---|---|---|
-| H01 | Teach troll language | Obvious lane closes | Learned route must be broad enough for touch |
-| H02 | Apply | Obvious lane wakes a bumper | Slightly more demanding than H01 |
-| H03 | Escalate | False bridge / floor collapse | Learned escape should remain fair |
-| H04 | Combine | Two-stage gate joke | Tests adaptation after the first reveal |
+| H01 | Teach troll language | Obvious lane closes | Next review target after Batch C; baseline learned route is too narrow on touch |
+| H02 | Apply | Obvious lane wakes a bumper | Leave unless Full evidence shows a real problem |
+| H03 | Escalate | False bridge / floor collapse | RC5.1 accepted regression baseline; do not casually retune |
+| H04 | Combine | Two-stage gate joke | Leave unless Full evidence shows a real problem |
 | H05 | Exam | Ambush + moving crossing + final guard | Current chapter finale |
 
-Target HARD rhythm: `surprise tutorial → application → stronger trap → chained trap → chapter exam`.
+Target rhythm: `surprise tutorial → application → stronger trap → chained trap → chapter exam`.
 
 ## Level quality rule
 
@@ -56,61 +56,50 @@ A level is ready when:
 2. the primary mechanic affects a strong route rather than acting as decoration;
 3. touch execution is forgiving enough that knowledge matters more than finger precision;
 4. failure is understandable and recovery is usually possible;
-5. the 3-star route expresses mastery of the level's lesson;
+5. the 3-star route expresses mastery rather than a fragile accidental line;
 6. it adds something different from neighbouring holes;
-7. its difficulty role makes sense in the learning wave.
+7. its difficulty role makes sense in the current learning wave;
+8. Full Audit shows no unresolved blocker/review that directly contradicts that role.
 
-## Review method
+## Batch status
 
-Do **not** tune single levels from fast/noisy model output. Work in small batches and certify each batch with the full model over the entire campaign.
+### Batch A · C01–05 — CLOSED
 
-### Batch A — Classic 01–05
+No geometry changes required. Full evidence supported the authored roles.
 
-Questions:
+### Batch B · C06–10 — CLOSED
 
-- Is C01 a genuinely forgiving opener?
-- Does C02 apply the first lesson without becoming easier by accident?
-- Is C03 readable and tolerant on touch?
-- Does C04 earn its role as the first placement exam?
-- Does C05 introduce bumpers cleanly, with a mastery route that uses the mechanic rather than precision cheese?
+Only C06 required a design change. Accepted Full result after the bumper-route correction:
 
-### Batch B — Classic 06–10
+- touch 86%;
+- casual 77%;
+- tolerance 85%;
+- human score 86%;
+- recovery 100%;
+- mechanic-relevance warning removed;
+- PASS.
 
-Questions:
+### Batch C · C11–13 — IN PROGRESS
 
-- Is C06's bumper actually relevant to a strong human route?
-- Does C07 test geometry without a precision spike?
-- Is C08 a deliberate sand tutorial/reset?
-- Does C09 meaningfully apply sand placement?
-- Does C10 feel like an earned chapter exam rather than edge-rest frustration?
+C13 already has strong human margins. C11/C12 were REVIEW because random/recovery shots could remain moving on large ice regions long enough to hit the simulation timeout.
 
-### Batch C — Classic 11–13
+First reduced-lake pass improved execution but retained timeout risk:
 
-Questions:
+- C11: touch 97%, tolerance 75%, timeout 11%;
+- C12: touch 95%, tolerance 68%, timeout 14%.
 
-- Does C11 teach ice through stopping-distance strategy rather than a broad bypass HIO?
-- Does C12 apply ice without long timeout/stalling outcomes?
-- Does C13 introduce booster alignment with a comfortable human window?
+Current candidate replaces those lakes with short ice bands and grass braking. Close the batch only from the next completed Full Audit.
 
-### Batch D — HARD 01–05
+### Batch D · H01–05 — NEXT
 
-Questions:
+Start with H01 only. Do not mix HARD edits into Batch C. H02–H05 remain unchanged unless their own Full evidence justifies intervention.
 
-- H01: broad learned route + reliable first-attempt bait.
-- H02: surprise is readable afterwards and learned execution is not narrow.
-- H03: preserve the accepted RC5.1 regression fix.
-- H04: chained surprise remains fair after learning.
-- H05: finale can be demanding, but knowledge must matter more than precision.
+## After existing-level certification
 
-## Certification rule
+Only after A–D are closed:
 
-After changes to a batch:
-
-1. run the **Full adversarial campaign audit**;
-2. run `audit:human:full`;
-3. run design difficulty/originality analysis;
-4. run originality audit;
-5. inspect the complete report, including levels outside the edited batch;
-6. retain the batch only if there are no regressions that undermine campaign quality.
-
-Once all four existing batches are individually strong, do a separate progression/order pass. Only then start adding more authored levels, again in small Full-Audit-certified groups.
+1. compare authored order with Audit difficulty, real-beta completion/abandonment and player feedback;
+2. reorder only if progression evidence supports it and save compatibility can be preserved safely;
+3. author additional levels in small groups;
+4. Full Audit each group;
+5. promote the closed candidate to `dev` for real human beta testing.
