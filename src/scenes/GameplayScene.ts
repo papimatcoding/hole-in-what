@@ -5,7 +5,7 @@ import { cosmeticById, type CosmeticDefinition } from "../data/cosmetics";
 import { levelFor, levelsForMode } from "../data/campaign";
 import { AudioFeedback, type FeedbackSound } from "../systems/AudioFeedback";
 import { openBetaReport } from "../systems/BetaReportOverlay";
-import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
+import { BetaTelemetry, type BetaInputKind, type BetaShotOutcome } from "../systems/BetaTelemetrySystem";
 import { drawBall } from "../systems/CosmeticRenderer";
 import { drawCourse, drawDynamicCourse } from "../systems/CourseRenderer";
 import {
@@ -20,9 +20,20 @@ import { formatRequirement, starsForRun } from "../systems/StarScoring";
 import type { GameSceneData, LevelDefinition } from "../types";
 
 interface TrailParticle { x:number;y:number;life:number;maxLife:number;size:number; }
+interface PendingShotTelemetry {
+  index:number;
+  inputKind:BetaInputKind;
+  startX:number;
+  startY:number;
+  angleDeg:number;
+  power:number;
+  startedAt:number;
+  eventKinds:Set<string>;
+}
 
 const BALL_R=GOLF_PHYSICS.ballRadius;
 const AIR_VISUAL_SCALE=.18;
+// Legacy key intentionally retained so the Hole in What? rename does not replay onboarding for existing testers.
 const CONTROL_TUTORIAL_KEY="troll-golf-control-onboarding-v1";
 
 export class GameplayScene extends Phaser.Scene {
@@ -55,6 +66,9 @@ export class GameplayScene extends Phaser.Scene {
   private trail:TrailParticle[]=[];
   private trailClock=0;
   private soundCooldown=new Map<FeedbackSound,number>();
+  private attemptId:string|null=null;
+  private attemptResolved=false;
+  private pendingShot:PendingShotTelemetry|null=null;
 
   constructor(){super("game");}
 
@@ -69,7 +83,9 @@ export class GameplayScene extends Phaser.Scene {
     setupDesignCamera(this);
     this.cameras.main.setBackgroundColor("#0b0f14");
     this.strokes=0;this.voids=0;this.startedAt=performance.now();this.sinking=false;this.voidAnimating=false;this.reportOpen=false;this.trail=[];this.trailClock=0;this.soundCooldown.clear();
-    if(BETA_TESTING)BetaTelemetry.beginAttempt(this.level.id);
+    this.attemptId=null;this.attemptResolved=false;this.pendingShot=null;
+    if(BETA_TESTING)this.attemptId=BetaTelemetry.beginAttempt(this.level.id,this.mode);
+    this.events.once("shutdown",()=>this.closeAttempt("scene-exit",false));
 
     const equipped=SaveSystem.cosmetics().equipped;
     this.ballCosmetic=cosmeticById(equipped.ball)??cosmeticById("ball-classic")!;
@@ -105,7 +121,10 @@ export class GameplayScene extends Phaser.Scene {
     this.timeText.setText(`${((performance.now()-this.startedAt)/1000).toFixed(1)} s`);
     if(this.tutorialCard||this.voidAnimating){this.updateHudOcclusion();drawDynamicCourse(this.dynamic,this.level,time/1000);return;}
     const dt=Math.min(deltaMs/1000,.033);
-    if(this.sim.state.moving)this.consume(this.sim.step(dt));
+    if(this.sim.state.moving){
+      this.consume(this.sim.step(dt));
+      if(!this.sim.state.moving&&this.pendingShot&&!this.voidAnimating&&!this.sinking)this.finishShotTelemetry("rest");
+    }
     this.updateTrail(dt);this.updateBallView();this.updateHudOcclusion();drawCourse(this.course,this.level,this.sim.state);drawDynamicCourse(this.dynamic,this.level,time/1000);
   }
 
@@ -176,9 +195,20 @@ export class GameplayScene extends Phaser.Scene {
   private pointerUp(pointer:Phaser.Input.Pointer):void{
     if(!this.dragPointer||this.reportOpen||this.sim.state.moving||this.sinking)return;
     const p=pointerToDesign(this,pointer),b=this.sim.state.ball,pull=resolveShotPull(b,p);this.dragPointer=null;this.aim.clear();
-    if(pull.length<12)return;const angle=Math.atan2(pull.dy,pull.dx),power=pull.power;if(!this.sim.launch(angle,power))return;
-    this.strokes+=1;this.strokeText.setText(`Golpes ${this.strokes}`);this.hideControlHint();try{localStorage.setItem(CONTROL_TUTORIAL_KEY,"1");}catch{/* optional */}
-    AudioFeedback.play("shot",.65+power*.45);this.impact(b.x,b.y,0xcbe8ff,18,.35);
+    if(pull.length<12)return;
+    const angle=Math.atan2(pull.dy,pull.dx),power=pull.power,startX=b.x,startY=b.y;
+    if(!this.sim.launch(angle,power))return;
+    this.strokes+=1;
+    if(BETA_TESTING&&this.attemptId){
+      const angleDeg=(Phaser.Math.RadToDeg(angle)+360)%360;
+      this.pendingShot={index:this.strokes,inputKind:this.pointerInputKind(pointer),startX,startY,angleDeg,power,startedAt:performance.now(),eventKinds:new Set()};
+    }
+    this.strokeText.setText(`Golpes ${this.strokes}`);this.hideControlHint();try{localStorage.setItem(CONTROL_TUTORIAL_KEY,"1");}catch{/* optional */}
+    AudioFeedback.play("shot",.65+power*.45);this.impact(startX,startY,0xcbe8ff,18,.35);
+  }
+  private pointerInputKind(pointer:Phaser.Input.Pointer):BetaInputKind{
+    const kind=(pointer.event as PointerEvent|undefined)?.pointerType;
+    return kind==="touch"||kind==="mouse"||kind==="pen"?kind:"unknown";
   }
   private drawAim(x:number,y:number):void{
     const b=this.sim.state.ball,pullData=resolveShotPull(b,{x,y});if(pullData.length<.001){this.aim.clear();return;}const pull=Math.min(pullData.length,GOLF_PHYSICS.maxPull/GOLF_PHYSICS.dragGain);
@@ -188,6 +218,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private consume(events:SimulationEvent[]):void{
     for(const e of events){
+      this.pendingShot?.eventKinds.add(e.kind);
       if(e.kind==="wall-hit")this.feedback(e,"wall",0xb7cad8,18,.00055);
       else if(e.kind==="bumper-hit")this.feedback(e,"bumper",0xffcf78,27,.00115);
       else if(e.kind==="surface-sand")this.playFeedbackSound("sand",120);
@@ -197,11 +228,24 @@ export class GameplayScene extends Phaser.Scene {
       else if(e.kind==="moving-hit")this.feedback(e,"bumper",0xbdd7e5,25,.0009);
       else if(e.kind==="ramp"||e.kind==="trampoline")this.feedback(e,"jump",0xd9f5ff,25,.00065);
       else if(e.kind==="landing")this.feedback(e,"land",0xeaf8ff,22,.0004);
-      else if(e.kind==="void"){this.voids+=1;this.feedback(e,"void",0x5a7182,34,.00145);this.startVoidReset();}
+      else if(e.kind==="void"){this.voids+=1;this.finishShotTelemetry("void");this.feedback(e,"void",0x5a7182,34,.00145);this.startVoidReset();}
       else if(e.kind==="trap-wall"||e.kind==="trap-bumper"||e.kind==="trap-void")this.feedback(e,"trap",0xf0b869,36,.00165);
       else if(e.kind==="hole-lip")this.feedback(e,"lip",0xf1e7b7,22,.0005);
-      else if(e.kind==="hole"){this.playFeedbackSound("hole",0);this.finishHole();}
+      else if(e.kind==="hole"){this.finishShotTelemetry("hole");this.playFeedbackSound("hole",0);this.finishHole();}
     }
+  }
+  private finishShotTelemetry(outcome:BetaShotOutcome):void{
+    const shot=this.pendingShot,attemptId=this.attemptId;
+    if(!BETA_TESTING||!shot||!attemptId)return;
+    this.pendingShot=null;
+    const b=this.sim.state.ball,durationMs=Math.min(120000,Math.max(0,Math.round(performance.now()-shot.startedAt)));
+    void BetaTelemetry.submitShot({attemptId,levelId:this.level.id,mode:this.mode,shotIndex:shot.index,inputKind:shot.inputKind,startX:shot.startX,startY:shot.startY,angleDeg:shot.angleDeg,power:shot.power,endX:b.x,endY:b.y,durationMs,outcome,eventKinds:[...shot.eventKinds]});
+  }
+  private closeAttempt(exitReason:string,completed:boolean):void{
+    const attemptId=this.attemptId;
+    if(!BETA_TESTING||!attemptId||this.attemptResolved)return;
+    this.attemptResolved=true;
+    void BetaTelemetry.endAttempt({attemptId,levelId:this.level.id,mode:this.mode,completed,exitReason,strokes:this.strokes,timeMs:Math.max(0,Math.round(performance.now()-this.startedAt)),voids:this.voids});
   }
   private feedback(e:SimulationEvent,sound:FeedbackSound,color:number,radius:number,shake:number):void{this.playFeedbackSound(sound,sound==="wall"?65:95);this.impact(e.x,e.y,color,radius,.62);this.cameras.main.shake(32,shake);}
   private playFeedbackSound(sound:FeedbackSound,cooldownMs:number):void{const now=performance.now(),until=this.soundCooldown.get(sound)??0;if(now<until)return;AudioFeedback.play(sound);if(cooldownMs>0)this.soundCooldown.set(sound,now+cooldownMs);}
@@ -213,6 +257,7 @@ export class GameplayScene extends Phaser.Scene {
   }
   private finishHole():void{
     if(this.sinking)return;this.sinking=true;this.dragPointer=null;this.aim.clear();this.holeFx();const timeMs=Math.round(performance.now()-this.startedAt),stars=starsForRun(this.level,this.strokes,timeMs);
+    this.closeAttempt("completed",true);
     const telemetry={trapsTriggered:[...this.sim.state.triggeredTraps],mechanicsUsed:[...this.sim.state.touchedMechanics],voids:this.voids};
     this.tweens.add({targets:this.ballView,x:this.level.hole.x,y:this.level.hole.y,scale:.06,alpha:0,duration:350,ease:"Cubic.easeOut",onComplete:()=>this.time.delayedCall(90,()=>this.scene.start("results",{mode:this.mode,levelIndex:this.levelIndex,levelId:this.level.id,strokes:this.strokes,timeMs,stars,...telemetry}))});
   }
