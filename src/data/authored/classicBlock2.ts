@@ -8,20 +8,21 @@ import { base, path, pt, r } from "./authoring";
  * accept them. Block 1 lives in classic.ts.
  */
 
-// 11 — First ice lesson. The ice runway still makes normal grass power travel much farther, but
-// grass before/after the surface now acts as a natural braking zone. The lesson stays about reading
-// stopping distance rather than waiting for a long low-friction roll to time out.
+// 11 — First ice lesson. A single crossable ice band teaches that the same power carries much
+// farther on ice, while grass on every side guarantees a natural braking zone. The surface is
+// deliberately a band rather than a lake so a bad horizontal/random shot cannot roll on ice for
+// most of the field and hit the simulation timeout.
 const c11=base("classic",11,pt(110,840),pt(420,160),2,3,"ice");
-c11.ice=[r(82,578,376,118)];
+c11.ice=[r(224,596,244,84)];
 c11.walls=[r(28,390,360,24)];
 path(c11,pt(400,640),pt(420,470),pt(420,340),pt(420,160));
 
-// 12 — Ice application through a broad setup shot. The lake is still wide enough that the useful
-// diagonal must account for ice, while a larger grass landing/braking area lets imperfect shots
-// settle and be recovered instead of remaining in motion for an excessive time.
+// 12 — Ice application. Two short staggered bands turn stopping distance into a repeated setup
+// decision without creating one giant low-friction lake. The grass gap between them gives imperfect
+// shots somewhere to settle and makes the second ice contact a deliberate application of C11.
 const c12=base("classic",12,pt(420,842),pt(110,154),2,3,"ice");
 c12.walls=[r(220,330,292,24),r(196,330,24,180)];
-c12.ice=[r(96,562,360,138)];
+c12.ice=[r(258,642,196,78),r(92,506,188,76)];
 path(c12,pt(140,620),pt(150,470),pt(160,300),pt(110,154));
 
 // 13 — First booster lesson. Entering the pad on a useful line turns acceleration into a
