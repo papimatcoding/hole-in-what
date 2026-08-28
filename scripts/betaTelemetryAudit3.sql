@@ -1,13 +1,15 @@
 -- Hole in What? · Audit V3 human telemetry snapshot
 --
 -- Server/admin aggregate input for scripts/audit3.ts. No tester IDs are returned.
--- The developer smoke alias Matkiller is excluded so model calibration uses external beta behaviour.
+-- Developer/self-test aliases are excluded so model calibration uses external beta behaviour:
+-- legacy `Matkiller` plus the explicit `DEV |...` naming convention used by current smoke sessions.
 -- Stale attempts are counted after 10 minutes.
 
 with eligible_testers as (
   select tester_id,device_class
   from public.beta_testers
   where coalesce(alias,'') <> 'Matkiller'
+    and coalesce(alias,'') not like 'DEV |%'
 ),
 attempt_base as (
   select a.*,coalesce(t.device_class,'unknown') as device_class
@@ -121,7 +123,7 @@ rows as (
 )
 select jsonb_build_object(
   'generatedAt',now(),
-  'exclusions',jsonb_build_array('alias:Matkiller'),
+  'exclusions',jsonb_build_array('alias:Matkiller','alias-prefix:DEV |'),
   'levels',coalesce(jsonb_agg(to_jsonb(rows) order by build_id,mode,level_id),'[]'::jsonb)
 ) as audit3_human_snapshot
 from rows;
