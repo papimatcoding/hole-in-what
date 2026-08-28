@@ -112,14 +112,20 @@ export class ResultsScene extends Phaser.Scene{
   private openFeedback():void{
     if(this.feedbackPanel)return;const children:Phaser.GameObjects.GameObject[]=[];children.push(this.add.rectangle(270,480,540,960,0x05080b,.82).setInteractive(),this.add.rectangle(270,480,430,450,0x111a22,.99).setStrokeStyle(2,0x405668),this.add.text(270,292,"REPORTE RÁPIDO",{fontFamily:"system-ui",fontSize:uiFontSize(17,2),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5),this.add.text(270,324,"1 toque. Nota sólo si eliges OTRO.",{fontFamily:"system-ui",fontSize:uiFontSize(10,2),color:"#8da0ad"}).setOrigin(.5));
     const choices:[string,BetaFeedbackCategory][]=[["BUG","bug"],["MUY FÁCIL","too-easy"],["MUY DIFÍCIL","too-hard"],["REPETITIVO","repetitive"],["OBJETO SOBRA","object"],["OTRO","other"]];
-    choices.forEach(([label,category],i)=>{const x=170+(i%2)*200,y=386+Math.floor(i/2)*68,bg=this.add.rectangle(x,y,178,54,0x1a2731).setStrokeStyle(1,0x496173).setInteractive({useHandCursor:true});const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:uiFontSize(11,2),fontStyle:"bold",color:"#dfe9ef"}).setOrigin(.5);children.push(bg,t);bg.on("pointerdown",()=>{bg.setScale(.98);t.setScale(.98);}).on("pointerout",()=>{bg.setScale(1);t.setScale(1);}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);void this.saveFeedback(category);});});
+    choices.forEach(([label,category],i)=>{const x=170+(i%2)*200,y=386+Math.floor(i/2)*68,bg=this.add.rectangle(x,y,178,54,0x1a2731).setStrokeStyle(1,0x496173).setInteractive({useHandCursor:true});const t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:uiFontSize(11,2),fontStyle:"bold",color:"#dfe9ef"}).setOrigin(.5);children.push(bg,t);bg.on("pointerdown",()=>{bg.setScale(.98);t.setScale(.98);}).on("pointerout",()=>{bg.setScale(1);t.setScale(1);}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);if(category==="other")this.openFeedbackNote(category);else void this.saveFeedback(category,"");});});
     this.feedbackCloseButton(children,270,626,"CERRAR",()=>this.closeFeedback());this.feedbackPanel=this.add.container(0,0,children).setDepth(220);
   }
-  private async saveFeedback(category:BetaFeedbackCategory):Promise<void>{
-    const note=category==="other"?(window.prompt("Cuéntanos qué pasó","")??""):"";
-    BetaFeedbackSystem.add({levelId:this.resultData.levelId,mode:this.resultData.mode,levelIndex:this.resultData.levelIndex,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs},category,note);
+  private openFeedbackNote(category:BetaFeedbackCategory):void{
+    this.closeFeedback();const children:Phaser.GameObjects.GameObject[]=[];
+    children.push(this.add.rectangle(270,480,540,960,0x05080b,.84).setInteractive(),this.add.rectangle(270,480,430,430,0x111a22,.99).setStrokeStyle(2,0x405668),this.add.text(270,324,"CUÉNTANOS QUÉ PASÓ",{fontFamily:"system-ui",fontSize:uiFontSize(16,2),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5),this.add.text(270,354,"Detalle opcional · máximo 400 caracteres",{fontFamily:"system-ui",fontSize:uiFontSize(10,2),color:"#8da0ad"}).setOrigin(.5));
+    const area=document.createElement("textarea");area.maxLength=400;area.placeholder="Escribe aquí…";area.setAttribute("aria-label","Detalle del reporte");Object.assign(area.style,{width:"330px",height:"126px",resize:"none",boxSizing:"border-box",border:"1px solid #496173",borderRadius:"8px",background:"#0d151b",color:"#e5eef3",padding:"12px",font:"14px system-ui",outline:"none"});
+    children.push(this.add.dom(270,446,area));this.feedbackCloseButton(children,170,590,"CANCELAR",()=>{this.closeFeedback();this.openFeedback();});this.feedbackCloseButton(children,370,590,"ENVIAR",()=>{void this.saveFeedback(category,area.value);});this.feedbackPanel=this.add.container(0,0,children).setDepth(240);this.time.delayedCall(50,()=>area.focus());
+  }
+  private async saveFeedback(category:BetaFeedbackCategory,note:string):Promise<void>{
+    const cleanNote=note.trim().slice(0,400);
+    BetaFeedbackSystem.add({levelId:this.resultData.levelId,mode:this.resultData.mode,levelIndex:this.resultData.levelIndex,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs},category,cleanNote);
     this.closeFeedback();
-    const sent=await BetaTelemetry.submitReport({levelId:this.resultData.levelId,mode:this.resultData.mode,category,note,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs});
+    const sent=await BetaTelemetry.submitReport({levelId:this.resultData.levelId,mode:this.resultData.mode,category,note:cleanNote,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs});
     this.toast(sent?"✓ REPORTE ENVIADO":"✓ GUARDADO LOCAL · SIN RED",true);
   }
   private closeFeedback():void{this.feedbackPanel?.destroy(true);this.feedbackPanel=null;}
