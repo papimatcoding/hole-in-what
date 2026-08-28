@@ -10,10 +10,10 @@ const READ_KEY="troll-golf-last-read-patch-v1";
 
 export const PATCH_NOTES:PatchNote[]=[
   {
-    id:"friends-rc6",
-    title:"FRIENDS BETA RC6",
+    id:"beta-rc6",
+    title:"BETA RC6",
     date:"28 AGO 2026",
-    summary:"Nuevos hoyos y mejoras para probar la beta.",
+    summary:"Nuevos hoyos y mejoras para seguir probando la beta.",
     bullets:[
       "Añadidos Classic 11–13 con hielo y boosters.",
       "Arreglados los campos de nombre y comentarios.",
@@ -22,8 +22,8 @@ export const PATCH_NOTES:PatchNote[]=[
     ]
   },
   {
-    id:"friends-ui-polish-1",
-    title:"FRIENDS BETA · UI",
+    id:"beta-ui-polish-1",
+    title:"BETA · UI",
     date:"27 AGO 2026",
     summary:"Mejoras de interfaz.",
     bullets:[
@@ -33,8 +33,8 @@ export const PATCH_NOTES:PatchNote[]=[
     ]
   },
   {
-    id:"friends-rc5-1",
-    title:"FRIENDS BETA RC5.1",
+    id:"beta-rc5-1",
+    title:"BETA RC5.1",
     date:"27 AGO 2026",
     summary:"Ajustes y correcciones.",
     bullets:[
@@ -43,8 +43,8 @@ export const PATCH_NOTES:PatchNote[]=[
     ]
   },
   {
-    id:"friends-rc5",
-    title:"FRIENDS BETA RC5",
+    id:"beta-rc5",
+    title:"BETA RC5",
     date:"27 AGO 2026",
     summary:"Mejoras de perfil y Community Maps.",
     bullets:[
@@ -54,8 +54,8 @@ export const PATCH_NOTES:PatchNote[]=[
     ]
   },
   {
-    id:"friends-rc4",
-    title:"FRIENDS BETA RC4",
+    id:"beta-rc4",
+    title:"BETA RC4",
     date:"27 AGO 2026",
     summary:"Mejoras generales de la beta.",
     bullets:[
@@ -65,8 +65,8 @@ export const PATCH_NOTES:PatchNote[]=[
     ]
   },
   {
-    id:"friends-rc3",
-    title:"FRIENDS BETA RC3",
+    id:"beta-rc3",
+    title:"BETA RC3",
     date:"27 AGO 2026",
     summary:"Gran actualización de Community Maps.",
     bullets:[
@@ -76,10 +76,10 @@ export const PATCH_NOTES:PatchNote[]=[
     ]
   },
   {
-    id:"friends-rc2",
-    title:"FRIENDS BETA RC2",
+    id:"beta-rc2",
+    title:"BETA RC2",
     date:"27 AGO 2026",
-    summary:"Primeras mejoras para la beta con amigos.",
+    summary:"Primeras mejoras de la beta.",
     bullets:[
       "Añadidos reportes dentro de los niveles.",
       "Añadido contador aproximado de jugadores online.",
