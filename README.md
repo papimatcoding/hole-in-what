@@ -12,11 +12,10 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 
 - Public Pages: `https://papimatcoding.github.io/troll-golf/`
 - Pages source: `dev`
-- current public `dev` HEAD: `9816d0044f8acb4f01b8d850544c0eb7caf39d94`
-- current promotion: PR #8, **BETA UX hotfix · editable fields + ES/EN**
+- current public **runtime code** head: `9816d0044f8acb4f01b8d850544c0eb7caf39d94`
+- runtime promotion: PR #8, **BETA UX hotfix · editable fields + ES/EN**
 - post-merge `dev` CI: run `33167542495` — **SUCCESS**
 - post-merge Pages deploy: run `33167542462` — **SUCCESS**
-- previous pre-UX docs/runtime head: `a87ef6d080f0023d918f36a9f726a082ef1a2763`
 - emergency rollback anchor before RC6 campaign promotion: `8075b162dc2b3e7b73b2fd0d36e6fbc5248120f4`
 - maintenance: **OFF**
 - backend patch label: **BETA RC6**
@@ -24,13 +23,13 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 - live campaign: **Classic 01–13 + HARD 01–05**
 - product name: **Hole in What?**
 
-Do not rename the repository or Pages path during RC6. Legacy `troll-golf-*` localStorage keys intentionally remain stable so existing anonymous beta identity/progression is not reset.
+Documentation-only commits may move the `dev` branch SHA beyond the runtime-code SHA above without changing the deployed game code. Do not rename the repository or Pages path during RC6. Legacy `troll-golf-*` localStorage keys intentionally remain stable so existing anonymous beta identity/progression is not reset.
 
 The original RC6 campaign promotion landed as `e90bf9b194044fb7af86a73e282a81bdc3133a9d`. Before the independent cohort started, approved direct-`dev` hotfixes corrected boot branding, expanded post-hole originality/difficulty ratings to true 1–5 controls and made HARD previews spoiler-safe. After that pre-cohort exception, use the normal feature flow again.
 
 ### RC6 UX/i18n unblock — MERGED
 
-PR #8 is now on public `dev`. It was presentation/UI-only and did not change campaign geometry, physics, save schema, Supabase schema or beta build ID.
+PR #8 is on public `dev`. It was presentation/UI-only and did not change campaign geometry, physics, save schema, Supabase schema or beta build ID.
 
 It adds/fixes:
 
@@ -43,36 +42,17 @@ It adds/fixes:
 - Spanish default for fresh Spanish/Catalan browser locales and English otherwise;
 - translated normal external-tester flow: menu, campaign navigation/objectives, gameplay onboarding/tutorials, results/feedback, profile/support, global survey and Community browsing/play/comments/reports.
 
-Artificial checks and deployment are green. The remaining acceptance gate for this change is **real browser validation on mobile/touch and desktop** because CI cannot prove DOM visibility, focus, keyboard behavior or readable localisation.
+Artificial checks and deployment are green. The remaining acceptance gate is **real browser validation on mobile/touch and desktop** because CI cannot prove DOM visibility, focus, keyboard behavior or readable localisation.
 
-## Official workflow — CLOSED
+## Workflow
 
 **`feature/**` → `dev` (public BETA / human validation) → `main` (official release)**
 
-### `feature/**`
+- `feature/**`: all active development and artificial acceptance. Use technical smoke for normal changes and Full Audit for campaign/simulation/design-affecting work. No public Pages deployment.
+- `dev`: public beta. Humans validate real touch/mouse behavior, readability, fun, fairness and forms. Once external cohort testing starts, do not use it as an exploratory scratchpad.
+- `main`: official shipped state only. Promote accepted `dev` when content and polish justify a real release.
 
-All active development and artificial acceptance happen here.
-
-- implement/fix levels, mechanics, UI, telemetry and internal tooling;
-- technical smoke for normal changes;
-- Full Audit for campaign/simulation/design-affecting work;
-- no human pre-merge gate;
-- no public Pages deployment.
-
-### `dev`
-
-Public developer/beta build and Pages source.
-
-- receives feature work after artificial checks pass;
-- humans validate real touch/mouse behavior, readability, fun, fairness and forms;
-- telemetry + qualitative feedback expose failures artificial models cannot prove;
-- once external cohort testing starts, do not use `dev` as an exploratory scratchpad.
-
-If humans find an issue on `dev`, create a **new `feature/**` fix**, pass the relevant artificial gates, then promote it back to `dev`.
-
-### `main`
-
-Official shipped state only. Promote accepted `dev` when content and polish are sufficient for a real release. There is no normal `release/**` stage. See `docs/release-process.md`.
+Any human-discovered problem on `dev` returns to a new `feature/**` branch, passes the relevant artificial gates and is then promoted back to `dev`. There is no normal `release/**` stage; see `docs/release-process.md`.
 
 ## Campaign artificial certification — CLOSED
 
@@ -97,9 +77,7 @@ Key final synthetic metrics:
 - H01 touch 95%, casual 82%, tolerance 78%, human 89%, recovery 94%, trap consequence 66%;
 - H03 touch 89%, casual 77%, tolerance 72%, human 83%, recovery 100%, trap 80%.
 
-Campaign order remains intentional. C04→C05 and C10→C11 are teaching resets, not automatic balance errors. Human beta may still reject any level.
-
-Full history: `docs/campaign-audit-2026-08-28.md` and `docs/campaign-progression.md`.
+Campaign order remains intentional. C04→C05 and C10→C11 are teaching resets, not automatic balance errors. Human beta may still reject any level. Full history: `docs/campaign-audit-2026-08-28.md` and `docs/campaign-progression.md`.
 
 ## Audit policy
 
@@ -122,25 +100,15 @@ Core authorities:
 - `scripts/audit2Design.ts` — difficulty/design advice;
 - `scripts/courseOriginalityAudit.ts` — structural originality.
 
-Permanent rule: keep the known-bad RC5 HARD03 fixture against accepted RC5.1 so future model calibration cannot regress silently.
+Keep the known-bad RC5 HARD03 fixture against accepted RC5.1 permanently so future model calibration cannot regress silently.
 
 > Mathematical solution ≠ synthetic human model ≠ real human validation.
 
-## Audit V3 — active internal model work
+## Audit V3 — active shadow work
 
-Separate branch: **`feature/audit-v3`**. Draft PR #7: **Audit V3 · troll cognition + human/map intelligence**. Keep it in shadow mode while calibration continues.
+Separate branch: **`feature/audit-v3`**. Draft PR #7: **Audit V3 · troll cognition + human/map intelligence**. Do not merge it solely because RC6 beta is live.
 
-V3 adds:
-
-- blind / curious / suspicious belief agents without privileged `designPath` or hidden-trigger knowledge;
-- HARD lifecycle reasoning: bait → consequence → comprehension → mastery;
-- bait strength, consequence, causal clarity, learned fairness, bypass resistance, trap originality, knowledge-gain potential and advisory Troll Score;
-- tooling-only troll intent (`soft`, `hard`, `terminal`);
-- possible accidental terminal/softlock detection;
-- map intelligence: visible/hazard/hidden footprint, connectivity, spatial entropy, symmetry, density/layout context and structural-neighbour similarity;
-- human/artificial metric fusion where synthetic execution is a prior and real beta evidence increasingly dominates with sample size;
-- explicit model-vs-human disagreement as a diagnostic;
-- anonymised beta aggregates including first attempt vs retry, mobile vs desktop and coarse first-shot route clusters.
+V3 adds blind/curious/suspicious belief agents, HARD bait→consequence→comprehension→mastery reasoning, troll-quality metrics, accidental terminal detection, map intelligence, human/artificial metric fusion and anonymised first-attempt/retry/device/route-cluster aggregates.
 
 First full V3 shadow calibration: run `33164327421` — **SUCCESS**.
 
@@ -150,23 +118,19 @@ First full V3 shadow calibration: run `33164327421` — **SUCCESS**.
 - HARD advisory scores: H01 83, H02 74, H03 87, H04 60, H05 78;
 - H04 emitted `WEAK_CONSEQUENCE:15%`, currently treated as a **model limitation**, not a geometry defect: H04 has chained consequence and V3 currently overweights immediate post-trigger displacement.
 
-Next V3 calibration work: **consequence look-ahead / chained-state reasoning**, then memory across attempts. Longer-term enabling architecture: a shared declarative **Trigger → Action** world-state engine consumed by runtime and Audit V3.
-
-Do not alter H04 geometry merely to satisfy the current V3 proxy.
+Next V3 calibration work: **consequence look-ahead / chained-state reasoning**, then memory across attempts. Longer-term enabling architecture: a shared declarative **Trigger → Action** world-state engine consumed by runtime and Audit V3. Do not alter H04 geometry merely to satisfy the current proxy.
 
 ## Physics authority
 
 `src/systems/GolfSimulation.ts` is the single physics authority for campaign, audits and Community Maps. Phaser owns rendering/input/audio/haptics/FX and must not implement a second gameplay physics model.
 
-Core constants currently include ball radius 13, max pull 172, power 7.4, grass friction 0.9875, ice friction 0.9982, sand friction 0.955 and stop speed 18.
-
-Procedural generation is tooling only, never campaign fallback content.
+Core constants currently include ball radius 13, max pull 172, power 7.4, grass friction 0.9875, ice friction 0.9982, sand friction 0.955 and stop speed 18. Procedural generation is tooling only, never campaign fallback content.
 
 ## Anonymous beta telemetry
 
 Detailed contract: `docs/beta-telemetry.md`.
 
-Current RC6 personal smoke snapshot in Supabase, all from alias `Matkiller`:
+Latest RC6 personal smoke snapshot in Supabase, all from alias `Matkiller`:
 
 - **33 attempts**;
 - **10 completed attempts**;
@@ -178,7 +142,7 @@ Current RC6 personal smoke snapshot in Supabase, all from alias `Matkiller`:
 
 Exclude `Matkiller` when calibrating against independent external players unless developer/self-test behavior is intentionally being studied.
 
-### Telemetry linkage — exact contract
+### Exact telemetry linkage
 
 The client generates one anonymous attempt UUID per level attempt.
 
@@ -187,25 +151,15 @@ The client generates one anonymous attempt UUID per level attempt.
 - completed/abandoned summary state is written back to the same `beta_attempts` row;
 - `beta_runs` is a parallel completed-result record used for leaderboard/result aggregates.
 
-**Important correction:** `beta_runs` currently has **no `attempt_id` column**, so it is not directly FK/key-linked to `beta_attempts`. The run upload sends an `attemptId` to the Edge Function, but that ID is currently used to update the completed attempt row rather than being persisted on `beta_runs`.
+**Important correction:** `beta_runs` currently has **no `attempt_id` column**. The run upload sends an `attemptId` to the Edge Function, but that ID is currently used to update the completed attempt row rather than being persisted on `beta_runs`.
 
-Therefore do not describe the database contract as a literal `attempt → shots → run` foreign-key chain. Direct traceability is currently **attempt ↔ shots**, plus completed-attempt summary and a parallel run record. If a future analysis genuinely needs exact run-row linkage, add it deliberately through a reviewed Supabase schema/function change instead of assuming it already exists.
+Do not describe the database as a literal `attempt → shots → run` foreign-key chain. Direct traceability is currently **attempt ↔ shots**, plus completed-attempt summary and a parallel run record. If future analysis genuinely needs exact run-row linkage, add it deliberately through a reviewed Supabase schema/function change instead of assuming it already exists.
 
 Uploads are best-effort/asynchronous and must never block gameplay. Do not collect physical pointer/finger trajectories.
 
 ### Personal-smoke qualitative signal — not cohort evidence
 
-The current self-test game survey says:
-
-- overall fun 3/5;
-- controls 4/5;
-- variety 2/5;
-- difficulty curve 3/5;
-- HARD 3/5;
-- would keep playing: yes;
-- favourite: H05;
-- worst: C11;
-- idea: **more levels / more variety**.
+The current self-test game survey says overall fun 3/5, controls 4/5, variety 2/5, difficulty curve 3/5, HARD 3/5, would keep playing yes, favourite H05, worst C11, and asks for **more levels / more variety**.
 
 Treat this as useful owner smoke, not balance authority. Do not redesign C11 or the campaign from one developer row; external human evidence is still missing.
 
@@ -213,9 +167,9 @@ Treat this as useful owner smoke, not balance authority. Do not redesign C11 or 
 
 The personal smoke produced four `troll-05` report rows in two near-simultaneous pairs (`bug` ×2 and `object` ×2). These rows predate the PR #8 public head.
 
-Current Results report code closes/destroys its report panel synchronously before awaiting the network request, so the obvious double-tap path is reduced in the deployed version. However the backend report endpoint has no request-id/idempotency key, so exact server-side duplicate protection does not currently exist.
+Current Results report code closes/destroys its report panel synchronously before awaiting the network request, so the obvious double-tap path is reduced in the deployed version. The backend report endpoint still has no request-id/idempotency key, so exact server-side duplicate protection does not exist.
 
-Before changing backend schema, re-test one report on the current public PR #8 build and confirm whether exactly one row arrives. If duplicates still reproduce, fix them on a fresh `feature/**` branch and prefer an explicit idempotency design rather than data cleanup after the fact.
+Before changing backend schema, re-test one report on the current public PR #8 build and confirm whether exactly one row arrives. If duplicates still reproduce, fix them on a fresh `feature/**` branch and prefer explicit idempotency rather than post-hoc data cleanup.
 
 ## Community Maps
 
@@ -243,13 +197,13 @@ Never spoil HARD solutions in selectors, previews, tutorials, Patch Notes or tra
 
 ## Immediate next steps — resume here
 
-1. **Human-smoke the current public Pages head `9816d004…` on mobile/touch first.** Verify Profile name editing, on-screen keyboard, Assistance textarea, Community comment/report fields, Results report detail field, no browser `prompt()` in the normal tester flow, ES/EN switching + persistence, readable English and spoiler-safe HARD previews.
+1. **Human-smoke the current public runtime head `9816d004…` on mobile/touch first.** Verify Profile name editing, on-screen keyboard, Assistance textarea, Community comment/report fields, Results report detail field, no browser `prompt()` in the normal tester flow, ES/EN switching + persistence, readable English and spoiler-safe HARD previews.
 2. Repeat the critical UI/form checks on a **desktop browser**.
 3. During that smoke, send exactly one test report and one editable-text submission. Then query Supabase and verify exactly one expected row arrives per action.
-4. Re-check RC6 telemetry after the smoke: attempt start → shots → attempt completion/abandon; confirm attempt UUID linkage in `beta_attempts`/`beta_shots` and completed summary integrity.
+4. Re-check telemetry after the smoke: attempt start → shots → attempt completion/abandon; confirm attempt UUID linkage in `beta_attempts`/`beta_shots` and completed summary integrity.
 5. If mobile + desktop smoke are green, share the same public beta URL with the broader independent/PlayMyGame cohort. Keep **BETA RC6 / `hole-in-what-beta-rc6`** so the cohort remains one dataset.
 6. Watch external completion/abandonment, first-attempt vs retry lift, strokes/time, touch-vs-mouse gaps, route clusters, level ratings and qualitative comments. Exclude `Matkiller` from external calibration.
 7. Any human-discovered problem on public `dev` returns to a new `feature/**` branch; do not exploratory-fix live `dev` once external testing is active.
 8. In parallel, continue **Audit V3 consequence look-ahead**, especially chained consequence on H04. Keep V3 shadow-only until calibrated against real players.
-9. After the RC6 evidence is reviewed, author the next **small** Classic/HARD content batch with stronger mechanic/visual variety instead of a huge content dump.
+9. After RC6 evidence is reviewed, author the next **small** Classic/HARD content batch with stronger mechanic/visual variety instead of a huge content dump.
 10. Promote accepted `dev` to `main` only when content and polish justify an official release.
