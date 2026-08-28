@@ -42,6 +42,13 @@ canvas {
   pointer-events: auto !important;
   touch-action: manipulation;
   caret-color: #eef5f8;
+
+  /* Phaser 4.2.1 issue #7329: scene-level DOMElements with the default centered
+     origin drift when camera.zoom != 1 because the renderer applies the origin
+     offset twice. Our design camera deliberately zooms for high-DPI rendering.
+     The renderer matrix already contains the correct origin translation, so forcing
+     CSS transform-origin to 0,0 removes the duplicate offset for all RC6 form fields. */
+  transform-origin: 0 0 !important;
 }
 
 @media (pointer: fine) and (hover: hover) and (min-width: 760px) {
