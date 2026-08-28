@@ -21,7 +21,7 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 - PR #11 public Pages: run `33168521414` — **SUCCESS**
 - PR #11 public CI: run `33168521423` — **SUCCESS**
 - PR #12 public Pages: run `33168834819` — **SUCCESS**
-- PR #12 public CI: run `33168834814` — **running at last handoff query**; typecheck/build/mechanics/contracts/geometry/clearance were already green and campaign simulation was in progress
+- PR #12 public CI: run `33168834814` — **SUCCESS**
 - emergency rollback anchor before RC6 campaign promotion: `8075b162dc2b3e7b73b2fd0d36e6fbc5248120f4`
 - maintenance: **OFF**
 - backend patch label: **BETA RC6**
@@ -50,7 +50,7 @@ Current player-facing beta flow includes:
 - translated normal tester flow, including gameplay/tutorial text and the remaining `TOCA` → `TAP` case;
 - client-side report guards that close the report panel before awaiting the network request, preventing the obvious same-panel repeat-tap duplicate path.
 
-Artificial checks are green. The remaining acceptance gate is **real browser validation on mobile/touch and desktop** because CI cannot prove DOM visibility, focus, keyboard behavior, readable localisation or real browser pointer classification.
+Artificial checks and public deployment are green. The remaining acceptance gate is **real browser validation on mobile/touch and desktop** because CI cannot prove DOM visibility, focus, keyboard behavior, readable localisation or real browser pointer classification.
 
 ## Workflow
 
@@ -114,36 +114,40 @@ Keep the known-bad RC5 HARD03 fixture against accepted RC5.1 permanently so futu
 
 ## Audit V3.1 — active shadow work
 
-Separate branch: **`feature/audit-v3`**. Draft PR #7: **Audit V3 · troll cognition + human/map intelligence**. Keep it shadow-only while calibration continues; do not merge it solely because RC6 beta is live.
+Separate branch: **`feature/audit-v3`**. Draft PR #7: **Audit V3 · troll cognition + human/map intelligence**. Keep it shadow-only while human calibration is missing; do not merge it solely because RC6 beta is live.
 
 V3 adds blind/curious/suspicious belief agents, HARD bait→consequence→comprehension→mastery reasoning, troll-quality metrics, accidental terminal detection, map intelligence, human/artificial metric fusion and anonymised first-attempt/retry/device/route-cluster aggregates.
 
-First full V3 shadow calibration: run `33164327421` — **SUCCESS**.
+### V3.1 consequence look-ahead — SYNTHETIC CALIBRATION ACCEPTED
 
-- **18/18 PASS · 0 REVIEW · 0 BLOCKER** inherited from certified V2;
-- no accidental terminal states;
-- no structurally similar map pairs;
-- HARD advisory scores: H01 83, H02 74, H03 87, H04 60, H05 78;
-- H04 emitted `WEAK_CONSEQUENCE:15%`, treated as a **model limitation**, not a geometry defect: H04 has chained consequence and the original V3 proxy overweights immediate post-trigger displacement.
+`feature/audit-v3` contains `scripts/audit3LookAhead.ts` and integrated V3.1 reporting. It compares post-trap agency with a hidden-trap counterfactual and measures second-shot opportunity loss so chained consequences such as H04 can be represented instead of judged only by immediate displacement.
 
-### V3.1 consequence look-ahead — IMPLEMENTED, certification pending
+Accepted candidate: `4e61ec0e213c5e8d8bc56077c0f05a619b13fdce`.
+Full Audit run `33168040095` / job `98838118811` — **SUCCESS**.
+Artifact: `9684761826`.
 
-`feature/audit-v3` now contains `scripts/audit3LookAhead.ts` and integrated V3.1 reporting. It compares post-trap agency with a hidden-trap counterfactual and measures second-shot opportunity loss so chained consequences such as H04 can be represented instead of judged only by immediate displacement.
+- adversarial campaign audit: **SUCCESS**;
+- Audit 2: **18/18 PASS · 0 REVIEW · 0 BLOCKER**;
+- V3.1 shadow: **18/18 PASS · 0 REVIEW · 0 BLOCKER**;
+- H03 permanent regression: **PASS**;
+- accidental terminal warnings: **0**;
+- originality: **0 structurally similar pairs**.
 
-Current certification candidate: `4e61ec0e213c5e8d8bc56077c0f05a619b13fdce`, Full Audit run `33168040095`.
+V3 → V3.1 chained-consequence calibration:
 
-At the last handoff query:
+| HARD | V3 consequence | V3.1 consequence | Option loss | Troll Score |
+| --- | ---: | ---: | ---: | ---: |
+| H01 | 62% | 78% | 25% | 83 → 86 |
+| H02 | 45% | 64% | 8% | 74 → 77 |
+| H03 | 91% | 91% | 53% | 87 → 87 |
+| H04 | **15%** | **73%** | 20% | **60 → 71** |
+| H05 | 51% | 66% | 11% | 78 → 81 |
 
-- typecheck/build/mechanics/contracts/geometry/clearance: **SUCCESS**;
-- full adversarial campaign audit: **SUCCESS**;
-- Audit 2 full human-model report: still running;
-- V3.1 shadow step, design advice, originality and artifact upload: pending behind Audit 2.
+This is the desired synthetic calibration shape: H04's known chained consequence is recovered strongly while H01/H02/H05 only move +3 Troll Score and H03 remains unchanged. The old `WEAK_CONSEQUENCE:15%` warning is therefore a proxy limitation, not a geometry defect.
 
-Do **not** call V3.1 calibrated until that complete run finishes and the H01–H05 deltas are inspected. Specific calibration risk: the current counterfactual removes all hidden pop traps in a level, which could over-attribute later consequences on multi-trap holes. Desired result is that H04 gains credible chained-consequence signal without absurdly inflating H01/H03/H05.
+V3.1 remains **shadow-only** until a meaningful human sample can test model-human agreement. Known caveat: the counterfactual currently removes all hidden pop traps on a level instead of isolating one action at a time. The accepted calibration did not show broad score inflation, so this is not a blocker; the future shared declarative Trigger → Action engine should enable trap-specific counterfactuals.
 
-After consequence look-ahead is accepted, next model work is **memory/learning across attempts**. Longer-term enabling architecture remains a shared declarative **Trigger → Action** world-state engine consumed by runtime and Audit V3.
-
-Do not alter H04 geometry merely to satisfy the audit proxy.
+Next cognition work: **memory / learning across attempts** — verify that a failed first read changes the next choice and that mastery becomes reliably executable after the joke is understood.
 
 ## Physics authority
 
@@ -259,5 +263,5 @@ Never spoil HARD solutions in selectors, previews, tutorials, Patch Notes or tra
 6. If mobile + desktop smoke are green, share the same public beta URL with the broader independent/PlayMyGame cohort. Keep **BETA RC6 / `hole-in-what-beta-rc6`** so the cohort remains one dataset.
 7. Watch external completion/abandonment, first-attempt vs retry lift, strokes/time, touch-vs-mouse gaps, route clusters, level ratings and qualitative comments. Exclude `Matkiller` from external calibration.
 8. Any human-discovered problem on public `dev` returns to a new `feature/**` branch; do not exploratory-fix live `dev` once external testing is active.
-9. Separately, finish Full Audit run `33168040095` and inspect V3.1 chained-consequence deltas before calling the model calibrated. Keep V3 shadow-only.
+9. Keep V3.1 shadow-only and use the RC6 human sample to test its consequence/learning assumptions. The next synthetic development target is memory across attempts, not another H04 geometry edit.
 10. After RC6 evidence is reviewed, author the next **small** Classic/HARD content batch with stronger mechanic/visual variety instead of a huge content dump. Promote accepted `dev` to `main` only when content and polish justify an official release.
