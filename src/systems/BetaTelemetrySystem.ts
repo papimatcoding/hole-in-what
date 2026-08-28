@@ -43,6 +43,7 @@ async function registerTester():Promise<boolean>{
 }
 let testerReady:Promise<boolean>|null=null;
 const attemptStarts=new Map<string,Promise<unknown>>();
+const activeAttemptByLevel=new Map<string,string>();
 async function ensureRegistered():Promise<void>{
   testerReady??=registerTester();
   const ok=await testerReady;
@@ -67,6 +68,7 @@ export const BetaTelemetry={
     const resolvedMode=mode??(levelId.startsWith("troll-")?"troll":"classic");
     const map=attemptMap(),key=`${BETA_BUILD_ID}:${levelId}`;map[key]=(map[key]??0)+1;safeSet(ATTEMPTS_KEY,JSON.stringify(map));
     const attemptId=newUuid(),attemptNumber=map[key]!;
+    activeAttemptByLevel.set(levelId,attemptId);
     const start=ensureRegistered().then(()=>post({type:"attempt_start",testerId:testerId(),buildId:BETA_BUILD_ID,attemptId,attemptNumber,levelId,mode:resolvedMode}));
     attemptStarts.set(attemptId,start);void start.finally(()=>attemptStarts.delete(attemptId));
     return attemptId;
@@ -79,11 +81,16 @@ export const BetaTelemetry={
   async endAttempt(input:{attemptId:string;levelId:string;mode:GameMode;completed:boolean;exitReason:string;strokes:number;timeMs:number;voids:number;}):Promise<void>{
     await waitForAttempt(input.attemptId);
     await post({type:"attempt_end",testerId:testerId(),buildId:BETA_BUILD_ID,...input});
+    // Completed attempts stay available until Results submits beta_runs, so all three layers can be joined.
+    // Abandoned/retried attempts are removed immediately and can never be attached to a later run.
+    if(!input.completed&&activeAttemptByLevel.get(input.levelId)===input.attemptId)activeAttemptByLevel.delete(input.levelId);
   },
   async submitRun(input:{attemptId?:string;levelId:string;mode:GameMode;strokes:number;timeMs:number;stars:number;trapsTriggered?:string[];mechanicsUsed?:string[];voids?:number;}):Promise<void>{
     await ensureRegistered();
-    if(input.attemptId)await waitForAttempt(input.attemptId);
-    await post({type:"run",testerId:testerId(),buildId:BETA_BUILD_ID,levelId:input.levelId,mode:input.mode,attemptId:input.attemptId??null,attempts:this.attempts(input.levelId),strokes:input.strokes,timeMs:input.timeMs,stars:input.stars,trapsTriggered:input.trapsTriggered??[],mechanicsUsed:input.mechanicsUsed??[],voids:input.voids??0,completed:true});
+    const attemptId=input.attemptId??activeAttemptByLevel.get(input.levelId)??null;
+    if(attemptId)await waitForAttempt(attemptId);
+    await post({type:"run",testerId:testerId(),buildId:BETA_BUILD_ID,levelId:input.levelId,mode:input.mode,attemptId,attempts:this.attempts(input.levelId),strokes:input.strokes,timeMs:input.timeMs,stars:input.stars,trapsTriggered:input.trapsTriggered??[],mechanicsUsed:input.mechanicsUsed??[],voids:input.voids??0,completed:true});
+    if(attemptId&&activeAttemptByLevel.get(input.levelId)===attemptId)activeAttemptByLevel.delete(input.levelId);
   },
   async submitReport(input:{levelId:string;mode:GameMode;category:BetaReportCategory;note?:string;strokes?:number|null;timeMs?:number|null;}):Promise<boolean>{
     await ensureRegistered();
