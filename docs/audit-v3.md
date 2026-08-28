@@ -67,6 +67,30 @@ Current V3 proxies:
 
 The score is a design alarm, never a substitute for players laughing, swearing or rating the level.
 
+## V3.1 consequence look-ahead
+
+`scripts/audit3LookAhead.ts` adds a second-stage consequence probe for traps whose real punishment appears after the immediate trigger state. It compares the real post-trigger state with a counterfactual world where hidden pop traps are removed, then measures how much useful second-shot agency/opportunity is lost.
+
+The first accepted synthetic calibration is commit `4e61ec0e213c5e8d8bc56077c0f05a619b13fdce`, Full Audit run `33168040095` — **SUCCESS**.
+
+V3 → V3.1 consequence / Troll Score changes:
+
+| HARD | Consequence | V3.1 consequence | Option loss | Troll Score |
+| --- | ---: | ---: | ---: | ---: |
+| H01 | 62% | 78% | 25% | 83 → 86 |
+| H02 | 45% | 64% | 8% | 74 → 77 |
+| H03 | 91% | 91% | 53% | 87 → 87 |
+| H04 | **15%** | **73%** | 20% | **60 → 71** |
+| H05 | 51% | 66% | 11% | 78 → 81 |
+
+This is the desired calibration shape: H04's known chained consequence is recovered strongly, while H01/H02/H05 only move +3 Troll Score and H03 remains unchanged. The previous `WEAK_CONSEQUENCE:15%` signal is therefore treated as a V3 proxy limitation, not a reason to alter H04 geometry.
+
+V3.1 remains **shadow-only**. Synthetic calibration is accepted, but human calibration is still required before consequence look-ahead can become a strict design gate. Keep watching for model-human disagreement once RC6 has a meaningful external sample.
+
+Known modelling caveat: the current counterfactual removes all hidden pop traps in a level rather than isolating one trap action at a time. The first calibration did not produce broad score inflation, so this is not a blocker, but a future declarative Trigger → Action engine should allow trap-specific counterfactuals.
+
+Next cognition work: **memory and learning across attempts** — measure whether a failed first read materially changes the agent's next choice and whether mastery becomes reliable after the joke is understood.
+
 ## Intentional terminal traps
 
 `src/data/trollAuditIntent.ts` stores tooling-only design intent outside `LevelDefinition`, so runtime/preview UI cannot accidentally expose it.
