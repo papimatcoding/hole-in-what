@@ -34,6 +34,28 @@ function coarsePointer():boolean{try{return matchMedia("(pointer: coarse)").matc
 function deviceClass():"mobile"|"tablet"|"desktop"|"unknown"{
   try{const coarse=coarsePointer(),short=Math.min(window.innerWidth,window.innerHeight);if(coarse&&short<600)return"mobile";if(coarse)return"tablet";return"desktop";}catch{return"unknown";}
 }
+function pointerKind(value:unknown):BetaInputKind{return value==="touch"||value==="mouse"||value==="pen"?value:"unknown";}
+let lastInputKind:BetaInputKind="unknown";
+function installInputKindTracker():void{
+  try{
+    if(typeof window==="undefined")return;
+    if(typeof PointerEvent!=="undefined"){
+      window.addEventListener("pointerdown",event=>{const kind=pointerKind(event.pointerType);if(kind!=="unknown")lastInputKind=kind;},{capture:true,passive:true});
+    }else{
+      window.addEventListener("touchstart",()=>{lastInputKind="touch";},{capture:true,passive:true});
+      window.addEventListener("mousedown",()=>{lastInputKind="mouse";},{capture:true,passive:true});
+    }
+  }catch{/* optional telemetry hint only */}
+}
+installInputKindTracker();
+function resolvedInputKind(kind:BetaInputKind):BetaInputKind{
+  if(kind!=="unknown")return kind;
+  if(lastInputKind!=="unknown")return lastInputKind;
+  // Rare fallback when Phaser does not expose pointerType and the global event tracker saw nothing.
+  // Prefer a useful coarse device split over silently losing the whole cohort to `unknown`.
+  if(coarsePointer())return"touch";
+  return deviceClass()==="desktop"?"mouse":"unknown";
+}
 function bucket(value:number):number{return Math.max(0,Math.round(value/100)*100);}
 async function registerTester():Promise<boolean>{
   // Deliberately avoid sending a full user-agent string. Coarse device/input information is enough
@@ -76,7 +98,8 @@ export const BetaTelemetry={
   attempts(levelId:string):number{return attemptMap()[`${BETA_BUILD_ID}:${levelId}`]??1;},
   async submitShot(input:{attemptId:string;levelId:string;mode:GameMode;shotIndex:number;inputKind:BetaInputKind;startX:number;startY:number;angleDeg:number;power:number;endX:number;endY:number;durationMs:number;outcome:BetaShotOutcome;eventKinds?:string[]}):Promise<void>{
     await waitForAttempt(input.attemptId);
-    await post({type:"shot",testerId:testerId(),buildId:BETA_BUILD_ID,...input});
+    const inputKind=resolvedInputKind(input.inputKind);
+    await post({type:"shot",testerId:testerId(),buildId:BETA_BUILD_ID,...input,inputKind});
   },
   async endAttempt(input:{attemptId:string;levelId:string;mode:GameMode;completed:boolean;exitReason:string;strokes:number;timeMs:number;voids:number;}):Promise<void>{
     await waitForAttempt(input.attemptId);
