@@ -1,9 +1,16 @@
 name: Lab Full Audit
 
-# Expensive certification before promoting laboratory work into dev.
+# Expensive campaign certification. UI, branding, telemetry and docs use smoke checks and must not
+# cancel a valid level audit. Full Audit reruns only when campaign data, simulation or audit logic changes.
 on:
   pull_request:
     branches: [dev]
+    paths:
+      - "src/data/**"
+      - "src/systems/GolfSimulation.ts"
+      - "src/types.ts"
+      - "scripts/**"
+      - ".github/workflows/lab-full-audit.yml"
   workflow_dispatch:
 
 concurrency:
