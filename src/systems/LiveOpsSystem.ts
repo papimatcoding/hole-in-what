@@ -72,7 +72,7 @@ export const LiveOps={
       const now=game.scene.getScenes(true)[0]?.scene.key;
       if(result.status.maintenance&&now!=="maintenance")game.scene.start("maintenance",{status:result.status});
       else if(!result.status.maintenance&&needsUpdate(result.status)&&now!=="update-required")game.scene.start("update-required",{status:result.status});
-      else if(!result.status.maintenance&&!needsUpdate(result.status)&&now==="maintenance")game.scene.start("menu");
+      else if(!result.status.maintenance&&!needsUpdate(result.status)&&now==="maintenance")window.location.reload();
     };
     void tick();
     timer=window.setInterval(()=>{void tick();},HEARTBEAT_MS);

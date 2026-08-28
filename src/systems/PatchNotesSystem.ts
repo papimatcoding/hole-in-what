@@ -6,23 +6,39 @@ export interface PatchNote{
   bullets:string[];
 }
 
+// Legacy key retained so the rebrand does not make old notes unread again for existing testers.
 const READ_KEY="troll-golf-last-read-patch-v1";
 
 export const PATCH_NOTES:PatchNote[]=[
   {
-    id:"friends-ui-polish-1",
-    title:"FRIENDS BETA · UI",
+    id:"beta-rc6",
+    title:"BETA RC6",
+    date:"28 AGO 2026",
+    summary:"Nuevo nombre, nuevos hoyos y una beta más cómoda de probar.",
+    bullets:[
+      "Troll Golf ahora se llama Hole in What?.",
+      "Añadidos Classic 11–13 con hielo y boosters.",
+      "HARD 01 ahora tiene una solución aprendida mucho más cómoda en táctil.",
+      "Arreglados los campos de nombre, comentarios y reportes con texto dentro del juego.",
+      "La encuesta global ahora pregunta antes de abrirse y da una recompensa única de 5 gemas.",
+      "Mejoradas las métricas anónimas para detectar problemas de balance y abandono.",
+      "El modo mantenimiento comprueba cuándo vuelve el juego y recarga la nueva versión automáticamente."
+    ]
+  },
+  {
+    id:"beta-ui-polish-1",
+    title:"BETA · UI",
     date:"27 AGO 2026",
     summary:"Mejoras de interfaz.",
     bullets:[
       "Mejorada la interfaz y legibilidad en PC.",
       "Las encuestas post-nivel ahora se envían manualmente.",
-      "Corregida la edición del nombre de jugador."
+      "Añadida la pantalla para editar el nombre de jugador."
     ]
   },
   {
-    id:"friends-rc5-1",
-    title:"FRIENDS BETA RC5.1",
+    id:"beta-rc5-1",
+    title:"BETA RC5.1",
     date:"27 AGO 2026",
     summary:"Ajustes y correcciones.",
     bullets:[
@@ -31,19 +47,19 @@ export const PATCH_NOTES:PatchNote[]=[
     ]
   },
   {
-    id:"friends-rc5",
-    title:"FRIENDS BETA RC5",
+    id:"beta-rc5",
+    title:"BETA RC5",
     date:"27 AGO 2026",
     summary:"Mejoras de perfil y Community Maps.",
     bullets:[
-      "El nombre de jugador ya se puede ver y editar dentro del juego.",
+      "El nombre de jugador ya se puede ver desde el juego.",
       "Añadida Asistencia al jugador.",
       "Ya puedes eliminar tus propios Community Maps."
     ]
   },
   {
-    id:"friends-rc4",
-    title:"FRIENDS BETA RC4",
+    id:"beta-rc4",
+    title:"BETA RC4",
     date:"27 AGO 2026",
     summary:"Mejoras generales de la beta.",
     bullets:[
@@ -53,8 +69,8 @@ export const PATCH_NOTES:PatchNote[]=[
     ]
   },
   {
-    id:"friends-rc3",
-    title:"FRIENDS BETA RC3",
+    id:"beta-rc3",
+    title:"BETA RC3",
     date:"27 AGO 2026",
     summary:"Gran actualización de Community Maps.",
     bullets:[
@@ -64,10 +80,10 @@ export const PATCH_NOTES:PatchNote[]=[
     ]
   },
   {
-    id:"friends-rc2",
-    title:"FRIENDS BETA RC2",
+    id:"beta-rc2",
+    title:"BETA RC2",
     date:"27 AGO 2026",
-    summary:"Primeras mejoras para la beta con amigos.",
+    summary:"Primeras mejoras de la beta.",
     bullets:[
       "Añadidos reportes dentro de los niveles.",
       "Añadido contador aproximado de jugadores online.",

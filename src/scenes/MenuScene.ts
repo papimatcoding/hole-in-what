@@ -25,7 +25,7 @@ export class MenuScene extends Phaser.Scene {
 
     const wallet=SaveSystem.wallet();
     this.add.text(DESIGN_WIDTH-42,54,`◈ ${wallet.coins}   ◆ ${wallet.gems}`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(15,1),fontStyle:"bold",color:"#d9e4ee"}).setOrigin(1,.5);
-    this.add.text(DESIGN_WIDTH/2,106,"TROLL GOLF",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(42,2),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
+    this.add.text(DESIGN_WIDTH/2,106,"HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(39,2),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
     this.add.rectangle(270,139,72,3,0x6f98ae,.95);
     this.add.text(DESIGN_WIDTH/2,160,"MINIGOLF · 3 ESTRELLAS",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,2),fontStyle:"bold",color:"#8194a3"}).setOrigin(.5);
 
@@ -61,7 +61,7 @@ export class MenuScene extends Phaser.Scene {
     const beta=this.add.rectangle(270,770,390,50,0x101820).setStrokeStyle(1,0x334956);
     const betaText=this.add.text(270,770,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:"#a9bdc9"}).setOrigin(.5);
     this.wirePress(beta,betaText,270,770,410,58,()=>this.scene.start("editor"),0x101820,0x1d2c36);
-    this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-48,BETA_TESTING?"FRIENDS BETA · DESKTOP":"CAMPAÑA · DESKTOP",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(9,2),color:"#5e707e"}).setOrigin(.5);
+    this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-48,BETA_TESTING?"BETA · DESKTOP":"CAMPAÑA · DESKTOP",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(9,2),color:"#5e707e"}).setOrigin(.5);
   }
 
   private createMobileActions():void{

@@ -1,6 +1,9 @@
 import Phaser from "phaser";
 import { isDesktopUI, setupDesignCamera, sharpenSceneText, uiFontSize } from "../config/display";
+import { GLOBAL_SURVEY_REWARD_GEMS, GLOBAL_SURVEY_REWARD_ID } from "../config/survey";
+import { levelsForMode } from "../data/campaign";
 import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
+import { SaveSystem } from "../systems/SaveSystem";
 
 type RatingKey="overallFun"|"controls"|"variety"|"difficultyCurve"|"hardMode";
 type PickerMode="favourite"|"worst";
@@ -16,10 +19,11 @@ interface SurveyAnswers{
   worstLevel:string;
 }
 
-const LEVELS=[...Array.from({length:10},(_,i)=>`classic-${String(i+1).padStart(2,"0")}`),...Array.from({length:5},(_,i)=>`troll-${String(i+1).padStart(2,"0")}`)];
+const LEVELS=[...levelsForMode("classic"),...levelsForMode("troll")].map(level=>level.id);
 const IMPROVEMENTS=["MÁS NIVELES","MEJOR BALANCE","MÁS VARIEDAD","HARD","CONTROLES","COMMUNITY"];
 
 export class GlobalSurveyScene extends Phaser.Scene{
+  private accepted=false;
   private page=0;
   private pickerMode:PickerMode="favourite";
   private answers:SurveyAnswers={overallFun:0,controls:0,variety:0,difficultyCurve:0,hardMode:0,wouldKeepPlaying:null,favouriteLevel:"",worstLevel:""};
@@ -33,12 +37,26 @@ export class GlobalSurveyScene extends Phaser.Scene{
 
   private render():void{
     this.children.removeAll(true);this.cameras.main.setBackgroundColor("#0b0f14");
+    if(!this.accepted){this.renderInvite();sharpenSceneText(this);return;}
     this.add.text(270,58,"ENCUESTA GLOBAL",{fontFamily:"system-ui",fontSize:uiFontSize(25,3),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
     this.add.rectangle(270,86,64,3,0x6f98ae,.9);
     this.add.text(270,111,`BETA · ${this.page+1}/4`,{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#7f96a5"}).setOrigin(.5);
     this.add.rectangle(270,468,454,650,0x0f171d,.68).setStrokeStyle(1,0x24343f,.85);
     if(this.page===0)this.pageRatingsOne();else if(this.page===1)this.pageRatingsTwo();else if(this.page===2)this.pageLevels();else this.pagePriorities();
     sharpenSceneText(this);
+  }
+
+  private renderInvite():void{
+    const rewardAvailable=!SaveSystem.hasBonusClaim(GLOBAL_SURVEY_REWARD_ID);
+    this.add.text(270,240,"AYÚDANOS A MEJORAR",{fontFamily:"system-ui",fontSize:uiFontSize(14,2),fontStyle:"bold",color:"#8fa7b6"}).setOrigin(.5);
+    this.add.rectangle(270,462,438,388,0x101920,.98).setStrokeStyle(2,0x3d5666);
+    this.add.text(270,338,"¿QUIERES CONTESTAR\nUNA ENCUESTA?",{fontFamily:"system-ui",fontSize:uiFontSize(25,2),fontStyle:"bold",color:"#f5f7fa",align:"center",lineSpacing:6}).setOrigin(.5);
+    this.add.text(270,424,"Son 4 pantallas cortas. Tus respuestas nos ayudan a decidir\nqué niveles, controles y sistemas mejorar primero.",{fontFamily:"system-ui",fontSize:uiFontSize(10,2),color:"#9babb5",align:"center",lineSpacing:5}).setOrigin(.5);
+    this.add.rectangle(270,500,300,54,rewardAvailable?0x211f18:0x151b1f).setStrokeStyle(1,rewardAvailable?0x675b38:0x303b42);
+    this.add.text(270,500,rewardAvailable?`RECOMPENSA · +${GLOBAL_SURVEY_REWARD_GEMS} ◆` :"RECOMPENSA DE BETA YA RECLAMADA",{fontFamily:"system-ui",fontSize:uiFontSize(11,2),fontStyle:"bold",color:rewardAvailable?"#e4cc86":"#71818c"}).setOrigin(.5);
+    this.actionButton(270,580,330,"SÍ, QUIERO AYUDAR",()=>{this.accepted=true;this.render();},true);
+    this.actionButton(270,652,250,"AHORA NO",()=>this.scene.start("menu"),false);
+    this.add.text(270,714,"La recompensa solo se puede reclamar una vez, aunque haya nuevos parches.",{fontFamily:"system-ui",fontSize:uiFontSize(8,2),color:"#667985",align:"center",wordWrap:{width:390}}).setOrigin(.5);
   }
 
   private pageRatingsOne():void{
@@ -62,11 +80,11 @@ export class GlobalSurveyScene extends Phaser.Scene{
   private pageLevels():void{
     const selectingFavourite=this.pickerMode==="favourite";
     this.sectionTitle(selectingFavourite?"ELIGE TU NIVEL FAVORITO":"¿CUÁL ES EL MÁS FLOJO?",selectingFavourite?"Opcional · nos ayuda a entender qué funciona":"Opcional · no significa necesariamente que esté roto");
-    LEVELS.forEach((level,i)=>{const col=i%5,row=Math.floor(i/5),x=78+col*96,y=248+row*66,label=level.startsWith("classic")?`C${level.slice(-2)}`:`H${level.slice(-2)}`,selected=(selectingFavourite?this.answers.favouriteLevel:this.answers.worstLevel)===level;this.levelButton(x,y,label,selected,()=>{if(selectingFavourite){this.answers.favouriteLevel=level;this.pickerMode="worst";}else this.answers.worstLevel=level;this.render();});});
-    this.add.text(270,478,`FAVORITO · ${this.shortLevel(this.answers.favouriteLevel)}   ·   MÁS FLOJO · ${this.shortLevel(this.answers.worstLevel)}`,{fontFamily:"system-ui",fontSize:uiFontSize(10,2),fontStyle:"bold",color:"#a8bbc6"}).setOrigin(.5);
-    if(selectingFavourite)this.actionButton(270,558,260,"SALTAR FAVORITO",()=>{this.pickerMode="worst";this.render();},false);
-    else this.actionButton(270,558,260,"SALTAR / CONTINUAR",()=>{this.page=3;this.render();},true);
-    this.actionButton(270,632,220,"‹ ATRÁS",()=>{if(!selectingFavourite){this.pickerMode="favourite";this.render();}else{this.page=1;this.render();}},false);
+    LEVELS.forEach((level,i)=>{const col=i%6,row=Math.floor(i/6),x=55+col*86,y=246+row*66,label=level.startsWith("classic")?`C${level.slice(-2)}`:`H${level.slice(-2)}`,selected=(selectingFavourite?this.answers.favouriteLevel:this.answers.worstLevel)===level;this.levelButton(x,y,label,selected,()=>{if(selectingFavourite){this.answers.favouriteLevel=level;this.pickerMode="worst";}else this.answers.worstLevel=level;this.render();});});
+    this.add.text(270,466,`FAVORITO · ${this.shortLevel(this.answers.favouriteLevel)}   ·   MÁS FLOJO · ${this.shortLevel(this.answers.worstLevel)}`,{fontFamily:"system-ui",fontSize:uiFontSize(10,2),fontStyle:"bold",color:"#a8bbc6"}).setOrigin(.5);
+    if(selectingFavourite)this.actionButton(270,548,260,"SALTAR FAVORITO",()=>{this.pickerMode="worst";this.render();},false);
+    else this.actionButton(270,548,260,"SALTAR / CONTINUAR",()=>{this.page=3;this.render();},true);
+    this.actionButton(270,624,220,"‹ ATRÁS",()=>{if(!selectingFavourite){this.pickerMode="favourite";this.render();}else{this.page=1;this.render();}},false);
   }
 
   private pagePriorities():void{
@@ -97,7 +115,7 @@ export class GlobalSurveyScene extends Phaser.Scene{
     bg.on("pointerover",()=>bg.setFillStyle(hover)).on("pointerout",()=>bg.setFillStyle(rest)).on("pointerdown",()=>{bg.setScale(.98);t.setScale(.98);}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);action();});
   }
 
-  private levelButton(x:number,y:number,label:string,selected:boolean,action:()=>void):void{this.choiceButton(x,y,78,label,selected,action);}
+  private levelButton(x:number,y:number,label:string,selected:boolean,action:()=>void):void{this.choiceButton(x,y,68,label,selected,action);}
 
   private actionButton(x:number,y:number,w:number,label:string,action:()=>void,primary:boolean,enabled=true):void{
     const rest=!enabled?0x10171c:primary?0x294657:0x17232c,hover=primary?0x386177:0x22313a,bg=this.add.rectangle(x,y,w,58,rest).setStrokeStyle(!enabled?1:2,!enabled?0x27313a:primary?0x78a9c2:0x3c5060),t=this.add.text(x,y,label,{fontFamily:"system-ui",fontSize:uiFontSize(11,2),fontStyle:"bold",color:enabled?"#e6eef3":"#596772"}).setOrigin(.5);if(!enabled)return;bg.setInteractive({useHandCursor:true}).on("pointerover",()=>bg.setFillStyle(hover)).on("pointerout",()=>bg.setFillStyle(rest)).on("pointerdown",()=>{bg.setScale(.98);t.setScale(.98);}).on("pointerup",()=>{bg.setScale(1);t.setScale(1);action();});
@@ -110,7 +128,11 @@ export class GlobalSurveyScene extends Phaser.Scene{
     this.submitting=true;this.render();
     const ok=await BetaTelemetry.submitGameFeedback({overallFun:this.answers.overallFun,controls:this.answers.controls,variety:this.answers.variety,difficultyCurve:this.answers.difficultyCurve,hardMode:this.answers.hardMode,wouldKeepPlaying:this.answers.wouldKeepPlaying,favouriteLevel:this.answers.favouriteLevel,worstLevel:this.answers.worstLevel,ideas:[...this.improvements].join(", ")});
     if(!ok){this.submitting=false;this.render();this.toast("NO SE PUDO ENVIAR",false);return;}
-    this.children.removeAll(true);this.add.text(270,390,"✓ GRACIAS",{fontFamily:"system-ui",fontSize:uiFontSize(30,2),fontStyle:"bold",color:"#a5ddb9"}).setOrigin(.5);this.add.text(270,446,"Encuesta guardada para esta versión.",{fontFamily:"system-ui",fontSize:uiFontSize(11,2),color:"#b2c1ca"}).setOrigin(.5);this.actionButton(270,552,300,"VOLVER AL MENÚ",()=>this.scene.start("menu"),true);sharpenSceneText(this);
+    const gems=SaveSystem.grantGemsOnce(GLOBAL_SURVEY_REWARD_ID,GLOBAL_SURVEY_REWARD_GEMS);
+    this.children.removeAll(true);this.add.text(270,382,"✓ GRACIAS",{fontFamily:"system-ui",fontSize:uiFontSize(30,2),fontStyle:"bold",color:"#a5ddb9"}).setOrigin(.5);
+    this.add.text(270,438,gems>0?`Encuesta guardada · +${gems} ◆` :"Encuesta guardada para esta versión.",{fontFamily:"system-ui",fontSize:uiFontSize(11,2),fontStyle:gems>0?"bold":"normal",color:gems>0?"#e1c77f":"#b2c1ca"}).setOrigin(.5);
+    if(gems===0&&SaveSystem.hasBonusClaim(GLOBAL_SURVEY_REWARD_ID))this.add.text(270,472,"La recompensa de beta solo se puede reclamar una vez.",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),color:"#778b98"}).setOrigin(.5);
+    this.actionButton(270,552,300,"VOLVER AL MENÚ",()=>this.scene.start("menu"),true);sharpenSceneText(this);
   }
 
   private toast(message:string,ok:boolean):void{const t=this.add.text(270,824,message,{fontFamily:"system-ui",fontSize:uiFontSize(10,2),fontStyle:"bold",color:ok?"#d9efde":"#f0c1b7",backgroundColor:ok?"#14231a":"#2b1715",padding:{x:12,y:7}}).setOrigin(.5).setDepth(100);this.tweens.add({targets:t,alpha:0,delay:850,duration:180,onComplete:()=>t.destroy()});}

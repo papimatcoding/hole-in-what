@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#0d1117" />
-    <title>Troll Golf</title>
+    <title>Hole in What?</title>
     <style>
       html, body {
         margin: 0;
@@ -36,7 +36,7 @@
     </style>
   </head>
   <body>
-    <div id="boot-status">Cargando Troll Golf…</div>
+    <div id="boot-status">Cargando Hole in What?…</div>
     <div id="game"></div>
 
     <script>
@@ -47,7 +47,7 @@
         const showError = (message) => {
           if (!status || booted) return;
           status.classList.add("error");
-          status.textContent = `No se pudo iniciar Troll Golf.\n\n${message}`;
+          status.textContent = `No se pudo iniciar Hole in What?.\n\n${message}`;
         };
 
         const observer = new MutationObserver(() => {
@@ -79,7 +79,7 @@
       })();
     </script>
 
-    <!-- Vite rewrites this source entry to /troll-golf/assets/... during the Pages build. -->
+    <!-- Keep the legacy repository path until the public beta URL is deliberately migrated. -->
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

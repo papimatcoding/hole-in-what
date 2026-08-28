@@ -4,8 +4,13 @@ import { base, path, pt, r, trap } from "./authoring";
 /** HARD block 1: every first attempt breaks an expectation; every second attempt has a learned answer. */
 
 // 01 — Commit to the obvious right lane and it closes. A second upper gate removes the old free HIO.
+// Keep the original broad trap trigger, but lower the top of the persistent divider while preserving
+// its bottom edge. This widens only the learned upper crossover from 66px to 102px: understanding the
+// joke should matter more than touch precision, while the obvious right lane still closes normally.
+// A short low-left guard blocks the unrelated full-power outer-bank HIO found by the adversarial solver;
+// it does not reach the intended right-side entry or narrow the newly widened learned crossover.
 const h1=base("troll",1,pt(126,836),pt(420,160),2,3,"wall");
-h1.walls=[r(246,382,24,310),r(28,292,280,24)];
+h1.walls=[r(246,418,24,274),r(28,292,280,24),r(28,704,162,24)];
 h1.popWalls=[{x:286,y:548,w:198,h:24,triggerX:360,triggerY:674,triggerRadius:150}];
 path(h1,pt(426,720),pt(426,470),pt(346,340),pt(420,160));trap(h1,"gate-pop");
 

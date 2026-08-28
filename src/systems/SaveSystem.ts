@@ -15,6 +15,7 @@ import type {
 
 const STORAGE_KEY = "troll-golf-save-beta-step3-v1";
 const PREVIOUS_STORAGE_KEYS = ["troll-golf-save-authored-reboot-v1","troll-golf-save-procedural-v1"];
+const BONUS_CLAIMS_KEY="troll-golf-bonus-claims-v1";
 const FRESH_START_COINS = 80;
 const LEGACY_DEV_GRANT = 250;
 
@@ -49,6 +50,10 @@ function load():SaveData{
   }catch{return emptySave();}
 }
 function persist(save:SaveData):void{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(save));}catch{/* gameplay can continue */}}
+function bonusClaims():Set<string>{
+  try{const raw=localStorage.getItem(BONUS_CLAIMS_KEY);const parsed=raw?JSON.parse(raw):[];return new Set(Array.isArray(parsed)?parsed.filter(x=>typeof x==="string"):[]);}catch{return new Set();}
+}
+function persistBonusClaims(claims:Set<string>):void{try{localStorage.setItem(BONUS_CLAIMS_KEY,JSON.stringify([...claims]));}catch{/* optional reward state */}}
 function unlockEligibleStarRewards(save:SaveData):string[]{
   const totalStars=totalStarsFromRecords(save.levels),unlocked:string[]=[];
   for(const reward of STAR_REWARDS){if(totalStars<reward.stars||save.cosmetics.owned.includes(reward.cosmeticId))continue;save.cosmetics.owned.push(reward.cosmeticId);unlocked.push(reward.cosmeticId);}
@@ -71,6 +76,12 @@ export const SaveSystem={
   totalStars(levelIds:string[]):number{const save=load();return levelIds.reduce((sum,id)=>sum+(save.levels[id]?.stars??0),0);},
   totalStarsAll():number{return totalStarsFromRecords(load().levels);},
   wallet():WalletSave{return{...load().wallet};},coins():number{return load().wallet.coins;},gems():number{return load().wallet.gems;},cosmetics():CosmeticsSave{return load().cosmetics;},
+  hasBonusClaim(rewardId:string):boolean{return bonusClaims().has(rewardId);},
+  grantGemsOnce(rewardId:string,amount:number):number{
+    const safeAmount=Math.max(0,Math.floor(amount));if(!rewardId||safeAmount<=0)return 0;
+    const claims=bonusClaims();if(claims.has(rewardId))return 0;
+    const save=load();save.wallet.gems+=safeAmount;persist(save);claims.add(rewardId);persistBonusClaims(claims);return safeAmount;
+  },
   claimEligibleStarRewards():string[]{const save=load(),unlocked=unlockEligibleStarRewards(save);if(unlocked.length>0)persist(save);return unlocked;},
   classicProgress():{stars:number;completed:number;total:number;requiredStars:number;firstChapterCompleted:number;requiredCompletions:number}{
     const save=load(),levels=levelsForMode("classic"),stars=levels.reduce((sum,level)=>sum+(save.levels[level.id]?.stars??0),0),completed=levels.reduce((sum,level)=>sum+(save.levels[level.id]?.completed?1:0),0),firstChapterCompleted=levels.slice(0,TROLL_UNLOCK_CLASSIC_COMPLETIONS).reduce((sum,level)=>sum+(save.levels[level.id]?.completed?1:0),0);

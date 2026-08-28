@@ -1,10 +1,11 @@
 import type { GameMode, LevelDefinition } from "../types";
 import { CLASSIC_AUTHORED } from "./authored/classic";
+import { CLASSIC_BLOCK_2 } from "./authored/classicBlock2";
 import { HARD_AUTHORED } from "./authored/hard";
 import { sanitizeCourse } from "./procedural/courseUtils";
 
 /** Player-facing campaign: authored levels only. No procedural or legacy fallback. */
-const CLASSIC=CLASSIC_AUTHORED.map(level=>sanitizeCourse(level));
+const CLASSIC=[...CLASSIC_AUTHORED,...CLASSIC_BLOCK_2].map(level=>sanitizeCourse(level));
 const HARD=HARD_AUTHORED.map(level=>sanitizeCourse(level));
 
 export function levelsForMode(mode:GameMode):LevelDefinition[]{return mode==="troll"?HARD:CLASSIC;}

@@ -1,16 +1,23 @@
 name: Full Audit
 
-# Long solver used to certify authored blocks before external beta.
+# Expensive authored-campaign certification for the public dev beta.
+# Feature branches are certified by lab-full-audit.yml before promotion; this workflow re-checks the
+# exact state that actually lands on dev with the same design standard.
 on:
   push:
     branches: [dev]
     paths:
-      - "src/data/authored/**"
+      - "src/data/**"
       - "src/systems/GolfSimulation.ts"
       - "src/systems/CourseValidation.ts"
-      - "scripts/courseAudit.ts"
+      - "src/types.ts"
+      - "scripts/**/*.ts"
       - ".github/workflows/full-audit.yml"
   workflow_dispatch:
+
+concurrency:
+  group: dev-full-audit
+  cancel-in-progress: true
 
 jobs:
   full-audit:
@@ -18,19 +25,56 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - name: Install dependencies
         run: npm install
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Check hole physics
+        run: npm run test:hole
+
       - name: Check authored mechanics
         run: npm run test:mechanics
+
+      - name: Check mechanic behavior contracts
+        run: npm run test:mechanic-behavior
+
       - name: Check authored geometry
         run: npm run test:geometry
+
       - name: Check authored clearance
         run: npm run test:clearance
-      - name: Full authored campaign audit
+
+      - name: Full adversarial campaign audit
         env:
           FULL_AUDIT: "1"
         run: npm run audit:courses
+
+      - name: Audit 2.1 full human-model report
+        run: npm run audit:human:full
+
+      - name: Difficulty and design advice
+        run: npm run audit:design
+
+      - name: Check course originality
+        run: npm run audit:originality
+
+      - name: Upload full audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-2-full-report
+          path: |
+            artifacts/audit2-report.*
+            artifacts/audit2-design.*
+          if-no-files-found: warn
