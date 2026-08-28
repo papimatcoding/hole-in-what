@@ -21,7 +21,7 @@ export class LevelPreviewScene extends Phaser.Scene{
 
     const levels=levelsForMode(this.mode);
     levels.forEach((level,index)=>this.card(level,index));
-    this.add.text(270,920,this.mode==="troll"?"HARD · PREVIEW SIN SPOILERS · JUEGA PARA DESCUBRIR LA TRAMPA":"CLICK = ABRIR EN EDITOR",{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#718392",align:"center",wordWrap:{width:470}}).setOrigin(.5);
+    this.add.text(270,920,this.mode==="troll"?"HARD":"CLICK = ABRIR EN EDITOR",{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#718392",align:"center",wordWrap:{width:470}}).setOrigin(.5);
     sharpenSceneText(this);
   }
 
@@ -36,9 +36,11 @@ export class LevelPreviewScene extends Phaser.Scene{
     this.drawMini(level,x+12,y+9,72,114,spoilerSafe);
     this.add.text(x+96,y+20,level.id.toUpperCase(),{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#f3f6f8"});
     this.add.text(x+96,y+47,`★★★ ${level.threeStar.maxStrokes??"-"} · ★★ ${level.twoStar.maxStrokes??"-"}`,{fontFamily:"system-ui, sans-serif",fontSize:"10px",color:"#d7c27c"});
-    this.add.text(x+96,y+70,spoilerSafe?"TRAMPA OCULTA":(level.primaryMechanic??"geometría").toUpperCase(),{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:spoilerSafe?"#a78d71":"#8da5b7"});
-    const objects=(level.walls?.length??0)+(level.bumpers?.length??0)+(level.sand?.length??0)+(level.ice?.length??0)+(level.movingWalls?.length??0)+(spoilerSafe?0:(level.popWalls?.length??0)+(level.popBumpers?.length??0)+(level.popVoids?.length??0));
-    this.add.text(x+96,y+94,spoilerSafe?`${objects} visibles`:`${objects} elementos`,{fontFamily:"system-ui, sans-serif",fontSize:"9px",color:"#657583"});
+    if(!spoilerSafe){
+      this.add.text(x+96,y+70,(level.primaryMechanic??"geometría").toUpperCase(),{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#8da5b7"});
+      const objects=(level.walls?.length??0)+(level.bumpers?.length??0)+(level.sand?.length??0)+(level.ice?.length??0)+(level.movingWalls?.length??0)+(level.popWalls?.length??0)+(level.popBumpers?.length??0)+(level.popVoids?.length??0);
+      this.add.text(x+96,y+94,`${objects} elementos`,{fontFamily:"system-ui, sans-serif",fontSize:"9px",color:"#657583"});
+    }
   }
 
   private drawMini(level:LevelDefinition,x:number,y:number,w:number,h:number,spoilerSafe=false):void{

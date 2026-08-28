@@ -66,6 +66,9 @@ async function registerTester():Promise<boolean>{
 let testerReady:Promise<boolean>|null=null;
 const attemptStarts=new Map<string,Promise<unknown>>();
 const activeAttemptByLevel=new Map<string,string>();
+const reportInflight=new Map<string,Promise<boolean>>();
+const reportRecentSuccess=new Map<string,number>();
+const REPORT_DEDUPE_MS=3000;
 async function ensureRegistered():Promise<void>{
   testerReady??=registerTester();
   const ok=await testerReady;
@@ -75,6 +78,9 @@ async function waitForAttempt(attemptId:string):Promise<void>{
   const pending=attemptStarts.get(attemptId);
   if(pending)await pending;
   else await ensureRegistered();
+}
+function reportFingerprint(input:{levelId:string;mode:GameMode;category:BetaReportCategory;note?:string;strokes?:number|null;timeMs?:number|null;}):string{
+  return JSON.stringify([BETA_BUILD_ID,input.levelId,input.mode,input.category,(input.note??"").trim(),input.strokes??null,input.timeMs??null]);
 }
 
 export const BetaTelemetry={
@@ -118,8 +124,18 @@ export const BetaTelemetry={
     if(attemptId&&activeAttemptByLevel.get(input.levelId)===attemptId)activeAttemptByLevel.delete(input.levelId);
   },
   async submitReport(input:{levelId:string;mode:GameMode;category:BetaReportCategory;note?:string;strokes?:number|null;timeMs?:number|null;}):Promise<boolean>{
-    await ensureRegistered();
-    const result=await post({type:"report",testerId:testerId(),buildId:BETA_BUILD_ID,...input});return result?.ok===true;
+    const key=reportFingerprint(input),now=Date.now(),recent=reportRecentSuccess.get(key);
+    if(recent!=null&&now-recent<REPORT_DEDUPE_MS)return true;
+    const existing=reportInflight.get(key);if(existing)return existing;
+    const task=(async()=>{
+      await ensureRegistered();
+      const result=await post({type:"report",testerId:testerId(),buildId:BETA_BUILD_ID,...input});
+      const ok=result?.ok===true;
+      if(ok)reportRecentSuccess.set(key,Date.now());
+      return ok;
+    })().finally(()=>reportInflight.delete(key));
+    reportInflight.set(key,task);
+    return task;
   },
   async submitSupport(input:{category:BetaSupportCategory;message:string;}):Promise<boolean>{
     await ensureRegistered();

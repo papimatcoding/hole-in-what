@@ -137,8 +137,8 @@ export class GameplayScene extends Phaser.Scene {
     this.timeText=this.add.text(498,42,"0.0 s",{fontFamily:"system-ui, sans-serif",fontSize:"15px",color:"#f5f7fa"}).setOrigin(1,0).setDepth(20);
 
     const back=this.add.rectangle(43,86,50,44,0x111920,.88).setStrokeStyle(1,0x344754).setDepth(20).setInteractive({useHandCursor:true});
-    this.add.text(43,82,"‹",{fontFamily:"system-ui, sans-serif",fontSize:"34px",color:"#f5f7fa"}).setOrigin(.5).setDepth(21);
-    back.on("pointerdown",()=>back.setScale(.97)).on("pointerout",()=>back.setScale(1)).on("pointerup",()=>{back.setScale(1);this.scene.start("level-select",{mode:this.mode,page:Math.floor(this.levelIndex/10)});});
+    const backText=this.add.text(43,82,"‹",{fontFamily:"system-ui, sans-serif",fontSize:"34px",color:"#f5f7fa"}).setOrigin(.5).setDepth(21);
+    this.bindHudButton(back,backText,.97,()=>this.scene.start("level-select",{mode:this.mode,page:Math.floor(this.levelIndex/10)}));
 
     if(BETA_TESTING){
       const levels=levelsForMode(this.mode);
@@ -147,7 +147,7 @@ export class GameplayScene extends Phaser.Scene {
       this.add.text(469,113,`${this.mode==="troll"?"H":"C"}${String(this.levelIndex+1).padStart(2,"0")}`,{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#7d91a0"}).setOrigin(.5).setDepth(20);
       const report=this.add.rectangle(62,136,104,40,0x17242d,.94).setStrokeStyle(1,0x557184).setDepth(20).setInteractive({useHandCursor:true});
       const reportText=this.add.text(62,136,"⚑ REPORTAR",{fontFamily:"system-ui, sans-serif",fontSize:"9px",fontStyle:"bold",color:"#afd2e4"}).setOrigin(.5).setDepth(21);
-      report.on("pointerdown",()=>{report.setScale(.97);reportText.setScale(.97);}).on("pointerout",()=>{report.setScale(1);reportText.setScale(1);}).on("pointerup",()=>{report.setScale(1);reportText.setScale(1);this.openReport();});
+      this.bindHudButton(report,reportText,.97,()=>this.openReport());
     }
   }
 
@@ -155,7 +155,26 @@ export class GameplayScene extends Phaser.Scene {
     const bg=this.add.rectangle(x,y,50,42,enabled?0x16232d:0x10171d,.92).setStrokeStyle(1,enabled?0x496273:0x252f37).setDepth(20);
     const text=this.add.text(x,y-1,label,{fontFamily:"system-ui, sans-serif",fontSize:"21px",fontStyle:"bold",color:enabled?"#dce8ef":"#46535d"}).setOrigin(.5).setDepth(21);
     if(!enabled)return;
-    bg.setInteractive({useHandCursor:true}).on("pointerdown",()=>{bg.setScale(.96);text.setScale(.96);}).on("pointerout",()=>{bg.setScale(1);text.setScale(1);}).on("pointerup",()=>{bg.setScale(1);text.setScale(1);action();});
+    bg.setInteractive({useHandCursor:true});this.bindHudButton(bg,text,.96,action);
+  }
+
+  private bindHudButton(bg:Phaser.GameObjects.Rectangle,text:Phaser.GameObjects.Text,pressedScale:number,action:()=>void):void{
+    let armedPointer:number|null=null;
+    const reset=()=>{bg.setScale(1);text.setScale(1);};
+    bg.on("pointerdown",(pointer:Phaser.Input.Pointer)=>{
+      if(this.pointerStartsOnBall(pointer)){armedPointer=null;reset();return;}
+      armedPointer=pointer.id;bg.setScale(pressedScale);text.setScale(pressedScale);
+    });
+    bg.on("pointerout",(pointer:Phaser.Input.Pointer)=>{if(armedPointer===pointer.id)armedPointer=null;reset();});
+    bg.on("pointerup",(pointer:Phaser.Input.Pointer)=>{
+      const shouldFire=armedPointer===pointer.id;armedPointer=null;reset();if(shouldFire)action();
+    });
+  }
+
+  private pointerStartsOnBall(pointer:Phaser.Input.Pointer):boolean{
+    if(this.reportOpen||this.tutorialCard||this.sim.state.moving||this.sinking||this.voidAnimating||this.sim.isAirborne())return false;
+    const p=pointerToDesign(this,pointer),b=this.sim.state.ball;
+    return Phaser.Math.Distance.Between(p.x,p.y,b.x,b.y)<=SHOT_GRAB_RADIUS;
   }
 
   private openReport():void{
