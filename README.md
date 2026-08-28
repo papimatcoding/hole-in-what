@@ -4,106 +4,182 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 
 > **SOURCE OF TRUTH / CHAT HANDOFF — 2026-08-28**
 >
-> Read this file first when continuing in another chat. Update it after any meaningful change to campaign state, architecture, validation, backend/live ops, beta status or immediate priorities.
+> Read this file first when continuing in another chat. Update it after meaningful changes to campaign state, architecture, validation, backend/live ops, beta status or immediate priorities.
 
 ## Current status
 
-### FRIENDS BETA: GO — RC5.1 live
+### BETA — RC5.1 live
 
-Live build:
+The public GitHub Pages build currently comes from `dev`. Maintenance is OFF.
 
-- `beta-block-1-friends-rc5-1`
-- maintenance: **OFF**
-- first campaign block: **FROZEN after human validation**
-
-Block 1 contains:
+Current live campaign:
 
 - 10 authored Classic holes;
 - 5 authored HARD/Troll holes;
 - shared pure-TypeScript physics;
-- automated validation + adversarial solvers;
-- anonymous beta telemetry and in-game feedback;
-- player identity/profile;
-- online presence + maintenance/update flow;
-- Community Maps single-hole MVP.
+- automated adversarial/human-model auditing;
+- anonymous beta telemetry + in-game feedback;
+- player profile/alias;
+- Community Maps single-hole MVP;
+- maintenance/update flow and approximate online presence.
 
-The owner manually re-tested RC5.1 HARD 03 on mobile after the final widening pass and accepted it as difficult but human-playable. **Do not reopen HARD 03 or micro-tune block 1 without new multi-user evidence.**
+RC5.1 HARD 03 was manually validated on mobile after widening a route that had been mathematically solvable but practically pixel-perfect. Keep the RC5→RC5.1 regression fixture permanently in Audit 2.1.
+
+## Current feature work
+
+Active branch:
+
+- `feature/block-2-authoring`
+
+This branch is **not deployed**. `dev` remains the playable beta while work continues.
+
+Current candidate changes include:
+
+- Classic 11–13 authored as first Block 2 candidates;
+- certified ice / booster / portal behavior contracts;
+- profile/input DOM stacking fix so HTML inputs remain visible/clickable above the Phaser canvas;
+- Community comments changed from browser `prompt()` to an in-game textarea editor;
+- global survey changed to an opt-in invitation before the full questionnaire;
+- one-time beta survey reward of 5 gems, keyed independently from patch number to prevent normal patch-to-patch farming;
+- maintenance screen polling + full-page reload after maintenance ends;
+- concise Beta RC6 Patch Notes;
+- first H01 touch-route adjustment is still a candidate and must be judged by Full Audit, not by the old fast model.
+
+Candidate beta build ID:
+
+- `beta-block-2-rc6`
+
+Do not update backend `current_build_id` to RC6 until RC6 is actually promoted to `dev`.
 
 ## Branch / release model
 
-- `main` — stable history.
-- `dev` — stable friends-beta release candidate and GitHub Pages source.
-- `feature/**` / `lab/**` — development laboratory. These branches **must not deploy Pages**.
+The official workflow is now:
 
-GitHub Pages:
+**`feature/**` → `dev` (beta + human review) → `main` (official release)**
 
-- https://papimatcoding.github.io/troll-golf/
+### `feature/**`
 
-New development flow:
+- all active development;
+- new mechanics, levels, UI and fixes;
+- automated testing and Full Audit;
+- never deployed to the public game.
 
-1. create/work on a feature branch;
-2. run fast lab validation continuously;
-3. iterate without maintenance and without affecting friends;
-4. open PR to `dev`;
-5. run full pre-release lab certification;
-6. human playtest when gameplay changed;
-7. merge to `dev` only when ready;
-8. use maintenance only for a real production transition that could affect live clients.
+### `dev`
 
-`dev` should no longer be used as a scratchpad.
+- public **beta**;
+- current GitHub Pages source;
+- receives only already-certified feature work;
+- real mobile/desktop human testing happens here;
+- player telemetry/feedback is used to discover problems the model cannot prove;
+- never use `dev` as a scratchpad.
 
-## Responsive presentation
+### `main`
 
-Gameplay is **device-invariant**; presentation does not have to be.
+- official shipped version;
+- promote the accepted `dev` state only when the game/version has enough polished content and is genuinely ready to release.
 
-- physics, course coordinates, shot rules, sensitivity and mechanics stay identical on desktop and touch;
-- `src/config/display.ts` owns presentation-only form-factor detection;
-- desktop detection uses fine pointer + hover + viewport width, not user-agent sniffing;
-- desktop may use larger typography, denser/horizontal layouts, hover states and an intentional framed game shell;
-- touch/mobile keeps larger touch targets and the compact vertical flow that already works well;
-- never fix desktop UX by creating a second gameplay/input implementation.
+There is no normal `release/**` stage. See `docs/release-process.md`.
 
-The first desktop UX pass was promoted to `dev` through PR #4 (`feature/pc-ui-ux`). It covers the browser shell, main menu, level select, Results/post-hole survey, player profile, Assistance, Community discovery, Patch Notes and the global survey. The post-hole survey uses explicit **ENVIAR / SALTAR** rather than auto-submitting as soon as the third answer is clicked. Player alias edits are stored locally immediately and synced to the backend afterwards, while `tester_id` remains unchanged. PR #3 (`feature/desktop-ui-feedback`) is an older superseded pass and should not be used as the current source of truth.
+## Level-development rule
 
-## Physics authority
+We are deliberately separating **level quality** from **campaign ordering**.
 
-`src/systems/GolfSimulation.ts` is the **single physics authority** for campaign, audits and Community Maps.
+Current plan:
 
-It owns:
+1. audit and improve every existing level;
+2. only after individual quality is acceptable, evaluate/reorder the campaign progression if necessary;
+3. add more levels in small authored batches;
+4. Full Audit each batch;
+5. move the certified version to `dev` for human beta testing;
+6. repeat until there is enough strong content for an official release.
 
-- launch / friction;
-- bounds / walls;
-- triangles / curves;
-- bumpers;
-- sand / ice;
-- boosters / fans;
-- portals;
-- moving objects;
-- ramps / trampolines;
-- voids / pop traps;
-- cup sweep / lip / sink.
+Do not redesign the whole campaign at once.
 
-Phaser owns rendering, input, audio, haptics and FX.
+### Existing-level audit batches
 
-Do not revive a second physics implementation or the old `GameScene -> V8 -> V81 -> V82` patch chain.
+Review several related levels at a time, but always with full-precision certification:
 
-Runtime campaign files:
+1. **Classic 01–05**
+2. **Classic 06–10**
+3. **Classic 11–13**
+4. **HARD 01–05**
 
-- `src/scenes/GameplayScene.ts`
-- `src/systems/CourseRenderer.ts`
-- `src/systems/ShotInputSystem.ts`
-- `src/data/campaign.ts`
-- `src/data/authored/classic.ts`
-- `src/data/authored/hard.ts`
-- `src/systems/SaveSystem.ts`
+For each batch:
 
-Procedural generation is tooling only; never campaign/fallback content.
+- confirm the intended teaching/troll purpose;
+- inspect Full Audit evidence;
+- make only justified changes;
+- run Full Audit across the complete campaign to catch regressions outside the edited batch;
+- keep changes only if they improve human margin, mechanic relevance, originality/progression or trap fairness without adding cheese/bypasses.
 
-## Block 1 design source of truth
+The fast workflow is **not** an acceptance tool for levels.
+
+## Audit 2.1 — acceptance policy
+
+Audit 2.1 is the internal level-design critic.
+
+Core scripts:
+
+- `scripts/courseAudit.ts` — adversarial/strict campaign solver;
+- `scripts/audit2.ts` — human execution critic;
+- `scripts/audit2Design.ts` — difficulty/originality + design advice;
+- `scripts/courseOriginalityAudit.ts` — structural originality.
+
+### Full Audit is authoritative for automated level review
+
+Use:
+
+```bash
+FULL_AUDIT=1 npm run audit:courses
+npm run audit:human:full
+npm run audit:design
+npm run audit:originality
+```
+
+The GitHub workflow `.github/workflows/lab-full-audit.yml` runs the full certification and cancels stale runs when a newer revision is pushed.
+
+`.github/workflows/lab-audit.yml` is now only a **technical smoke workflow** (typecheck, build, physics, mechanics, geometry, clearance). Do not use a quick/fast model to approve or reject authored levels.
+
+A Full Audit result is still not a replacement for real playtesting:
+
+> **Mathematical solution ≠ automated human model ≠ real human validation.**
+
+All three layers matter.
+
+### What Audit 2.1 checks
+
+- best / blind / learned / naive routes;
+- HIO and cheese/bypass search;
+- route-family diversity;
+- touch, casual and mouse execution;
+- angle/power perturbation;
+- per-shot tolerance;
+- recovery after imperfect shots;
+- boundary-rest risk;
+- trap trigger/consequence;
+- primary-mechanic relevance;
+- moving-state / timeout / softlock risk;
+- geometry and clearance;
+- structural originality.
+
+Machine difficulty/originality and player ratings stay separate. Never average them together.
+
+## Campaign design principles
 
 ### Classic
 
-Teaching plan:
+Each hole needs both:
+
+- a distinct silhouette;
+- a distinct strategic question.
+
+The useful rhythm is generally:
+
+**teach → apply → combine → exam**
+
+A new mechanic may create a controlled difficulty reset. The campaign does not need a perfectly monotonic difficulty graph, but accidental cliffs/dips should be investigated.
+
+Block 1 original teaching intent:
 
 1. control / comfortable HIO
 2. first bank
@@ -116,7 +192,7 @@ Teaching plan:
 9. sand route choice
 10. chapter exam
 
-Each hole needs a distinct silhouette **and** strategic question. Teach mechanics, then reuse them.
+Block 2 begins with ice → ice application → booster, then will expand only after the first batch survives Full Audit and human beta testing.
 
 ### HARD
 
@@ -125,229 +201,75 @@ A good troll trap:
 1. makes the obvious read attractive;
 2. surprises;
 3. is deterministic and understandable afterwards;
-4. genuinely changes the failed/learned route;
+4. changes the failed/learned route;
 5. leaves a fair learned answer;
 6. has normal human execution margin;
-7. creates “qué cabrón”, not “esto es random”.
+7. feels like “qué cabrón”, not “esto es random”.
 
-The learned optimal route may avoid the trap if avoiding it is the lesson, but the naive attractive read must be demonstrably punished.
+Never spoil HARD solutions in selection screens, tutorials or Patch Notes.
 
-Do not spoil HARD traps in level select, tutorial overlays or Patch Notes.
+## Physics authority
 
-### HARD 03 historical regression
+`src/systems/GolfSimulation.ts` is the **single physics authority** for campaign, audits and Community Maps.
 
-RC5 HARD 03 was mathematically solvable but effectively pixel-perfect for a human. RC5.1 widened the learned route while keeping the trap meaningful.
+It owns:
 
-This failure is now a permanent **Audit 2.1 regression fixture**. Audit changes should continue to distinguish the bad RC5 geometry from the accepted RC5.1 geometry.
+- launch / friction;
+- bounds / walls / triangles / curves;
+- bumpers;
+- sand / ice;
+- boosters / fans;
+- portals;
+- moving objects;
+- ramps / trampolines;
+- voids / pop traps;
+- cup sweep / lip / sink.
 
-## Audit 2.1
+Phaser owns rendering, input, audio, haptics and FX.
 
-Audit 2.1 is the current internal level-design critic. It was developed on `feature/audit-2-human` and certified through PR #1 before promotion to `dev`.
+Do not create a second gameplay/input implementation for desktop or Community Maps.
 
-Core scripts:
+Runtime campaign files:
 
-- `scripts/audit2.ts` — physics/human-model critic;
-- `scripts/audit2Design.ts` — difficulty/originality ranking + design recommendations.
+- `src/scenes/GameplayScene.ts`
+- `src/systems/CourseRenderer.ts`
+- `src/systems/ShotInputSystem.ts`
+- `src/data/campaign.ts`
+- `src/data/authored/classic.ts`
+- `src/data/authored/classicBlock2.ts`
+- `src/data/authored/hard.ts`
+- `src/systems/SaveSystem.ts`
 
-Workflows:
+Procedural generation is tooling only, never campaign fallback content.
 
-- `.github/workflows/lab-audit.yml` — fast feature-branch feedback;
-- `.github/workflows/lab-full-audit.yml` — full PR/manual pre-release certification.
+## Responsive presentation
 
-### What Audit 2.1 measures
+Gameplay must be device-invariant; presentation may adapt.
 
-- learned / naive / explorer agents;
-- best and blind solvability;
-- HIO / cheese search;
-- route-family diversity;
-- mouse / touch / casual execution models;
-- angle and power perturbation;
-- per-shot tolerance;
-- recovery after imperfect shots;
-- rests near boundaries;
-- trap trigger and real consequence;
-- primary-mechanic relevance;
-- moving-state / softlock risk;
-- traditional geometry / clearance / originality checks.
-
-Audit 2.1 explicitly separates:
-
-- **best route** — lowest-stroke route found;
-- **human route** — most robust route found within at most +1 stroke of optimum.
-
-This prevents a fragile 2-stroke speedrun line from making an otherwise comfortable 3-stroke solution look pixel-perfect.
-
-Important calibration rule:
-
-> **A mathematical solution is not human validation.**
-
-The human model is a critic, not an oracle. It remains advisory/reporting rather than replacing manual playtests or the strict campaign gate.
-
-### Difficulty and originality
-
-Both design metrics use **1.0–5.0**, not LOW/MEDIUM/HIGH labels.
-
-Keep machine and player scores separate:
-
-- `difficultyAudit: 1–5`
-- `difficultyPlayers: 1–5`
-- `originalityAudit: 1–5`
-- `originalityPlayers: 1–5`
-
-Do not average them together. Disagreement is valuable evidence.
-
-Examples:
-
-- audit difficulty 2.2 / players 4.3 → investigate controls, readability or missing knowledge before changing geometry;
-- audit originality 4.0 / players 2.0 → structurally different may still feel repetitive.
-
-### Audit 2.1 full calibration — accepted baseline
-
-Full Lab Audit:
-
-- run `33085175970`: **success**;
-- strict campaign solver: **Classic 10/10 + HARD 5/5 clean**;
-- Audit 2.1 human model: **13 PASS / 2 REVIEW / 0 BLOCKER**;
-- originality audit: **0 structurally similar pairs**.
-
-The two advisory reviews are:
-
-- Classic 06 — `MECHANIC_RELEVANCE_LOW` in the selected robust route;
-- HARD 01 — touch/tolerance margin worth watching.
-
-Do **not** reopen frozen block 1 from these advisory flags alone. Cross them with real player evidence first.
-
-HARD 03 regression in the full model:
-
-- bad RC5 fixture: human score ~61%, touch ~71%, tolerance ~43%;
-- accepted RC5.1: human route **3 strokes**, human score ~83%, touch ~89%, tolerance ~72%;
-- regression result: **PASS**.
-
-Current simulation-only difficulty order from the full Design Advisor:
-
-1. Classic 01 — difficulty 2.0/5 · originality 3.7/5
-2. Classic 05 — 2.2/5 · 3.4/5
-3. Classic 07 — 2.2/5 · 2.9/5
-4. Classic 03 — 2.3/5 · 3.5/5
-5. Classic 02 — 2.4/5 · 3.5/5
-6. Classic 08 — 2.4/5 · 3.5/5
-7. Classic 06 — 2.4/5 · 3.5/5
-8. Classic 04 — 2.6/5 · 3.6/5
-9. Classic 09 — 2.8/5 · 3.4/5
-10. HARD 03 — 2.9/5 · 3.6/5
-11. HARD 04 — 2.9/5 · 3.4/5
-12. HARD 01 — 3.1/5 · 3.4/5
-13. HARD 05 — 3.1/5 · 4.1/5
-14. HARD 02 — 3.2/5 · 3.7/5
-15. Classic 10 — 3.4/5 · 2.9/5
-
-These are calibration outputs, **not authored truth**. Reorder/redesign only after combining them with human evidence.
-
-### Feedback-aware Design Advisor
-
-`audit2Design.ts` accepts an optional aggregated feedback snapshot containing, per level:
-
-- sample size;
-- average fun;
-- average originality;
-- average difficulty;
-- bug rate;
-- HARD surprise/caught score;
-- recurring themes.
-
-Recommendations distinguish cases such as:
-
-- low fun + low difficulty → add a memorable decision/mechanic/risk-reward, not precision;
-- low fun + high difficulty → reduce friction/precision and improve readability;
-- reasonable difficulty + low fun → redesign the strategic question/silhouette;
-- low originality → introduce a genuinely new interaction, not cosmetic geometry;
-- weak HARD surprise → improve bait/consequence without making the learned answer arbitrary;
-- player/audit difficulty disagreement → investigate input/readability/knowledge first.
-
-Current RC5.1 feedback remains tiny and owner-weighted. One H03 response currently gives roughly 3/5 fun, 3/5 originality, 3/5 difficulty and 5/5 surprise. Do not overfit to n=1.
-
-When importing feedback into Audit 2.1, use **aggregated/non-identifying snapshots**. Do not commit tester aliases, UUIDs or raw private comments just to run design analysis.
-
-## Validation commands
-
-Normal release checks:
-
-```bash
-npm run typecheck
-npm run build
-npm run test:hole
-npm run test:mechanics
-npm run test:geometry
-npm run test:clearance
-npm run audit:courses
-npm run audit:originality
-```
-
-Strict campaign solver:
-
-```bash
-FULL_AUDIT=1 npm run audit:courses
-```
-
-Audit 2.1:
-
-```bash
-npm run audit:human
-npm run audit:human:full
-npm run audit:design
-```
-
-Full campaign certification still requires every authored campaign course to be `OK`. Inspect textual summaries; workflow colour is not a substitute for understanding the output.
-
-## Patch Notes policy
-
-Player-facing Patch Notes must be **short, natural and spoiler-free**.
-
-Good examples:
-
-- “Solucionado un problema que hacía HARD 03 demasiado difícil de resolver.”
-- “Mejorados los controles cerca de los bordes.”
-- “Mejoras y correcciones en Community Maps.”
-
-Do not expose:
-
-- trap solutions;
-- exact routes;
-- internal telemetry/build architecture;
-- implementation details;
-- long AI-sounding explanations.
-
-README/documentation can stay technical. Patch Notes are for players.
-
-Files:
-
-- `src/systems/PatchNotesSystem.ts`
-- `src/scenes/PatchNotesScene.ts`
+- same physics/course coordinates/shot sensitivity on desktop and touch;
+- `src/config/display.ts` owns presentation-only detection;
+- no user-agent gameplay forks;
+- desktop may use denser layouts, larger typography and hover states;
+- touch keeps larger targets and compact vertical flow.
 
 ## Player identity / feedback
 
 - `tester_id` is stable anonymous browser identity;
-- alias is editable in-game and **must not change tester_id**;
-- changing alias must not unlock another survey/rating;
-- feedback/report UI should be in-game, not browser prompts.
+- alias is editable and must never change `tester_id`;
+- changing alias must not unlock another rating/survey;
+- feedback/comment entry should be in-game, not browser prompts.
+
+Global survey:
+
+- invitation first;
+- player may decline without disruption;
+- completion reward candidate: **5 gems**;
+- reward uses a stable claim ID rather than patch/build ID so normal updates cannot be farmed repeatedly.
 
 Backend uniqueness:
 
 - `beta_game_feedback`: `(tester_id, build_id)`;
 - `beta_level_feedback`: `(tester_id, build_id, level_id)`.
-
-Main-menu **ASISTENCIA AL JUGADOR** contains profile/alias, global survey and support message categories.
-
-Beta tables include:
-
-- `beta_testers`
-- `beta_runs`
-- `beta_level_feedback`
-- `beta_game_feedback`
-- `beta_reports`
-- `beta_support_messages`
-- `beta_presence`
-- `app_status`
 
 Supabase project:
 
@@ -357,88 +279,83 @@ Never commit service-role/admin secrets.
 
 ## Community Maps
 
-Publishing flow:
+Current single-hole publishing loop:
 
-**Editor → save explicit draft → select draft → complete playtest → publish**
+**Editor → explicit draft → playtest → publish → discover → play → rate/comment/report**
 
-Editing a draft invalidates its previous playtest certification.
+Editing a draft invalidates its playtest certification.
 
-Discovery:
+Discovery tabs:
 
 - TENDENCIA
 - MEJORES
 - NUEVOS
 
-Current loop:
+Creator protections:
 
 - creator alias;
-- 1–5★ rating;
-- plays / unique players / approximate active players;
-- comments;
-- reports;
-- creator-owned delete, validated server-side;
-- creator cannot self-rate.
+- self-rating blocked;
+- creator-owned delete validated server-side.
 
-Community Play must share GolfSimulation, CourseRenderer, shot input, cosmetics and core gameplay feedback with campaign.
+Schema remains prepared for future multi-hole courses (`map_kind`, `hole_count`, `holes_json`), but do not build the full multi-hole editor until the single-hole loop survives real multi-user beta testing.
 
-Schema is prepared for future multi-hole courses:
-
-- `map_kind: single | course`
-- `hole_count: 1–18`
-- `holes_json`
-
-Do not build the full multi-hole editor until the single-hole Community flow survives real multi-user testing.
-
-## Live ops
+## Live ops / maintenance
 
 Backend table: `app_status`.
 
-- Boot checks current build/maintenance;
-- stale clients can be sent to update-required;
-- maintenance scene shows patch/message/ETA;
-- presence heartbeat supplies approximate online count.
+Maintenance is **OFF during feature development**.
 
-Meaningful production deploy protocol:
+For a real beta deployment:
 
-1. prepare/certify on feature branch first;
-2. maintenance ON only when the actual live transition begins and needs protection;
-3. deploy code/backend;
-4. CI + Pages green;
-5. final smoke checks;
-6. concise Patch Notes + README handoff;
-7. update server build ID if gameplay/data comparability changes;
-8. maintenance OFF.
+1. feature work + Full Audit complete;
+2. maintenance ON immediately before promotion to `dev`;
+3. merge/promote certified feature state to `dev`;
+4. Pages deploys the new beta;
+5. smoke test the actual deployed build;
+6. update backend `current_build_id`/patch text if appropriate;
+7. maintenance OFF.
 
-With feature/lab branches, most level design and audit work should happen with **no maintenance at all**.
+Maintenance clients poll status and perform a full page reload after maintenance ends to avoid stale assets.
+
+If deployment is broken, keep maintenance enabled and rollback `dev` to the previous known-good commit before reopening the beta.
+
+## Patch Notes policy
+
+Player-facing notes must be short, natural and spoiler-free.
+
+Use **BETA**, never “Friends Beta”.
+
+Do not expose:
+
+- trap solutions;
+- exact routes;
+- internal audit/telemetry architecture;
+- implementation details;
+- long technical explanations.
 
 ## Known non-blockers
 
-- bundle ~1.55 MB minified / ~410 kB gzip;
-- beta sample is still small and owner-weighted;
+- bundle remains relatively large (~1.55 MB minified / ~410 kB gzip);
+- beta sample is currently small;
 - abandonment analytics are approximate;
-- Community discovery/search/pagination waits for real map volume;
-- multi-hole Community is schema-prepared but not implemented;
-- private DEV/review dashboard not implemented;
-- Audit 2.1 thresholds remain advisory and should not auto-redesign frozen levels without human evidence.
+- Community search/pagination can wait for real volume;
+- multi-hole Community is not implemented;
+- private DEV/review dashboard is not a current priority.
 
 ## Deliberately not building now
 
-Do not spend the current milestone on ranked/MMR multiplayer, battle pass/seasons, Daily Hole, ads/lootboxes, extra currencies or large account systems.
+Do not spend this milestone on ranked/MMR multiplayer, battle pass/seasons, Daily Hole, ads/lootboxes, extra currencies or large account systems.
 
-Historical ideas such as ~40 Classic + ~40 HARD, competitive online up to 10, bots, ranked/MMR and thematic seasons remain possible later.
+Long-term ideas such as ~40 Classic + ~40 HARD, competitive online play, bots/ranks and seasons remain future possibilities, not current scope.
 
 ## Immediate next steps — resume here
 
-**Block 1 remains frozen. Audit 2.1, the first Block 2 mechanic contracts (ice, booster, portal) and the first desktop UX pass are all merged into `dev`. Block 2 authoring can now begin on a fresh feature branch without touching the frozen first block.**
-
-1. Do a final post-merge desktop/mobile smoke check of current `dev` and confirm GitHub Pages still presents the responsive UI correctly; no gameplay retuning is implied by this check.
-2. Close/ignore superseded PR #3 (`feature/desktop-ui-feedback`); PR #4 is the desktop source of truth.
-3. Run Community Maps end-to-end with at least two testers: create → draft → playtest → publish → discover → play → rate → comment → report → creator delete / self-rating blocked.
-4. Start authored Block 2 holes on a new feature branch, using the now-certified ice / booster / portal contracts before adding further mechanics.
-5. Use Audit 2.1 to rank candidate holes by difficulty/originality and recommend changes, then manually play them before promotion.
-6. When reviewing beta feedback, query Supabase, create an aggregated/non-identifying snapshot and feed it to `audit2Design.ts`.
-7. Build a private DEV/review dashboard only when enough fresh beta/community data exists to justify it.
-
-## Development principle
-
-**Author deliberately → audit adversarially → model humans → play manually → test with humans → curate → approve.**
+1. Treat the current feature branch as the RC6 development laboratory; do **not** merge it to `dev` yet.
+2. Obtain a fresh **Full Audit baseline** for the complete current campaign (C01–13 + H01–05), including the candidate H01 adjustment.
+3. Review/improve existing levels by batch: **C01–05 → C06–10 → C11–13 → H01–05**. Each batch gets one Full Audit over the complete campaign before moving on.
+4. Do not use the old fast human-model output for design decisions.
+5. Once all existing levels are individually strong, evaluate the campaign ordering/progression as a separate pass and reorder only where evidence supports it.
+6. Add additional Classic/HARD levels in small batches, Full Audit each batch, and continue until there is a substantial high-quality campaign.
+7. Promote the certified feature state to `dev` for real beta playtesting; fix human-only issues through new feature branches.
+8. Promote accepted `dev` to `main` only when the game/version is ready for official release.
+9. Before the next beta deployment, verify profile inputs, Community comment editor, survey invitation/reward and maintenance auto-reload on both mobile and desktop.
