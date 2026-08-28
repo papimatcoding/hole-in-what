@@ -84,8 +84,8 @@ export class ResultsScene extends Phaser.Scene{
     children.push(this.add.text(270,top,"¿QUÉ TAL ESTE HOYO?",{fontFamily:"system-ui",fontSize:uiFontSize(17,2),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5));
     children.push(this.add.text(270,top+31,"3 respuestas rápidas · pulsa ENVIAR al terminar",{fontFamily:"system-ui",fontSize:uiFontSize(10,2),color:"#91a4b1"}).setOrigin(.5));
     this.segmentRow(children,"DIVERSIÓN",top+88,["1","2","3","4","5"],[1,2,3,4,5],"fun");
-    this.segmentRow(children,"ORIGINAL",top+153,["REPETIDO","NORMAL","NUEVO"],[1,3,5],"originality");
-    this.segmentRow(children,"DIFICULTAD",top+218,["FÁCIL","JUSTA","DURA"],[1,3,5],"difficulty");
+    this.segmentRow(children,"ORIGINAL",top+153,["1","2","3","4","5"],[1,2,3,4,5],"originality");
+    this.segmentRow(children,"DIFICULTAD",top+218,["1","2","3","4","5"],[1,2,3,4,5],"difficulty");
     const chipY=top+282;
     if(hard){const bug=this.chip(children,190,chipY,"⚠ BUG",()=>{this.surveyBug=!this.surveyBug;bug.setFillStyle(this.surveyBug?0x5a342f:0x17242d);});const troll=this.chip(children,350,chipY,"😈 ME PILLÓ",()=>{this.surveySurprise=!this.surveySurprise;troll.setFillStyle(this.surveySurprise?0x4c3f65:0x17242d);});}
     else{const bug=this.chip(children,270,chipY,"⚠ BUG",()=>{this.surveyBug=!this.surveyBug;bug.setFillStyle(this.surveyBug?0x5a342f:0x17242d);});}
