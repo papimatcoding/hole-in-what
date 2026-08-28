@@ -66,15 +66,18 @@ This matches the transform origin used by Phaser's correct parent-container rend
 - translated normal tester flow;
 - report panels close/guard before awaiting network requests to reduce accidental duplicate sends.
 
-## Workflow
+## Workflow — default project rule
 
-**`feature/**` → `dev` (public BETA / human validation) → `main` (official release)**
+Unless the project owner explicitly says otherwise, **all work follows this promotion path**:
 
-- `feature/**`: active development and artificial acceptance. Technical smoke for normal changes; Full Audit for campaign/simulation/design-affecting work. No public Pages deployment.
-- `dev`: public beta. Humans validate touch/mouse behavior, readability, fun, fairness and forms. Once external cohort testing starts, do not use it as an exploratory scratchpad.
-- `main`: official shipped state only.
+**`feature/**` → artificial review → `dev` → human review → `main`**
 
-Any human-discovered problem on `dev` returns to a new `feature/**` branch, passes the relevant artificial gates and is promoted back to `dev` for human re-validation.
+- `feature/**`: active development and **artificial acceptance only**. Technical smoke for normal changes; Full Audit for campaign/simulation/design-affecting work. Feature branches are not the public human-test build.
+- `dev` during beta: receives work only after the relevant artificial checks pass. It is the **human-validation / public beta build**, where real players validate touch/mouse behavior, readability, fun, fairness and forms. Human-discovered problems return to a fresh `feature/**` branch and must pass artificial review again before coming back to `dev`.
+- `main` during beta: do not promote ordinary beta iteration here. `main` receives the game when the beta is considered complete and the build is accepted as the real shipped game.
+- **After beta completion:** `main` becomes the player/release build and `dev` becomes the ongoing **developer build** for future development and human validation before later promotions to `main`.
+
+Do not bypass a stage, push exploratory fixes straight through the chain, or treat an artificial PASS as human acceptance unless the owner explicitly requests an exception.
 
 ## Campaign artificial certification — CLOSED
 
@@ -213,4 +216,4 @@ Never spoil HARD solutions in selectors, previews, tutorials, Patch Notes or tra
 8. Watch completion/abandonment, first-attempt vs retry lift, strokes/time, touch-vs-mouse gaps, route clusters, ratings and qualitative comments.
 9. In parallel, continue Audit V3 with **memory across attempts**; keep V3.1 shadow-only until calibrated against humans.
 10. After RC6 evidence is reviewed, author the next **small** Classic/HARD content batch with stronger mechanic/visual variety rather than a huge dump.
-11. Promote accepted `dev` to `main` only when content and polish justify an official release.
+11. When the beta is complete and the game is accepted for release, promote the accepted `dev` build to `main`; from that point onward `main` is the player/release build and `dev` is the ongoing developer build.
