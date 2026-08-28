@@ -8,7 +8,7 @@ export class BootScene extends Phaser.Scene{
   create():void{
     setupDesignCamera(this);
     this.cameras.main.setBackgroundColor("#0b0f14");
-    this.add.text(270,452,"TROLL GOLF",{fontFamily:"system-ui, sans-serif",fontSize:"28px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
+    this.add.text(270,452,"HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:"28px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
     this.add.text(270,494,"CARGANDO…",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#7f91a0"}).setOrigin(.5);
     void this.route();
   }
