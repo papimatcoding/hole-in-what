@@ -22,7 +22,7 @@ path(c11,pt(400,640),pt(420,470),pt(420,340),pt(420,160));
 // left landing area, deliberately controls where the ball stops, then finishes from that setup.
 // A slower grass-heavy route around the lower/left edge remains available for recovery.
 const c12=base("classic",12,pt(420,842),pt(110,154),2,3,"ice");
-c12.walls=[r(220,330,292,24),r(220,330,24,180)];
+c12.walls=[r(220,330,292,24),r(196,330,24,180)];
 c12.ice=[r(80,540,400,180)];
 path(c12,pt(140,620),pt(150,470),pt(160,300),pt(110,154));
 
