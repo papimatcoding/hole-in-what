@@ -63,7 +63,8 @@ jobs:
       - name: Audit 2 full human-model report
         run: npm run audit:human:full
 
-      - name: Audit V3 shadow intelligence
+      # npm run audit:v3:full now means the complete V3.1 shadow stack: V3 base + chained consequence look-ahead.
+      - name: Audit V3.1 shadow intelligence
         run: npm run audit:v3:full
 
       - name: Difficulty and design advice
