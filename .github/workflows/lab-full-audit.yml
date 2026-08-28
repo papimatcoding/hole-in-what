@@ -1,8 +1,8 @@
 name: Lab Full Audit
 
 # Expensive campaign certification. Run automatically only when a feature/lab push changes campaign
-# data, simulation or audit logic. UI, branding, telemetry and docs stay on fast smoke checks and can
-# no longer cancel an in-progress level certification.
+# data, simulation or TypeScript validation/audit logic. UI, branding, telemetry, SQL and docs stay on
+# fast smoke checks and can no longer cancel an in-progress level certification.
 on:
   push:
     branches:
@@ -13,7 +13,7 @@ on:
       - "src/data/**"
       - "src/systems/GolfSimulation.ts"
       - "src/types.ts"
-      - "scripts/**"
+      - "scripts/**/*.ts"
       - ".github/workflows/lab-full-audit.yml"
   workflow_dispatch:
 
