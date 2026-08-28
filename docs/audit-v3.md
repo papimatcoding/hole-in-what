@@ -83,13 +83,26 @@ V3 runs shallow post-trigger search probes. A likely terminal state that is **no
 
 Optional input: `AUDIT3_HUMAN_FILE`, default `artifacts/audit3-human.json`.
 
-The accepted shape is the JSON output of `scripts/betaTelemetryAggregate.sql`. The file contains aggregate level statistics only, no tester IDs.
+The preferred snapshot is produced by `scripts/betaTelemetryAudit3.sql`. It returns aggregate level statistics only, no tester IDs, and excludes the developer smoke alias `Matkiller` from calibration. The older `scripts/betaTelemetryAggregate.sql` shape remains accepted for backwards compatibility.
+
+The boosted V3 snapshot includes:
+
+- external players, attempts and completed attempts;
+- first-attempt completion vs retry completion;
+- stale/explicit abandonment and extra attempts per player;
+- median/p75 strokes and median completion time;
+- shot count, touch/mouse/pen mix, hole/void rates, shot duration and power dispersion;
+- mobile/tablet/desktop player counts and mobile vs desktop completion;
+- 1–5 fun/originality/difficulty/surprise feedback;
+- coarse **first-shot landing clusters** (60 px cells, top six only) so V3 can compare human route choice with artificial route families without storing identities or physical pointer trajectories.
 
 For completion, V3 treats synthetic touch success as a Bayesian-style prior and updates it with real completed/attempt counts. The prior is intentionally small so real players take over quickly.
 
 For subjective difficulty, artificial difficulty is blended with the 1–5 post-hole difficulty rating as feedback sample size grows.
 
 Confidence bands are based on players/attempts. Large model-human disagreement becomes an advisory; in strict mode a sufficiently confident disagreement can promote a level to REVIEW.
+
+The next calibration layer should explicitly consume retry lift, device completion gaps and route-cluster concentration as soon as an external sample exists; until then those fields remain evidence in the snapshot rather than hard gates.
 
 ## Map intelligence
 
@@ -106,6 +119,8 @@ V3 rasterises each authored map independently of its intended route and computes
 - nearest structural neighbour in the same mode, including mirrored similarity.
 
 These metrics are descriptive. A corridor or symmetric map can be excellent; the purpose is to detect repetition and provide context to design review.
+
+Human first-shot clusters are deliberately kept separate from authored-map geometry: V3 should be able to say “these two maps look different but players solve them the same way” or “this map looks simple but humans split into three route families”.
 
 ## Outputs
 
