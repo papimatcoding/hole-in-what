@@ -32,6 +32,7 @@ const exact=new Map<string,string>([
   ["REINTENTAR","RETRY"],
   ["SIGUIENTE","NEXT"],
   ["‹ ANTERIOR","‹ PREVIOUS"],
+  ["‹ ATRÁS","‹ BACK"],
   ["SIGUIENTE ›","NEXT ›"],
   ["NIVELES","LEVELS"],
   ["🏆 RANKING","🏆 LEADERBOARD"],
@@ -45,6 +46,63 @@ const exact=new Map<string,string>([
   ["😈 ME PILLÓ","😈 GOT ME"],
   ["SALTAR","SKIP"],
   ["ENVIAR","SEND"],
+
+  ["ENCUESTA GLOBAL","GLOBAL SURVEY"],
+  ["AYÚDANOS A MEJORAR","HELP US IMPROVE"],
+  ["¿QUIERES CONTESTAR\nUNA ENCUESTA?","WOULD YOU LIKE TO\nTAKE A SURVEY?"],
+  ["Son 4 pantallas cortas. Tus respuestas nos ayudan a decidir\nqué niveles, controles y sistemas mejorar primero.","It is 4 short screens. Your answers help us decide\nwhich levels, controls and systems to improve first."],
+  ["RECOMPENSA DE BETA YA RECLAMADA","BETA REWARD ALREADY CLAIMED"],
+  ["SÍ, QUIERO AYUDAR","YES, I WANT TO HELP"],
+  ["AHORA NO","NOT NOW"],
+  ["La recompensa solo se puede reclamar una vez, aunque haya nuevos parches.","The reward can only be claimed once, even after new patches."],
+  ["¿CÓMO SE SIENTE EL JUEGO?","HOW DOES THE GAME FEEL?"],
+  ["Puntúa del 1 al 5","Rate from 1 to 5"],
+  ["DIVERSIÓN GENERAL","OVERALL FUN"],
+  ["CONTROLES / GAME FEEL","CONTROLS / GAME FEEL"],
+  ["VARIEDAD","VARIETY"],
+  ["BALANCE Y HARD","BALANCE & HARD"],
+  ["Cómo se siente la dificultad del bloque actual","How the current block difficulty feels"],
+  ["CURVA DE DIFICULTAD","DIFFICULTY CURVE"],
+  ["MODO HARD","HARD MODE"],
+  ["¿JUGARÍAS OTRO BLOQUE DE NIVELES?","WOULD YOU PLAY ANOTHER LEVEL BLOCK?"],
+  ["SÍ","YES"],
+  ["NO","NO"],
+  ["ELIGE TU NIVEL FAVORITO","PICK YOUR FAVOURITE LEVEL"],
+  ["¿CUÁL ES EL MÁS FLOJO?","WHICH ONE IS THE WEAKEST?"],
+  ["Opcional · nos ayuda a entender qué funciona","Optional · helps us understand what works"],
+  ["Opcional · no significa necesariamente que esté roto","Optional · does not necessarily mean it is broken"],
+  ["SALTAR FAVORITO","SKIP FAVOURITE"],
+  ["SALTAR / CONTINUAR","SKIP / CONTINUE"],
+  ["¿QUÉ MEJORARÍAS PRIMERO?","WHAT WOULD YOU IMPROVE FIRST?"],
+  ["Puedes marcar varias opciones","You can select several options"],
+  ["MÁS NIVELES","MORE LEVELS"],
+  ["MEJOR BALANCE","BETTER BALANCE"],
+  ["MÁS VARIEDAD","MORE VARIETY"],
+  ["CONTROLES","CONTROLS"],
+  ["ENVIAR ENCUESTA","SEND SURVEY"],
+  ["1 · flojo                                      5 · genial","1 · weak                                      5 · great"],
+  ["NO SE PUDO ENVIAR","COULD NOT SEND"],
+  ["✓ GRACIAS","✓ THANK YOU"],
+  ["Encuesta guardada para esta versión.","Survey saved for this version."],
+  ["La recompensa de beta solo se puede reclamar una vez.","The beta reward can only be claimed once."],
+  ["VOLVER AL MENÚ","BACK TO MENU"],
+
+  ["COMMUNITY MAPS","COMMUNITY MAPS"],
+  ["Descubre, juega y publica mapas de la comunidad","Discover, play and publish community maps"],
+  ["TENDENCIA","TRENDING"],
+  ["MEJORES","TOP"],
+  ["NUEVOS","NEW"],
+  ["+ PUBLICAR UN MAPA","+ PUBLISH A MAP"],
+  ["Todavía no hay mapas publicados. Sé el primero.","There are no published maps yet. Be the first."],
+  ["☆☆☆☆☆ · SIN VOTOS","☆☆☆☆☆ · NO VOTES"],
+  ["JUGAR  ›","PLAY  ›"],
+  ["BORRAR","DELETE"],
+  ["¿BORRAR MAPA?","DELETE MAP?"],
+  ["También se borrarán sus partidas, valoraciones, comentarios y reportes.\nEsta acción no se puede deshacer.","Its runs, ratings, comments and reports will also be deleted.\nThis action cannot be undone."],
+  ["BORRANDO…","DELETING…"],
+  ["No se pudo borrar el mapa.","Could not delete the map."],
+  ["MAPA BORRADO","MAP DELETED"],
+
   ["CARGANDO MAPA…","LOADING MAP…"],
   ["BORRADOR NO ENCONTRADO","DRAFT NOT FOUND"],
   ["NO SE PUDO CARGAR","COULD NOT LOAD"],
@@ -78,6 +136,7 @@ const exact=new Map<string,string>([
   ["Opcional · máximo 500 caracteres","Optional · maximum 500 characters"],
   ["✓ REPORTE ENVIADO","✓ REPORT SENT"],
   ["NO SE PUDO REPORTAR","COULD NOT REPORT"],
+
   ["PERFIL DE JUGADOR","PLAYER PROFILE"],
   ["El nombre que verán otros testers en rankings y Community Maps","The name other testers will see in leaderboards and Community Maps"],
   ["AÚN NO TIENES NOMBRE","YOU DO NOT HAVE A NAME YET"],
@@ -85,7 +144,6 @@ const exact=new Map<string,string>([
   ["GUARDAR NOMBRE","SAVE NAME"],
   ["IDENTIDAD BETA","BETA IDENTITY"],
   ["La ID permanece estable en este navegador.\nTu nombre es solo la etiqueta visible y puede cambiar.","The ID stays stable in this browser.\nYour name is only the visible label and can change."],
-  ["ASISTENCIA AL JUGADOR","PLAYER SUPPORT"],
   ["Perfil, encuesta y contacto directo con la beta","Profile, survey and direct beta feedback"],
   ["SIN NOMBRE","NO NAME"],
   ["ENCUESTA GENERAL\nYA ENVIADA","GENERAL SURVEY\nALREADY SENT"],
@@ -147,12 +205,24 @@ function translateDynamic(value:string):string{
   if((match=value.match(/^(\d+) golpes · (.+)$/)))return `${match[1]} strokes · ${match[2]}`;
   if((match=value.match(/^por (.+)$/)))return `by ${match[1]}`;
   if((match=value.match(/^(.+) · TÚ$/)))return `${match[1]} · YOU`;
+  if((match=value.match(/^por (.+) · TUYO · (\d+) HOYO$/)))return `by ${match[1]} · YOURS · ${match[2]} HOLE`;
+  if((match=value.match(/^por (.+) · TUYO · (\d+) HOYOS$/)))return `by ${match[1]} · YOURS · ${match[2]} HOLES`;
+  if((match=value.match(/^por (.+) · (\d+) HOYO$/)))return `by ${match[1]} · ${match[2]} HOLE`;
+  if((match=value.match(/^por (.+) · (\d+) HOYOS$/)))return `by ${match[1]} · ${match[2]} HOLES`;
   if((match=value.match(/^✓ (\d+)★ ENVIADAS$/)))return `✓ ${match[1]}★ SENT`;
   if((match=value.match(/^BETA LAB · EDITOR\s+·\s+(.+) FB$/)))return `BETA LAB · EDITOR   ·   ${match[1]} FB`;
   if((match=value.match(/^Te faltó 1 golpe para (.+)$/)))return `1 stroke short of ${match[1]}`;
   if((match=value.match(/^Te faltaron (\d+) golpes para (.+)$/)))return `${match[1]} strokes short of ${match[2]}`;
   if((match=value.match(/^([★☆]+\s+≤\s*\d+) golpe$/)))return `${match[1]} stroke`;
   if((match=value.match(/^([★☆]+\s+≤\s*\d+) golpes$/)))return `${match[1]} strokes`;
+  if((match=value.match(/^FAVORITO · (.+)\s+·\s+MÁS FLOJO · (.+)$/)))return `FAVOURITE · ${match[1]}   ·   WEAKEST · ${match[2]}`;
+  if((match=value.match(/^RECOMPENSA · \+(\d+) ◆$/)))return `REWARD · +${match[1]} ◆`;
+  if((match=value.match(/^Encuesta guardada · \+(\d+) ◆$/)))return `Survey saved · +${match[1]} ◆`;
+  if((match=value.match(/^(\d+) mapas · ordenados por actividad reciente$/)))return `${match[1]} maps · sorted by recent activity`;
+  if((match=value.match(/^(\d+) mapas · ordenados por estrellas$/)))return `${match[1]} maps · sorted by stars`;
+  if((match=value.match(/^(\d+) mapas · ordenados por más recientes$/)))return `${match[1]} maps · newest first`;
+  if((match=value.match(/^(.*) · (\d+) jugadas · (\d+) jugadores$/)))return `${match[1]} · ${match[2]} plays · ${match[3]} players`;
+  if((match=value.match(/^● (\d+) JUGANDO$/)))return `● ${match[1]} PLAYING`;
   return value;
 }
 
