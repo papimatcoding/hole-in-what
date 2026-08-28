@@ -23,6 +23,7 @@ const LEVELS=[...levelsForMode("classic"),...levelsForMode("troll")].map(level=>
 const IMPROVEMENTS=["MÁS NIVELES","MEJOR BALANCE","MÁS VARIEDAD","HARD","CONTROLES","COMMUNITY"];
 
 export class GlobalSurveyScene extends Phaser.Scene{
+  private accepted=false;
   private page=0;
   private pickerMode:PickerMode="favourite";
   private answers:SurveyAnswers={overallFun:0,controls:0,variety:0,difficultyCurve:0,hardMode:0,wouldKeepPlaying:null,favouriteLevel:"",worstLevel:""};
@@ -36,12 +37,26 @@ export class GlobalSurveyScene extends Phaser.Scene{
 
   private render():void{
     this.children.removeAll(true);this.cameras.main.setBackgroundColor("#0b0f14");
+    if(!this.accepted){this.renderInvite();sharpenSceneText(this);return;}
     this.add.text(270,58,"ENCUESTA GLOBAL",{fontFamily:"system-ui",fontSize:uiFontSize(25,3),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
     this.add.rectangle(270,86,64,3,0x6f98ae,.9);
     this.add.text(270,111,`BETA · ${this.page+1}/4`,{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#7f96a5"}).setOrigin(.5);
     this.add.rectangle(270,468,454,650,0x0f171d,.68).setStrokeStyle(1,0x24343f,.85);
     if(this.page===0)this.pageRatingsOne();else if(this.page===1)this.pageRatingsTwo();else if(this.page===2)this.pageLevels();else this.pagePriorities();
     sharpenSceneText(this);
+  }
+
+  private renderInvite():void{
+    const rewardAvailable=!SaveSystem.hasBonusClaim(GLOBAL_SURVEY_REWARD_ID);
+    this.add.text(270,240,"AYÚDANOS A MEJORAR",{fontFamily:"system-ui",fontSize:uiFontSize(14,2),fontStyle:"bold",color:"#8fa7b6"}).setOrigin(.5);
+    this.add.rectangle(270,462,438,388,0x101920,.98).setStrokeStyle(2,0x3d5666);
+    this.add.text(270,338,"¿QUIERES CONTESTAR\nUNA ENCUESTA?",{fontFamily:"system-ui",fontSize:uiFontSize(25,2),fontStyle:"bold",color:"#f5f7fa",align:"center",lineSpacing:6}).setOrigin(.5);
+    this.add.text(270,424,"Son 4 pantallas cortas. Tus respuestas nos ayudan a decidir\nqué niveles, controles y sistemas mejorar primero.",{fontFamily:"system-ui",fontSize:uiFontSize(10,2),color:"#9babb5",align:"center",lineSpacing:5}).setOrigin(.5);
+    this.add.rectangle(270,500,300,54,rewardAvailable?0x211f18:0x151b1f).setStrokeStyle(1,rewardAvailable?0x675b38:0x303b42);
+    this.add.text(270,500,rewardAvailable?`RECOMPENSA · +${GLOBAL_SURVEY_REWARD_GEMS} ◆` :"RECOMPENSA DE BETA YA RECLAMADA",{fontFamily:"system-ui",fontSize:uiFontSize(11,2),fontStyle:"bold",color:rewardAvailable?"#e4cc86":"#71818c"}).setOrigin(.5);
+    this.actionButton(270,580,330,"SÍ, QUIERO AYUDAR",()=>{this.accepted=true;this.render();},true);
+    this.actionButton(270,652,250,"AHORA NO",()=>this.scene.start("menu"),false);
+    this.add.text(270,714,"La recompensa solo se puede reclamar una vez, aunque haya nuevos parches.",{fontFamily:"system-ui",fontSize:uiFontSize(8,2),color:"#667985",align:"center",wordWrap:{width:390}}).setOrigin(.5);
   }
 
   private pageRatingsOne():void{
