@@ -86,8 +86,10 @@ export const BetaTelemetry={
     if(!input.completed&&activeAttemptByLevel.get(input.levelId)===input.attemptId)activeAttemptByLevel.delete(input.levelId);
   },
   async submitRun(input:{attemptId?:string;levelId:string;mode:GameMode;strokes:number;timeMs:number;stars:number;trapsTriggered?:string[];mechanicsUsed?:string[];voids?:number;}):Promise<void>{
-    await ensureRegistered();
+    // Resolve synchronously before the first await. A very fast RETRY can start the next attempt while
+    // this network request is pending, but it must never steal the completed run's attempt link.
     const attemptId=input.attemptId??activeAttemptByLevel.get(input.levelId)??null;
+    await ensureRegistered();
     if(attemptId)await waitForAttempt(attemptId);
     await post({type:"run",testerId:testerId(),buildId:BETA_BUILD_ID,levelId:input.levelId,mode:input.mode,attemptId,attempts:this.attempts(input.levelId),strokes:input.strokes,timeMs:input.timeMs,stars:input.stars,trapsTriggered:input.trapsTriggered??[],mechanicsUsed:input.mechanicsUsed??[],voids:input.voids??0,completed:true});
     if(attemptId&&activeAttemptByLevel.get(input.levelId)===attemptId)activeAttemptByLevel.delete(input.levelId);
