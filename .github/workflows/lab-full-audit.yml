@@ -12,6 +12,7 @@ on:
     paths:
       - "src/data/**"
       - "src/systems/GolfSimulation.ts"
+      - "src/systems/CourseValidation.ts"
       - "src/types.ts"
       - "scripts/**/*.ts"
       - ".github/workflows/lab-full-audit.yml"
