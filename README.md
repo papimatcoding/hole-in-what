@@ -14,7 +14,7 @@ RC6 has been promoted from the certified feature candidate to the public develop
 
 - Pages: `https://papimatcoding.github.io/troll-golf/`
 - Pages source: `dev`
-- latest runtime hotfix code SHA: `7377b4c5c9a920ebb20badd551e9cb80a731c8ed`
+- latest runtime hotfix code SHA: `e4419d9fcc234986b0ece7526321083c6ece704c`
 - previous known-good / rollback `dev`: `8075b162dc2b3e7b73b2fd0d36e6fbc5248120f4`
 - maintenance: **OFF**
 - backend patch label: **BETA RC6**
@@ -22,9 +22,9 @@ RC6 has been promoted from the certified feature candidate to the public develop
 - live campaign: Classic 01–13 + HARD 01–05
 - product name: **Hole in What?**
 
-The original RC6 runtime promotion landed as `e90bf9b194044fb7af86a73e282a81bdc3133a9d`. Before the wider tester cohort began, two explicitly approved beta hotfixes were applied directly on `dev`: the Phaser boot screen was renamed from `TROLL GOLF` to `HOLE IN WHAT?`, and post-hole originality/difficulty ratings were expanded from the sparse `1/3/5` UI to true **1–5** controls. CI and Pages deployment for runtime hotfix head `7377b4c…` completed successfully.
+The original RC6 runtime promotion landed as `e90bf9b194044fb7af86a73e282a81bdc3133a9d`. Before the wider tester cohort began, three explicitly approved beta hotfixes were applied directly on `dev`: the Phaser boot screen was renamed from `TROLL GOLF` to `HOLE IN WHAT?`; post-hole originality/difficulty ratings were expanded from the sparse `1/3/5` UI to true **1–5** controls; and the campaign previsualizer was made spoiler-safe for HARD while gaining a direct **MENU** exit plus a separate **EDITOR** action. Runtime hotfix head `e4419d9…` passed CI and Pages deployment successfully.
 
-At the post-hotfix telemetry check, RC6 still had **0 attempts, 0 shots, 0 runs and 0 level-feedback rows**, so the wider cohort starts without mixing pre-hotfix survey data.
+RC6 telemetry is no longer empty because the first personal smoke has started: at the spoiler-preview hotfix checkpoint there were **23 attempts, 40 shots, 8 runs and 8 level-feedback rows**, all from the single alias `Matkiller`. No independent external cohort had entered RC6 yet at that checkpoint, so keeping the same build ID avoids fragmenting the beta dataset while those personal smoke rows can later be excluded from external-player calibration.
 
 Do **not** rename the repository or Pages path during RC6. Keep the existing public link stable.
 
@@ -38,7 +38,7 @@ The important workflow rule is now explicit:
 
 There is no human pre-merge gate between feature and dev. If RC6 humans find a problem, create a new `feature/**` fix, run the artificial gates there, then promote the accepted fix back to `dev`.
 
-The two direct RC6 hotfixes above were a deliberate **pre-cohort exception** requested while the new build still had no RC6 gameplay/feedback sample. Once real cohort data begins, return to the normal `feature/** → dev` fix flow rather than editing live beta code directly.
+The three direct RC6 hotfixes above were a deliberate **pre-cohort exception** requested before the beta link was distributed to independent testers. Once the external cohort starts, return to the normal `feature/** → dev` fix flow rather than editing live beta code directly.
 
 The previous authoring branch/PR is closed by promotion:
 
@@ -152,7 +152,9 @@ RC6 contains:
 - maintenance polling + hard reload when maintenance ends;
 - concise spoiler-free **BETA RC6** Patch Notes;
 - **Hole in What?** browser/menu/boot branding;
-- post-hole diversion, originality and difficulty ratings all using a full **1–5** scale;
+- post-hole diversión, originalidad and dificultad ratings all using a full **1–5** scale;
+- HARD campaign previews hide `popWalls`, `popBumpers` and `popVoids`, suppress trap-mechanic metadata/counts and cannot open official HARD geometry into the editor by clicking a card;
+- previsualizer navigation exposes an explicit **MENU** exit and a separate **EDITOR** action;
 - anonymous attempt + shot telemetry linked to completed runs;
 - aligned feature/dev validation workflows.
 
@@ -277,7 +279,7 @@ A good trap:
 6. rewards knowledge more than pixel precision;
 7. creates “qué cabrón”, not “esto es random”.
 
-Never spoil HARD solutions in selection screens, tutorials or Patch Notes.
+Never spoil HARD solutions in selection screens, previews, tutorials or Patch Notes. Player-facing previews may show only geometry that exists visibly at hole start; latent pop traps and trap-specific metadata stay hidden.
 
 ## Live ops / controlled beta promotion
 
@@ -294,7 +296,7 @@ RC6 deployment completed in this order:
 7. `dev` CI completed successfully;
 8. backend changed to `BETA RC6` / `hole-in-what-beta-rc6`;
 9. maintenance OFF;
-10. before cohort testing, user-approved direct `dev` hotfixes corrected boot branding and expanded post-hole originality/difficulty controls to 1–5; runtime head `7377b4c…` passed CI and Pages deploy.
+10. before external cohort testing, user-approved direct `dev` hotfixes corrected boot branding, expanded post-hole originality/difficulty controls to 1–5, and made HARD previews spoiler-safe with direct menu navigation; runtime head `e4419d9…` passed CI and Pages deploy.
 
 If a future beta deployment breaks: keep maintenance ON, restore the previous known-good `dev` + backend state, verify Pages, then reopen.
 
@@ -312,13 +314,15 @@ Long-term possibilities — larger Classic/HARD campaign, competitive online, bo
 
 ## Immediate next steps — resume here
 
-1. **RC6 is live on `dev` with the pre-cohort hotfixes deployed.** Do not re-merge PR #5 or reopen the certified campaign geometry.
+1. **RC6 is live on `dev` with the approved pre-cohort hotfixes deployed.** Do not re-merge PR #5 or reopen the certified campaign geometry.
 2. Perform the first **human beta smoke directly on the public `dev`/Pages build**: one real touch device + one desktop browser.
-3. Validate loading now says **HOLE IN WHAT?**, menu branding is correct, Classic/HARD selectors work, and the post-hole survey shows **1–5 for diversión, originalidad and dificultad**.
-4. Validate controls, C11/C12 settling, H01/H03 usability, navigation, profile/forms, survey reward and absence of browser `prompt()` dialogs.
-5. Validate Supabase telemetry end-to-end: level start → `beta_attempts`, shot → `beta_shots`, completion → `beta_runs`, all sharing the intended attempt UUID; also test abandon/retry.
-6. If the first smoke is green, share the same public beta link with a larger independent tester cohort.
-7. Watch completion/abandonment, attempts, strokes/time, touch-vs-mouse differences, shot outcomes, route clusters and qualitative feedback.
-8. Any human-discovered problem after cohort testing starts becomes a **new `feature/**` fix**, gets artificial review there, then is promoted back to `dev`.
-9. After RC6 evidence is reviewed, author the next small Classic/HARD content batch rather than a huge block at once.
-10. Promote an accepted `dev` to `main` only when content and polish are sufficient for an official release.
+3. Validate loading says **HOLE IN WHAT?**, menu branding is correct, Classic/HARD selectors work, and the post-hole survey shows **1–5 for diversión, originalidad and dificultad**.
+4. Validate the previsualizer: HARD thumbnails reveal only start-visible geometry, HARD cards do not open official trap geometry in the editor, **MENU** exits directly to the menu and **EDITOR** remains separately available.
+5. Validate controls, C11/C12 settling, H01/H03 usability, navigation, profile/forms, survey reward and absence of browser `prompt()` dialogs.
+6. Validate Supabase telemetry end-to-end: level start → `beta_attempts`, shot → `beta_shots`, completion → `beta_runs`, all sharing the intended attempt UUID; also test abandon/retry.
+7. When analyzing the external cohort, exclude the known personal-smoke `Matkiller` rows from calibration unless specifically studying developer/self-test behaviour.
+8. If the smoke is green, share the same public beta link with a larger independent tester cohort.
+9. Watch completion/abandonment, attempts, strokes/time, touch-vs-mouse differences, shot outcomes, route clusters and qualitative feedback.
+10. Any human-discovered problem after cohort testing starts becomes a **new `feature/**` fix**, gets artificial review there, then is promoted back to `dev`.
+11. After RC6 evidence is reviewed, author the next small Classic/HARD content batch rather than a huge block at once.
+12. Promote an accepted `dev` to `main` only when content and polish are sufficient for an official release.
