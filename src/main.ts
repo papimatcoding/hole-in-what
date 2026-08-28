@@ -20,7 +20,10 @@ import { LevelPreviewScene } from "./scenes/LevelPreviewScene";
 import { CommunityMapsScene } from "./scenes/CommunityMapsScene";
 import { CommunityPublishScene } from "./scenes/CommunityPublishScene";
 import { CommunityPlayScene } from "./scenes/CommunityPlayScene";
+import { I18n } from "./systems/I18nSystem";
 import { LiveOps } from "./systems/LiveOpsSystem";
+
+I18n.install();
 
 const renderWidth=Math.round(DESIGN_WIDTH*RENDER_SCALE);
 const renderHeight=Math.round(DESIGN_HEIGHT*RENDER_SCALE);

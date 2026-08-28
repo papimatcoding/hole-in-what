@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { I18n } from "../systems/I18nSystem";
 
 export const DESIGN_WIDTH = 540;
 export const DESIGN_HEIGHT = 960;
@@ -26,6 +27,7 @@ export function setupDesignCamera(scene: Phaser.Scene): void {
 }
 
 export function sharpenSceneText(scene: Phaser.Scene): void {
+  I18n.localizeScene(scene);
   for (const child of scene.children.list) {
     if (child instanceof Phaser.GameObjects.Text) {
       child.setResolution(RENDER_SCALE);

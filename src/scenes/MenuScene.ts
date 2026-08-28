@@ -4,6 +4,7 @@ import { DESIGN_HEIGHT, DESIGN_WIDTH, isDesktopUI, setupDesignCamera, sharpenSce
 import { levelsForMode } from "../data/campaign";
 import { BetaFeedbackSystem } from "../systems/BetaFeedbackSystem";
 import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
+import { I18n, type GameLanguage } from "../systems/I18nSystem";
 import { LiveOps } from "../systems/LiveOpsSystem";
 import { PatchNotes } from "../systems/PatchNotesSystem";
 import { SaveSystem } from "../systems/SaveSystem";
@@ -25,6 +26,7 @@ export class MenuScene extends Phaser.Scene {
 
     const wallet=SaveSystem.wallet();
     this.add.text(DESIGN_WIDTH-42,54,`◈ ${wallet.coins}   ◆ ${wallet.gems}`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(15,1),fontStyle:"bold",color:"#d9e4ee"}).setOrigin(1,.5);
+    this.languageSelector();
     this.add.text(DESIGN_WIDTH/2,106,"HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(39,2),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
     this.add.rectangle(270,139,72,3,0x6f98ae,.95);
     this.add.text(DESIGN_WIDTH/2,160,"MINIGOLF · 3 ESTRELLAS",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,2),fontStyle:"bold",color:"#8194a3"}).setOrigin(.5);
@@ -42,6 +44,16 @@ export class MenuScene extends Phaser.Scene {
     if(this.desktop)this.createDesktopActions();else this.createMobileActions();
 
     sharpenSceneText(this);
+  }
+
+  private languageSelector():void{
+    const current=I18n.language();
+    const select=(next:GameLanguage):void=>{if(next===I18n.language())return;I18n.set(next);this.scene.restart();};
+    const left=this.add.rectangle(248,54,42,30,current==="es"?0x29485a:0x111a21).setStrokeStyle(1,current==="es"?0x709bb1:0x2b3a45).setInteractive({useHandCursor:true});
+    const right=this.add.rectangle(292,54,42,30,current==="en"?0x29485a:0x111a21).setStrokeStyle(1,current==="en"?0x709bb1:0x2b3a45).setInteractive({useHandCursor:true});
+    const es=this.add.text(248,54,"ES",{fontFamily:"system-ui",fontSize:uiFontSize(9,1),fontStyle:"bold",color:current==="es"?"#eef7fb":"#718491"}).setOrigin(.5).setInteractive({useHandCursor:true});
+    const en=this.add.text(292,54,"EN",{fontFamily:"system-ui",fontSize:uiFontSize(9,1),fontStyle:"bold",color:current==="en"?"#eef7fb":"#718491"}).setOrigin(.5).setInteractive({useHandCursor:true});
+    left.on("pointerup",()=>select("es"));es.on("pointerup",()=>select("es"));right.on("pointerup",()=>select("en"));en.on("pointerup",()=>select("en"));
   }
 
   private createDesktopActions():void{
