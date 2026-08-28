@@ -14,7 +14,7 @@ RC6 has been promoted from the certified feature candidate to the public develop
 
 - Pages: `https://papimatcoding.github.io/troll-golf/`
 - Pages source: `dev`
-- current `dev` SHA: `e90bf9b194044fb7af86a73e282a81bdc3133a9d`
+- latest runtime hotfix code SHA: `7377b4c5c9a920ebb20badd551e9cb80a731c8ed`
 - previous known-good / rollback `dev`: `8075b162dc2b3e7b73b2fd0d36e6fbc5248120f4`
 - maintenance: **OFF**
 - backend patch label: **BETA RC6**
@@ -22,7 +22,9 @@ RC6 has been promoted from the certified feature candidate to the public develop
 - live campaign: Classic 01–13 + HARD 01–05
 - product name: **Hole in What?**
 
-GitHub Pages deployment for `e90bf9b…` completed successfully and the post-merge `dev` CI passed typecheck, build, physics, mechanic contracts, geometry, clearance, campaign simulation and originality.
+The original RC6 runtime promotion landed as `e90bf9b194044fb7af86a73e282a81bdc3133a9d`. Before the wider tester cohort began, two explicitly approved beta hotfixes were applied directly on `dev`: the Phaser boot screen was renamed from `TROLL GOLF` to `HOLE IN WHAT?`, and post-hole originality/difficulty ratings were expanded from the sparse `1/3/5` UI to true **1–5** controls. CI and Pages deployment for runtime hotfix head `7377b4c…` completed successfully.
+
+At the post-hotfix telemetry check, RC6 still had **0 attempts, 0 shots, 0 runs and 0 level-feedback rows**, so the wider cohort starts without mixing pre-hotfix survey data.
 
 Do **not** rename the repository or Pages path during RC6. Keep the existing public link stable.
 
@@ -36,14 +38,14 @@ The important workflow rule is now explicit:
 
 There is no human pre-merge gate between feature and dev. If RC6 humans find a problem, create a new `feature/**` fix, run the artificial gates there, then promote the accepted fix back to `dev`.
 
+The two direct RC6 hotfixes above were a deliberate **pre-cohort exception** requested while the new build still had no RC6 gameplay/feedback sample. Once real cohort data begins, return to the normal `feature/** → dev` fix flow rather than editing live beta code directly.
+
 The previous authoring branch/PR is closed by promotion:
 
 - merged PR #5: **BETA RC6 candidate · 18-hole campaign certified**
 - certified feature head before squash merge: `635df7afcf7843b262bc1abacecf1c61020ae40c`
 - certified campaign geometry: `466b5297c4f6517092dac8c09b1c05532cc21736`
 - accepted campaign Full Audit: run `33158002310`
-
-A small documentation-only branch `feature/rc6-beta-handoff` exists only to synchronize this handoff after deployment. It must not contain gameplay changes.
 
 ## Official workflow
 
@@ -67,9 +69,9 @@ Public developer/beta build and Pages source.
 - receives already-artificially-certified feature work;
 - real mobile/desktop players validate controls, readability, fun and fairness;
 - telemetry + qualitative feedback expose failures the artificial review cannot prove;
-- do not use as an exploratory scratchpad.
+- do not use as an exploratory scratchpad once cohort testing has started.
 
-Human problems on `dev` return to `feature/**`; fixes do not happen directly on live `dev`.
+Human problems on `dev` return to `feature/**`.
 
 ### `main`
 
@@ -149,7 +151,8 @@ RC6 contains:
 - opt-in global survey + stable one-time 5-gem reward;
 - maintenance polling + hard reload when maintenance ends;
 - concise spoiler-free **BETA RC6** Patch Notes;
-- **Hole in What?** browser/menu branding;
+- **Hole in What?** browser/menu/boot branding;
+- post-hole diversion, originality and difficulty ratings all using a full **1–5** scale;
 - anonymous attempt + shot telemetry linked to completed runs;
 - aligned feature/dev validation workflows.
 
@@ -290,11 +293,12 @@ RC6 deployment completed in this order:
 6. Pages deployed `e90bf9b…` successfully;
 7. `dev` CI completed successfully;
 8. backend changed to `BETA RC6` / `hole-in-what-beta-rc6`;
-9. maintenance OFF.
+9. maintenance OFF;
+10. before cohort testing, user-approved direct `dev` hotfixes corrected boot branding and expanded post-hole originality/difficulty controls to 1–5; runtime head `7377b4c…` passed CI and Pages deploy.
 
 If a future beta deployment breaks: keep maintenance ON, restore the previous known-good `dev` + backend state, verify Pages, then reopen.
 
-Never make exploratory gameplay fixes directly on public `dev`; return to `feature/**`.
+Once cohort testing begins, never make exploratory gameplay fixes directly on public `dev`; return to `feature/**`.
 
 ## Patch Notes policy
 
@@ -308,12 +312,13 @@ Long-term possibilities — larger Classic/HARD campaign, competitive online, bo
 
 ## Immediate next steps — resume here
 
-1. **RC6 is live on `dev`; do not re-merge PR #5 or reopen the certified feature branch.**
+1. **RC6 is live on `dev` with the pre-cohort hotfixes deployed.** Do not re-merge PR #5 or reopen the certified campaign geometry.
 2. Perform the first **human beta smoke directly on the public `dev`/Pages build**: one real touch device + one desktop browser.
-3. Validate menu branding, Classic/HARD selectors, controls, C11/C12 settling, H01/H03 usability, navigation, profile/forms, survey reward and absence of browser `prompt()` dialogs.
-4. Validate Supabase telemetry end-to-end: level start → `beta_attempts`, shot → `beta_shots`, completion → `beta_runs`, all sharing the intended attempt UUID; also test abandon/retry.
-5. If the first smoke is green, share the same public beta link with a larger independent tester cohort.
-6. Watch completion/abandonment, attempts, strokes/time, touch-vs-mouse differences, shot outcomes, route clusters and qualitative feedback.
-7. Any human-discovered problem becomes a **new `feature/**` fix**, gets artificial review there, then is promoted back to `dev`.
-8. After RC6 evidence is reviewed, author the next small Classic/HARD content batch rather than a huge block at once.
-9. Promote an accepted `dev` to `main` only when content and polish are sufficient for an official release.
+3. Validate loading now says **HOLE IN WHAT?**, menu branding is correct, Classic/HARD selectors work, and the post-hole survey shows **1–5 for diversión, originalidad and dificultad**.
+4. Validate controls, C11/C12 settling, H01/H03 usability, navigation, profile/forms, survey reward and absence of browser `prompt()` dialogs.
+5. Validate Supabase telemetry end-to-end: level start → `beta_attempts`, shot → `beta_shots`, completion → `beta_runs`, all sharing the intended attempt UUID; also test abandon/retry.
+6. If the first smoke is green, share the same public beta link with a larger independent tester cohort.
+7. Watch completion/abandonment, attempts, strokes/time, touch-vs-mouse differences, shot outcomes, route clusters and qualitative feedback.
+8. Any human-discovered problem after cohort testing starts becomes a **new `feature/**` fix**, gets artificial review there, then is promoted back to `dev`.
+9. After RC6 evidence is reviewed, author the next small Classic/HARD content batch rather than a huge block at once.
+10. Promote an accepted `dev` to `main` only when content and polish are sufficient for an official release.
