@@ -286,11 +286,10 @@ Long-term possibilities — larger Classic/HARD campaign, competitive online, bo
 ## Immediate next steps — resume here
 
 1. **Do not change campaign geometry. Existing campaign certification is CLOSED.**
-2. Let the policy-only Lab Full Audit recheck triggered by the Full-workflow path fix finish; it should reproduce the accepted 18/18 campaign because gameplay has not changed.
-3. Finish RC6 candidate housekeeping: promotion checklist, Patch Notes, README/PR metadata and final smoke.
-4. Perform **Gate 2 human smoke on at least one real touch device and one desktop browser** while still on the feature candidate / a safe preview path. Validate controls, C11/C12 settling, H01/H03 usability, profile/forms, surveys and telemetry linkage.
-5. Only after Gate 2 is green, open the controlled deployment window: maintenance ON → merge exact head to `dev` → Pages verification → backend build/patch update → maintenance OFF.
-6. Run immediate public RC6 smoke, then share the beta with a larger independent tester cohort.
-7. Use real completion/abandonment/shot/feedback evidence to decide the next `feature/**` fixes. Human beta evidence may reject an automated PASS.
-8. After RC6 evidence is reviewed, add the next small Classic/HARD content batch. Do **not** preemptively reopen these 18 levels or build a huge block before learning from the cohort.
-9. Promote an accepted `dev` to `main` only when content and polish are sufficient for an official release.
+2. Finish RC6 release housekeeping and ensure the final feature head has green Full-policy recheck + Lab Smoke Checks.
+3. Perform **Gate 2 human smoke on at least one real touch device and one desktop browser**. Validate controls, C11/C12 settling, H01/H03 usability, profile/forms, surveys and telemetry linkage.
+4. Only after Gate 2 is green, open the controlled deployment window: maintenance ON → merge exact head to `dev` → Pages verification → backend build/patch update → maintenance OFF.
+5. Run immediate public RC6 smoke, then share the beta with a larger independent tester cohort.
+6. Use real completion/abandonment/shot/feedback evidence to decide the next `feature/**` fixes. Human beta evidence may reject an automated PASS.
+7. After RC6 evidence is reviewed, add the next small Classic/HARD content batch. Do **not** preemptively reopen these 18 levels or build a huge block before learning from the cohort.
+8. Promote an accepted `dev` to `main` only when content and polish are sufficient for an official release.
