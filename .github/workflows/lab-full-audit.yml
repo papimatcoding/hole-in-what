@@ -6,6 +6,10 @@ on:
     branches: [dev]
   workflow_dispatch:
 
+concurrency:
+  group: lab-full-audit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lab-full-audit:
     runs-on: ubuntu-latest
