@@ -18,7 +18,7 @@ with attempt_stats as (
     percentile_cont(0.5) within group (order by a.strokes) filter (where a.completed and a.strokes is not null) as median_strokes,
     percentile_cont(0.75) within group (order by a.strokes) filter (where a.completed and a.strokes is not null) as p75_strokes,
     percentile_cont(0.5) within group (order by a.time_ms) filter (where a.completed and a.time_ms is not null) as median_time_ms,
-    round(avg(a.voids) filter (where a.completed and a.voids is not null)::numeric,3) as avg_voids_completed
+    round((avg(a.voids) filter (where a.completed and a.voids is not null))::numeric,3) as avg_voids_completed
   from public.beta_attempts a
   group by a.build_id,a.level_id,a.mode
 ),
@@ -46,7 +46,7 @@ feedback_stats as (
     round(avg(f.fun)::numeric,2) as avg_fun,
     round(avg(f.originality)::numeric,2) as avg_originality,
     round(avg(f.difficulty)::numeric,2) as avg_difficulty,
-    round(avg(f.surprise)::numeric,2) filter (where f.surprise is not null) as avg_surprise
+    round((avg(f.surprise) filter (where f.surprise is not null))::numeric,2) as avg_surprise
   from public.beta_level_feedback f
   group by f.build_id,f.level_id
 ),
