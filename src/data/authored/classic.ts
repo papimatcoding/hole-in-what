@@ -25,10 +25,10 @@ c5.walls=[r(210,548,24,164),r(326,320,24,174),r(88,300,144,24),r(28,714,248,24),
 c5.bumpers=[{x:390,y:626,r:32}];
 path(c5,pt(390,626),pt(426,510),pt(270,420),pt(238,258),pt(422,166));
 
-// Same mechanic, different question: controlled rebound setup, followed by a side-entry finish that kills the old one-shot pinball line.
+// Bumper application: the lower shelf now closes most of the old clean bypass and the larger first bumper becomes the broad, forgiving way through the gate. The upper bumper remains a second rebound option rather than mandatory precision.
 const c6=base("classic",6,pt(420,836),pt(108,166),2,3,"bumper");
-c6.walls=[r(248,564,264,24),r(28,332,250,24),r(28,220,210,24)];
-c6.bumpers=[{x:142,y:650,r:34},{x:398,y:432,r:32}];
+c6.walls=[r(220,564,292,24),r(28,332,250,24),r(28,220,210,24)];
+c6.bumpers=[{x:142,y:650,r:44},{x:398,y:432,r:32}];
 path(c6,pt(142,650),pt(398,432),pt(300,280),pt(108,166));
 
 // Geometry exam. Solver mastery is genuinely two strokes, so the stars say two.
