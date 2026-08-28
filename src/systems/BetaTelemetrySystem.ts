@@ -51,10 +51,11 @@ export const BetaTelemetry={
     if(!name)return false;
     safeSet(ALIAS_KEY,name);void registerTester();return alias()===name;
   },
-  beginAttempt(levelId:string,mode:GameMode):string{
+  beginAttempt(levelId:string,mode?:GameMode):string{
+    const resolvedMode=mode??(levelId.startsWith("troll-")?"troll":"classic");
     const map=attemptMap(),key=`${BETA_BUILD_ID}:${levelId}`;map[key]=(map[key]??0)+1;safeSet(ATTEMPTS_KEY,JSON.stringify(map));
     const attemptId=newUuid(),attemptNumber=map[key]!;
-    void this.ensureTester(false).then(()=>post({type:"attempt_start",testerId:testerId(),buildId:BETA_BUILD_ID,attemptId,attemptNumber,levelId,mode}));
+    void this.ensureTester(false).then(()=>post({type:"attempt_start",testerId:testerId(),buildId:BETA_BUILD_ID,attemptId,attemptNumber,levelId,mode:resolvedMode}));
     return attemptId;
   },
   attempts(levelId:string):number{return attemptMap()[`${BETA_BUILD_ID}:${levelId}`]??1;},
