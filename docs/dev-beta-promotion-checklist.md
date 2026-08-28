@@ -1,6 +1,14 @@
 # Hole in What? · `dev` beta promotion checklist
 
-This checklist promotes an already-certified `feature/**` candidate into the public `dev` beta. It does **not** replace Full Audit or real human testing.
+This checklist promotes an already-certified `feature/**` candidate into the public `dev` beta.
+
+**Branch contract:**
+
+- `feature/**` = artificial validation only: technical smoke + Full Audit + design/originality review.
+- `dev` = public/developer BETA where real humans test mobile + desktop and produce telemetry/feedback.
+- `main` = official release only after an accepted beta.
+
+Human testing is therefore **not a precondition for merging feature → dev**. Any problem found by humans on `dev` returns to a new `feature/**` fix and must pass the artificial gates again before another beta promotion.
 
 ## Candidate identity
 
@@ -14,7 +22,7 @@ This checklist promotes an already-certified `feature/**` candidate into the pub
 - Accepted campaign Full Audit: run `33158002310`.
 - Known-good rollback `dev`: `8075b162dc2b3e7b73b2fd0d36e6fbc5248120f4`.
 
-## Gate 1 · feature certification
+## Gate 1 · feature artificial certification
 
 Campaign certification is closed. Do not reopen geometry during release housekeeping.
 
@@ -30,19 +38,44 @@ Campaign certification is closed. Do not reopen geometry during release housekee
 - [x] Originality: 0 structurally similar/fatal pairs.
 - [x] Campaign ordering pass documented: preserve current order and IDs for RC6.
 - [x] Feature and `dev` Full workflows use the same full certification standard.
-- [ ] Policy-only Lab Full recheck triggered by the final workflow-path correction finishes green.
-- [ ] Final housekeeping head passes Lab Smoke Checks after README/Patch Notes/checklist are frozen.
+- [x] Policy/workflow housekeeping does not alter certified campaign geometry.
+- [ ] Final feature head passes Lab Smoke Checks after release docs/Patch Notes are frozen.
 
-## Gate 2 · human feature smoke before merge
+## Gate 2 · migration preflight
 
-Test at least one **real touch device** and one **desktop browser**. Machine audit cannot sign this gate.
+No human gameplay approval is required here. This gate only ensures we know exactly what is being promoted and how to roll it back.
+
+- [ ] Re-read current PR #5 head SHA and confirm target is `dev`.
+- [ ] Re-read current `dev` SHA immediately before promotion.
+- [ ] Re-read backend `maintenance`, `patch_label` and `current_build_id`.
+- [ ] Record the rollback values before changing live state.
+- [ ] Confirm the candidate build ID remains `hole-in-what-beta-rc6`.
+- [ ] Confirm no campaign-affecting commit has appeared after the accepted Full Audit without a new Full Audit.
+
+## Gate 3 · controlled feature → dev deployment
+
+Only after Gates 1–2 are green:
+
+1. Enable backend maintenance.
+2. Mark PR #5 ready and merge/promote the **exact checked feature head** into `dev`.
+3. Do not make exploratory edits directly on `dev`.
+4. Let GitHub Pages deploy the new `dev` commit.
+5. Verify the public Pages deployment corresponds to the new `dev` SHA/build.
+6. Set backend patch label to `BETA RC6` and `current_build_id` to `hole-in-what-beta-rc6` only after the new Pages build is confirmed.
+7. Verify app status reports the same build.
+8. Disable maintenance.
+9. A client left on Maintenance should hard-reload into RC6 automatically.
+
+## Gate 4 · human beta validation on `dev`
+
+This is where real testing begins. Test at least one **real touch device** and one **desktop browser**, then expand to the external cohort.
 
 ### Core game
 
 - [ ] Fresh load reaches menu without boot error.
 - [ ] Menu says **HOLE IN WHAT?**.
 - [ ] Classic and HARD level selectors open.
-- [ ] Shot drag/release feels unchanged on touch and mouse.
+- [ ] Shot drag/release feels correct on touch and mouse.
 - [ ] C11/C12 visibly use the intended ice bands and balls settle normally.
 - [ ] H01 learned route is comfortably usable while the obvious route still triggers the joke.
 - [ ] H03 remains human-playable.
@@ -73,25 +106,7 @@ Test at least one **real touch device** and one **desktop browser**. Machine aud
 - [ ] Gameplay still works normally with telemetry requests unavailable/failed.
 - [ ] `scripts/betaTelemetryAggregate.sql` returns aggregate per-level metrics without exposing tester IDs.
 
-## Gate 3 · controlled deployment window
-
-Only after Gates 1–2 are green:
-
-1. Re-read current `dev` SHA and backend `current_build_id` / patch label immediately before deployment.
-2. Enable backend maintenance.
-3. Verify PR #5 still targets `dev` and record the **exact head SHA** being approved.
-4. Merge/promote that exact head into `dev`; do not merge if the head moved after human approval.
-5. Let GitHub Pages deploy `dev`.
-6. Open the real public URL in a clean/private browser and hard-refresh once.
-7. Verify menu/title/assets are RC6 and core gameplay starts.
-8. **Only now** set backend patch label to `BETA RC6` and `current_build_id` to `hole-in-what-beta-rc6`.
-9. Verify presence/status calls report the same current build.
-10. Disable maintenance.
-11. Verify a client already sitting on Maintenance hard-reloads into RC6 automatically.
-
-## Gate 4 · immediate public-beta smoke
-
-After maintenance is OFF:
+### Immediate public-beta smoke
 
 - [ ] Mobile public URL works from a normal cached browser.
 - [ ] Desktop public URL works.
@@ -104,7 +119,7 @@ After maintenance is OFF:
 - [ ] Online-presence counter still updates.
 - [ ] Maintenance remains OFF after verification.
 
-Only then share the beta link with the wider tester cohort.
+Once the first human smoke is green, share the same `dev`/Pages beta with the wider tester cohort.
 
 ## Wider-cohort evidence to watch
 
