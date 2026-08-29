@@ -67,6 +67,12 @@ function translateDynamic(value:string):string{
 
 function translate(value:string):string{
   if(language==="es")return value;
+  const cosmetic=value.match(/^(.+) · (COMÚN|RARO|ÉPICO|TEMPORADA|HITO)$/);
+  if(cosmetic){
+    const name=EN_EXACT[cosmetic[1]!]??EN_SURFACE_EXACT[cosmetic[1]!]??cosmetic[1]!;
+    const rarity=EN_SURFACE_EXACT[cosmetic[2]!]??cosmetic[2]!;
+    return `${name} · ${rarity}`;
+  }
   return EN_EXACT[value]??EN_SURFACE_EXACT[value]??translateDynamic(value);
 }
 
