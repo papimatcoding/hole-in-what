@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { EN_EXACT, EN_PLACEHOLDERS } from "./I18nDictionary";
+import { EN_SURFACE_EXACT, translateSurfaceDynamic } from "./I18nSurfaceDictionary";
 
 export type GameLanguage="es"|"en";
 
@@ -19,6 +20,7 @@ let language:GameLanguage=detectDefault();
 
 function translateDynamic(value:string):string{
   let match:RegExpMatchArray|null;
+  const surface=translateSurfaceDynamic(value);if(surface!==undefined)return surface;
   if(value==="TOCA")return "TAP";
   if(value==="No hace falta completar el hoyo.")return "You do not need to complete the hole.";
   if(value==="MUY FÁCIL")return "TOO EASY";
@@ -65,7 +67,13 @@ function translateDynamic(value:string):string{
 
 function translate(value:string):string{
   if(language==="es")return value;
-  return EN_EXACT[value]??translateDynamic(value);
+  const cosmetic=value.match(/^(.+) · (COMÚN|RARO|ÉPICO|TEMPORADA|HITO)$/);
+  if(cosmetic){
+    const name=EN_EXACT[cosmetic[1]!]??EN_SURFACE_EXACT[cosmetic[1]!]??cosmetic[1]!;
+    const rarity=EN_SURFACE_EXACT[cosmetic[2]!]??cosmetic[2]!;
+    return `${name} · ${rarity}`;
+  }
+  return EN_EXACT[value]??EN_SURFACE_EXACT[value]??translateDynamic(value);
 }
 
 function translateDomElement(element:Element):void{
@@ -78,6 +86,12 @@ function translateDomElement(element:Element):void{
   }
 }
 
+function installNativeDialogLocalization():void{
+  const originalPrompt=window.prompt.bind(window),originalConfirm=window.confirm.bind(window);
+  window.prompt=(message?:string,defaultValue?:string):string|null=>originalPrompt(message===undefined?undefined:translate(message),defaultValue===undefined?undefined:translate(defaultValue));
+  window.confirm=(message?:string):boolean=>originalConfirm(message===undefined?undefined:translate(message));
+}
+
 function install():void{
   document.documentElement.lang=language;
   if(installed)return;installed=true;
@@ -87,6 +101,7 @@ function install():void{
     const localized=Array.isArray(value)?value.map(item=>translate(String(item))):translate(String(value));
     return original.call(this,localized);
   };
+  installNativeDialogLocalization();
   const observer=new MutationObserver(records=>{
     for(const record of records)for(const node of Array.from(record.addedNodes)){
       if(!(node instanceof Element))continue;
