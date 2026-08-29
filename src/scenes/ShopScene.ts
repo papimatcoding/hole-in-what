@@ -112,13 +112,16 @@ export class ShopScene extends Phaser.Scene {
     }
 
     if (item.category === "trail") {
+      // Center the complete trail composition on x instead of anchoring the ball on x.
+      const ballX = x + 30;
       g.fillStyle(0xfbfefe, 1);
-      g.fillCircle(x + 26, y, 12);
+      g.fillCircle(ballX, y, 12);
       for (let i = 0; i < 6; i += 1) {
         const color = i % 2 === 0 ? item.primary : (item.secondary ?? item.primary);
+        const particleX = x + 10 - i * 10;
         g.fillStyle(color, 0.82 - i * 0.11);
-        if (item.id.includes("petal")) g.fillTriangle(x - i * 13, y, x + 8 - i * 13, y - 6, x + 9 - i * 13, y + 5);
-        else g.fillCircle(x - i * 13, y + Math.sin(i) * 5, Math.max(2, 7 - i * 0.7));
+        if (item.id.includes("petal")) g.fillTriangle(particleX - 7, y, particleX + 1, y - 6, particleX + 2, y + 5);
+        else g.fillCircle(particleX, y + Math.sin(i) * 5, Math.max(2, 7 - i * 0.7));
       }
       return;
     }
