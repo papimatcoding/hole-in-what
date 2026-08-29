@@ -2,7 +2,7 @@
 
 Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 
-> **SOURCE OF TRUTH / CHAT HANDOFF — 2026-08-28**
+> **SOURCE OF TRUTH / CHAT HANDOFF — 2026-08-29**
 >
 > Read this file first when continuing in another chat. Update it after meaningful changes to campaign state, architecture, validation, backend/live ops, beta status or immediate priorities.
 
@@ -10,9 +10,9 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 
 ### Public BETA RC6 — live on `dev`
 
-- Public Pages: `https://papimatcoding.github.io/troll-golf/`
-- Pages source: `dev`
-- current public **runtime code** head: `02357338a6eadbd4480c47d2cf0b9ef15e81a044`
+- Public Pages: `https://papimatcoding.github.io/troll-golf/` **until the repository rename is executed**;
+- Pages source: `dev`;
+- current public **runtime code** head: `02357338a6eadbd4480c47d2cf0b9ef15e81a044`;
 - latest runtime change: **direct RC6 experience hotfix** `02357338…`, explicitly requested as an exception to the normal feature workflow so new testers would not keep hitting already-known UX problems;
 - hotfix public Pages run `33180376039` — **SUCCESS**;
 - hotfix public CI run `33180375917` — **SUCCESS** including typecheck, build, physics, mechanic contracts, geometry, clearance, full campaign simulation and originality;
@@ -21,14 +21,36 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
   - PR #12, modern in-hole report;
   - PR #11, preserve shot input kind;
   - PR #8, editable DOM fields + ES/EN foundation.
-- emergency rollback anchor before RC6 campaign promotion: `8075b162dc2b3e7b73b2fd0d36e6fbc5248120f4`
-- maintenance: **OFF**
-- backend patch label: **BETA RC6**
-- backend build ID: `hole-in-what-beta-rc6`
-- live campaign: **Classic 01–13 + HARD 01–05**
-- product name: **Hole in What?**
+- emergency rollback anchor before RC6 campaign promotion: `8075b162dc2b3e7b73b2fd0d36e6fbc5248120f4`;
+- maintenance: **OFF**;
+- backend patch label: **BETA RC6**;
+- backend build ID: `hole-in-what-beta-rc6`;
+- live campaign: **Classic 01–13 + HARD 01–05**;
+- product name: **Hole in What?**.
 
-Documentation-only commits may move the `dev` branch SHA beyond the runtime-code SHA above without changing the deployed game code. Do not rename the repository or Pages path during RC6. Legacy `troll-golf-*` localStorage keys intentionally remain stable so existing anonymous beta identity/progression is not reset.
+Documentation-only commits may move the `dev` branch SHA beyond the runtime-code SHA above without changing the deployed game code. Legacy `troll-golf-*` localStorage keys intentionally remain stable so existing anonymous beta identity/progression is not reset.
+
+## Repository / Pages rename migration — prepared, rename pending
+
+Target repository name: **`hole-in-what`**.
+
+PR #17 (`feature/repo-rename`) prepares the migration before the GitHub repository itself is renamed:
+
+- `vite.config.ts` derives the Pages base from `GITHUB_REPOSITORY` instead of hardcoding `/troll-golf/`;
+- while the repository is still named `troll-golf`, GitHub Actions therefore keeps building for `/troll-golf/`;
+- after the repository is renamed to `hole-in-what`, the next GitHub Actions build automatically targets `/hole-in-what/`;
+- package/devcontainer display metadata now uses **Hole in What?**;
+- legacy `troll-golf-*` localStorage keys **must not be renamed** during this migration.
+
+Safe execution order:
+
+1. merge PR #17 to `dev` and require the normal CI + Pages deploy to succeed under the current `/troll-golf/` path;
+2. rename the GitHub repository from `troll-golf` to `hole-in-what`;
+3. make/trigger a fresh `dev` build so `GITHUB_REPOSITORY` is evaluated with the new name;
+4. verify `https://papimatcoding.github.io/hole-in-what/` on desktop + mobile before sharing the Reddit link;
+5. update this README so the new Pages URL becomes the sole public beta URL.
+
+Do not send the new Pages URL to testers until step 4 passes.
 
 ## RC6 experience hotfix — deployed directly to `dev`
 
@@ -261,15 +283,16 @@ Never spoil HARD solutions **or the mere existence/location/type of a trap** in 
 
 ## Immediate next steps — resume here
 
-1. **Human-check public runtime `02357338…`.** Open HARD preview and confirm it no longer mentions traps/hidden/visible/spoilers/discovery.
-2. In gameplay, deliberately start a ball drag and release over BACK / level arrows / REPORT. The shot gesture must not activate the HUD button. Also test a stationary ball sitting underneath a HUD button if reproducible.
-3. Send a normal in-hole report and confirm one expected DB row. The server exact-duplicate guard is already transactionally smoke-tested; keep watching real reports for recurrence.
-4. Finish the mobile DOM re-check and make a fresh mobile shot; confirm `input_kind = touch`.
-5. **Then return to the normal workflow.** Discuss and scope the next `feature/**` work from human evidence before coding it.
-6. Main feature discussion should distinguish:
+1. Complete the repository rename migration in the exact order documented above; do not share the new Pages URL until the post-rename deploy passes.
+2. **Human-check the public runtime after that deploy.** Open HARD preview and confirm it no longer mentions traps/hidden/visible/spoilers/discovery.
+3. In gameplay, deliberately start a ball drag and release over BACK / level arrows / REPORT. The shot gesture must not activate the HUD button. Also test a stationary ball sitting underneath a HUD button if reproducible.
+4. Send a normal in-hole report and confirm one expected DB row. The server exact-duplicate guard is already transactionally smoke-tested; keep watching real reports for recurrence.
+5. Finish the mobile DOM re-check and make a fresh mobile shot; confirm `input_kind = touch`.
+6. Only after the rename + smoke is clean, prepare/share the Reddit beta post using the new `hole-in-what` Pages URL.
+7. Then return to the normal feature workflow. Main discussion should distinguish:
    - improving Classic's early fun/identity/variety without destroying its teaching role;
    - adding genuinely new mechanics/visual variety rather than only more holes with the same pieces;
    - deciding the next small Classic/HARD content batch;
    - Trigger → Action architecture and future troll vocabulary;
    - Audit V3 memory/learning work in parallel, still shadow-only.
-7. Keep collecting external RC6 data while feature work happens. Do not promote beta iteration to `main` until the beta is complete and accepted.
+8. Keep collecting external RC6 data while feature work happens. Do not promote beta iteration to `main` until the beta is complete and accepted.
