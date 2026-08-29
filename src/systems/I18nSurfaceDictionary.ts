@@ -45,7 +45,7 @@ export const EN_SURFACE_EXACT:Record<string,string>={
   "Un destello radial breve y seco.":"A short, sharp radial flash.",
   "Una flor de luz se abre en el hoyo.":"A flower of light blooms over the hole.",
 
-  // Editor
+  // Editor / level preview
   "SELECCIONAR":"SELECT",
   "MURO":"WALL",
   "BOOST":"BOOST",
@@ -80,6 +80,9 @@ export const EN_SURFACE_EXACT:Record<string,string>={
   "Golpes para ★★":"Strokes for ★★",
   "JSON COPIADO":"JSON COPIED",
   "Copia el JSON":"Copy the JSON",
+  "PREVISUALIZADOR":"PREVIEW",
+  "CLICK = ABRIR EN EDITOR":"CLICK = OPEN IN EDITOR",
+  "GEOMETRÍA":"GEOMETRY",
 
   // Community publish / drafts
   "PUBLICAR MAPA":"PUBLISH MAP",
@@ -174,6 +177,7 @@ export function translateSurfaceDynamic(value:string):string|undefined{
   if((match=value.match(/^(.+) · V seleccionar · R rotar · D duplicar · Del borrar · G grid · P previews$/)))return `${match[1]} · V select · R rotate · D duplicate · Del delete · G grid · P previews`;
   if((match=value.match(/^(.+) · ACTIVO$/)))return `${match[1]} · ACTIVE`;
   if((match=value.match(/^(.+) cargado$/)))return `${match[1]} loaded`;
+  if((match=value.match(/^(\d+) elementos$/)))return `${match[1]} elements`;
   if((match=value.match(/^MIS BORRADORES · (\d+)$/)))return `MY DRAFTS · ${match[1]}`;
   if((match=value.match(/^(\d+) objetos · ✓ PROBADO$/)))return `${match[1]} objects · ✓ PLAYTESTED`;
   if((match=value.match(/^(\d+) objetos · ● SIN PROBAR$/)))return `${match[1]} objects · ● NOT PLAYTESTED`;
