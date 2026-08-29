@@ -80,6 +80,12 @@ function translateDomElement(element:Element):void{
   }
 }
 
+function installNativeDialogLocalization():void{
+  const originalPrompt=window.prompt.bind(window),originalConfirm=window.confirm.bind(window);
+  window.prompt=(message?:string,defaultValue?:string):string|null=>originalPrompt(message===undefined?undefined:translate(message),defaultValue===undefined?undefined:translate(defaultValue));
+  window.confirm=(message?:string):boolean=>originalConfirm(message===undefined?undefined:translate(message));
+}
+
 function install():void{
   document.documentElement.lang=language;
   if(installed)return;installed=true;
@@ -89,6 +95,7 @@ function install():void{
     const localized=Array.isArray(value)?value.map(item=>translate(String(item))):translate(String(value));
     return original.call(this,localized);
   };
+  installNativeDialogLocalization();
   const observer=new MutationObserver(records=>{
     for(const record of records)for(const node of Array.from(record.addedNodes)){
       if(!(node instanceof Element))continue;
