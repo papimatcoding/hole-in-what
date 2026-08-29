@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { EN_EXACT, EN_PLACEHOLDERS } from "./I18nDictionary";
+import { EN_SURFACE_EXACT, translateSurfaceDynamic } from "./I18nSurfaceDictionary";
 
 export type GameLanguage="es"|"en";
 
@@ -19,6 +20,7 @@ let language:GameLanguage=detectDefault();
 
 function translateDynamic(value:string):string{
   let match:RegExpMatchArray|null;
+  const surface=translateSurfaceDynamic(value);if(surface!==undefined)return surface;
   if(value==="TOCA")return "TAP";
   if(value==="No hace falta completar el hoyo.")return "You do not need to complete the hole.";
   if(value==="MUY FÁCIL")return "TOO EASY";
@@ -65,7 +67,7 @@ function translateDynamic(value:string):string{
 
 function translate(value:string):string{
   if(language==="es")return value;
-  return EN_EXACT[value]??translateDynamic(value);
+  return EN_EXACT[value]??EN_SURFACE_EXACT[value]??translateDynamic(value);
 }
 
 function translateDomElement(element:Element):void{
