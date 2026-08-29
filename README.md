@@ -10,12 +10,14 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 
 ### Public BETA RC6 — live on `dev`
 
-- Public Pages: `https://papimatcoding.github.io/troll-golf/` **until the repository rename is executed**;
+- Public Pages: `https://papimatcoding.github.io/hole-in-what/`;
 - Pages source: `dev`;
-- current public **runtime code** head: `02357338a6eadbd4480c47d2cf0b9ef15e81a044`;
-- latest runtime change: **direct RC6 experience hotfix** `02357338…`, explicitly requested as an exception to the normal feature workflow so new testers would not keep hitting already-known UX problems;
-- hotfix public Pages run `33180376039` — **SUCCESS**;
-- hotfix public CI run `33180375917` — **SUCCESS** including typecheck, build, physics, mechanic contracts, geometry, clearance, full campaign simulation and originality;
+- repository: **`papimatcoding/hole-in-what`** (renamed from `troll-golf` on 2026-08-29);
+- current public **runtime/config code** head: `2d34b5f7478f46933077b71fa229e59193b94cc8` (PR #17 safe repository/Pages migration);
+- current deployed `dev` head: `5a19e7b2c2c8c95d4358d4ccfe629dc2cd3b7a84` (documentation-only rename completion marker);
+- post-rename public Pages run `33244590415` — **SUCCESS**; GitHub reported environment URL `https://papimatcoding.github.io/hole-in-what/`;
+- post-rename CI run `33244590414` passed typecheck, build, physics, mechanic contracts, geometry, clearance, campaign simulation and originality checks;
+- latest gameplay change remains the **direct RC6 experience hotfix** `02357338a6eadbd4480c47d2cf0b9ef15e81a044`;
 - previous runtime fixes:
   - PR #14, Phaser DOM drift;
   - PR #12, modern in-hole report;
@@ -28,29 +30,31 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 - live campaign: **Classic 01–13 + HARD 01–05**;
 - product name: **Hole in What?**.
 
-Documentation-only commits may move the `dev` branch SHA beyond the runtime-code SHA above without changing the deployed game code. Legacy `troll-golf-*` localStorage keys intentionally remain stable so existing anonymous beta identity/progression is not reset.
+Documentation-only commits may move the `dev` branch SHA beyond the runtime-code SHA above without changing gameplay. Legacy `troll-golf-*` localStorage keys intentionally remain stable so existing anonymous beta identity/progression is not reset.
 
-## Repository / Pages rename migration — prepared, rename pending
+## Repository / Pages rename migration — COMPLETE
 
-Target repository name: **`hole-in-what`**.
+The GitHub repository was renamed from **`troll-golf`** to **`hole-in-what`** on 2026-08-29, before the Reddit beta wave.
 
-PR #17 (`feature/repo-rename`) prepares the migration before the GitHub repository itself is renamed:
+PR #17 (`feature/repo-rename`) prepared the migration before the administrative rename:
 
 - `vite.config.ts` derives the Pages base from `GITHUB_REPOSITORY` instead of hardcoding `/troll-golf/`;
-- while the repository is still named `troll-golf`, GitHub Actions therefore keeps building for `/troll-golf/`;
-- after the repository is renamed to `hole-in-what`, the next GitHub Actions build automatically targets `/hole-in-what/`;
-- package/devcontainer display metadata now uses **Hole in What?**;
-- legacy `troll-golf-*` localStorage keys **must not be renamed** during this migration.
+- the pre-rename build therefore continued to work under `/troll-golf/`;
+- after the rename, the first fresh `dev` build automatically targeted `/hole-in-what/`;
+- package/devcontainer display metadata uses **Hole in What?**;
+- legacy `troll-golf-*` localStorage keys **remain intentionally unchanged**.
 
-Safe execution order:
+Validation:
 
-1. merge PR #17 to `dev` and require the normal CI + Pages deploy to succeed under the current `/troll-golf/` path;
-2. rename the GitHub repository from `troll-golf` to `hole-in-what`;
-3. make/trigger a fresh `dev` build so `GITHUB_REPOSITORY` is evaluated with the new name;
-4. verify `https://papimatcoding.github.io/hole-in-what/` on desktop + mobile before sharing the Reddit link;
-5. update this README so the new Pages URL becomes the sole public beta URL.
+1. PR #17 merged to `dev` as `2d34b5f7478f46933077b71fa229e59193b94cc8`;
+2. pre-rename CI run `33244050708` — **SUCCESS**;
+3. pre-rename Pages run `33244050721` — **SUCCESS**;
+4. repository renamed to `papimatcoding/hole-in-what`;
+5. post-rename trigger commit `5a19e7b2c2c8c95d4358d4ccfe629dc2cd3b7a84`;
+6. post-rename Pages run `33244590415` — **SUCCESS** with environment URL `https://papimatcoding.github.io/hole-in-what/`;
+7. public `main` README renamed/reworked for **Hole in What?** and linked to the new beta URL.
 
-Do not send the new Pages URL to testers until step 4 passes.
+The old `/troll-golf/` Pages path is no longer the canonical beta URL. Do not share it with new testers.
 
 ## RC6 experience hotfix — deployed directly to `dev`
 
@@ -283,16 +287,15 @@ Never spoil HARD solutions **or the mere existence/location/type of a trap** in 
 
 ## Immediate next steps — resume here
 
-1. Complete the repository rename migration in the exact order documented above; do not share the new Pages URL until the post-rename deploy passes.
-2. **Human-check the public runtime after that deploy.** Open HARD preview and confirm it no longer mentions traps/hidden/visible/spoilers/discovery.
-3. In gameplay, deliberately start a ball drag and release over BACK / level arrows / REPORT. The shot gesture must not activate the HUD button. Also test a stationary ball sitting underneath a HUD button if reproducible.
-4. Send a normal in-hole report and confirm one expected DB row. The server exact-duplicate guard is already transactionally smoke-tested; keep watching real reports for recurrence.
-5. Finish the mobile DOM re-check and make a fresh mobile shot; confirm `input_kind = touch`.
-6. Only after the rename + smoke is clean, prepare/share the Reddit beta post using the new `hole-in-what` Pages URL.
-7. Then return to the normal feature workflow. Main discussion should distinguish:
+1. **Human-check `https://papimatcoding.github.io/hole-in-what/` on desktop and mobile.** Open HARD preview and confirm it no longer mentions traps/hidden/visible/spoilers/discovery.
+2. In gameplay, deliberately start a ball drag and release over BACK / level arrows / REPORT. The shot gesture must not activate the HUD button. Also test a stationary ball sitting underneath a HUD button if reproducible.
+3. Send a normal in-hole report and confirm one expected DB row. The server exact-duplicate guard is already transactionally smoke-tested; keep watching real reports for recurrence.
+4. Finish the mobile DOM re-check and make a fresh mobile shot; confirm `input_kind = touch`.
+5. Once those human smokes are clean, prepare/share the Reddit beta post using the canonical `hole-in-what` Pages URL.
+6. Then return to the normal feature workflow. Main discussion should distinguish:
    - improving Classic's early fun/identity/variety without destroying its teaching role;
    - adding genuinely new mechanics/visual variety rather than only more holes with the same pieces;
    - deciding the next small Classic/HARD content batch;
    - Trigger → Action architecture and future troll vocabulary;
    - Audit V3 memory/learning work in parallel, still shadow-only.
-8. Keep collecting external RC6 data while feature work happens. Do not promote beta iteration to `main` until the beta is complete and accepted.
+7. Keep collecting external RC6 data while feature work happens. Do not promote beta iteration to `main` until the beta is complete and accepted.
