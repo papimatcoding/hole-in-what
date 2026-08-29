@@ -123,6 +123,7 @@ export class CosmeticsScene extends Phaser.Scene {
       const isOwned = owned.has(item.id);
       const isEquipped = item.id === equipped;
       const reward = starRewardForCosmetic(item.id);
+      const isUpcoming = !isOwned && item.rarity === "seasonal";
       const fill = isEquipped ? 0x243341 : isOwned ? 0x171f28 : 0x121820;
       const stroke = isEquipped ? 0x7fa1bd : 0x2b3744;
 
@@ -141,10 +142,10 @@ export class CosmeticsScene extends Phaser.Scene {
       let statusLabel = "EQUIPAR";
       if (isEquipped) statusLabel = "EQUIPADO";
       else if (!isOwned && reward) statusLabel = `★ ${reward.stars}`;
-      else if (!isOwned && item.rarity === "seasonal") statusLabel = "PASE";
+      else if (isUpcoming) statusLabel = "PRÓXIMAMENTE";
 
       const status = this.add.text(448, y, statusLabel, {
-        fontFamily: "system-ui, sans-serif", fontSize: "9px", fontStyle: "bold",
+        fontFamily: "system-ui, sans-serif", fontSize: isUpcoming ? "8px" : "9px", fontStyle: "bold",
         color: isEquipped ? "#dcecff" : isOwned ? "#98a7b7" : reward ? "#e6ce80" : "#8c7895"
       }).setOrigin(1, 0.5);
 
@@ -159,7 +160,7 @@ export class CosmeticsScene extends Phaser.Scene {
           return;
         }
         if (reward) this.feedbackText.setText(`Se desbloquea al llegar a ${reward.stars} estrellas`);
-        else this.feedbackText.setText("Contenido de temporada");
+        else this.feedbackText.setText("Contenido de temporada · próximamente");
       };
 
       card.on("pointerup", select);
@@ -180,27 +181,29 @@ export class CosmeticsScene extends Phaser.Scene {
     if (item.category === "ball") {
       drawBall(this.preview, item, cx, cy, 46);
     } else if (item.category === "trail") {
+      // Center the full ball + trail composition around the preview center rather than the ball alone.
+      const ballX = 350;
       this.preview.fillStyle(0xfbfefe, 1);
-      this.preview.fillCircle(365, cy, 19);
+      this.preview.fillCircle(ballX, cy, 19);
       if (item.id !== "trail-none") {
         for (let i = 0; i < 10; i += 1) {
-          const x = 326 - i * 24;
+          const x = 320 - i * 16;
           const alpha = Math.max(0.12, 0.82 - i * 0.07);
           const color = i % 2 === 0 ? item.primary : (item.secondary ?? item.primary);
           this.preview.fillStyle(color, alpha);
           if (item.id.includes("petal")) this.preview.fillTriangle(x - 8, cy, x + 5, cy - 6, x + 8, cy + 5);
-          else if (item.id.includes("spark") || item.id === "trail-stardust") this.preview.fillRect(x, cy + Math.sin(i * 1.7) * 13, 8, 3);
+          else if (item.id.includes("spark") || item.id === "trail-stardust") this.preview.fillRect(x - 4, cy + Math.sin(i * 1.7) * 13 - 1.5, 8, 3);
           else this.preview.fillCircle(x, cy + Math.sin(i * 1.3) * 8, Math.max(2, 7 - i * 0.42));
         }
       }
     } else {
       this.preview.fillStyle(0x12171b, 1);
-      this.preview.fillCircle(cx, cy + 18, 22);
+      this.preview.fillCircle(cx, cy, 22);
       this.preview.lineStyle(4, item.primary, item.id === "hole-default" ? 0.25 : 0.8);
-      this.preview.strokeCircle(cx, cy + 18, item.id === "hole-default" ? 30 : 52);
+      this.preview.strokeCircle(cx, cy, item.id === "hole-default" ? 30 : 52);
       if (item.id !== "hole-default") {
         this.preview.lineStyle(2, item.secondary ?? item.primary, 0.4);
-        this.preview.strokeCircle(cx, cy + 18, 72);
+        this.preview.strokeCircle(cx, cy, 72);
       }
     }
 
@@ -213,22 +216,24 @@ export class CosmeticsScene extends Phaser.Scene {
       return;
     }
     if (item.category === "trail") {
+      // Keep the visual bounds centered on x even though a trail naturally extends behind the ball.
+      const ballX = x + 20;
       g.fillStyle(0xfbfefe, 1);
-      g.fillCircle(x + 18, y, 6);
+      g.fillCircle(ballX, y, 6);
       if (item.id !== "trail-none") {
         for (let i = 0; i < 4; i += 1) {
           const color = i % 2 === 0 ? item.primary : (item.secondary ?? item.primary);
           g.fillStyle(color, 0.72 - i * 0.12);
-          g.fillCircle(x + 3 - i * 11, y + Math.sin(i) * 5, 4.5 - i * 0.6);
+          g.fillCircle(x + 8 - i * 8, y + Math.sin(i) * 4, 4.5 - i * 0.6);
         }
       }
       return;
     }
     g.fillStyle(0x11171b, 1);
-    g.fillCircle(x, y + 3, 10);
+    g.fillCircle(x, y, 10);
     if (item.id !== "hole-default") {
       g.lineStyle(3, item.primary, 0.75);
-      g.strokeCircle(x, y + 3, 21);
+      g.strokeCircle(x, y, 21);
     }
   }
 }
