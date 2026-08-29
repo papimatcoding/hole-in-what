@@ -114,7 +114,8 @@ export const EN_SURFACE_EXACT:Record<string,string>={
 
   // Patch notes
   "Cambios recientes de la beta":"Recent beta changes",
-  "NUEVO":"NEW",
+  "28 AGO 2026":"28 AUG 2026",
+  "27 AGO 2026":"27 AUG 2026",
   "Nuevo nombre, nuevos hoyos y una beta más cómoda de probar.":"New name, new holes and a smoother beta to test.",
   "Troll Golf ahora se llama Hole in What?.":"Troll Golf is now called Hole in What?.",
   "Añadidos Classic 11–13 con hielo y boosters.":"Added Classic 11–13 with ice and boosters.",
@@ -151,6 +152,7 @@ export const EN_SURFACE_EXACT:Record<string,string>={
   "MANTENIMIENTO":"MAINTENANCE",
   "COMPROBAR AHORA":"CHECK NOW",
   "COMPROBANDO…":"CHECKING…",
+  "Estamos aplicando una actualización.":"We are applying an update.",
   "Comprobamos automáticamente cada 15 s.\nCuando termine el parche, la página se recargará sola.":"We check automatically every 15 s.\nWhen the patch is finished, the page will reload itself.",
   "VOLVEMOS EN CUANTO TERMINE EL PARCHE":"WE'LL BE BACK AS SOON AS THE PATCH IS DONE",
   "NUEVA VERSIÓN":"NEW VERSION",
@@ -165,7 +167,7 @@ export function translateSurfaceDynamic(value:string):string|undefined{
   if((match=value.match(/^(\d+) OBJ\.$/)))return `${match[1]} ITEMS`;
   if((match=value.match(/^Se desbloquea al llegar a (\d+) estrellas$/)))return `Unlocks at ${match[1]} stars`;
   if((match=value.match(/^(.+) añadido a tu colección$/)))return `${match[1]} added to your collection`;
-  if((match=value.match(/^ROTACIÓN DIARIA · (.+)$/)))return `DAILY ROTATION · ${match[1]}`;
+  if((match=value.match(/^ROTACIÓN DIARIA · ROTA EN (\d+)H (\d+)M$/)))return `DAILY ROTATION · ROTATES IN ${match[1]}H ${match[2]}M`;
   if((match=value.match(/^(\d+)★ FALTAN$/)))return `${match[1]}★ TO GO`;
   if((match=value.match(/^HOYO EN (\d+)$/)))return `HOLE IN ${match[1]}`;
   if((match=value.match(/^PLAYTEST · (\d+) golpes · SPACE resetea · TEST sale$/)))return `PLAYTEST · ${match[1]} strokes · SPACE resets · TEST exits`;
@@ -176,6 +178,13 @@ export function translateSurfaceDynamic(value:string):string|undefined{
   if((match=value.match(/^(\d+) objetos · ✓ PROBADO$/)))return `${match[1]} objects · ✓ PLAYTESTED`;
   if((match=value.match(/^(\d+) objetos · ● SIN PROBAR$/)))return `${match[1]} objects · ● NOT PLAYTESTED`;
   if((match=value.match(/^SELECCIONADO · (.+)$/)))return `SELECTED · ${match[1]}`;
+  if((match=value.match(/^JUGADOR\n(.+)\s+✎$/)))return `PLAYER\n${match[1]}   ✎`;
+  if((match=value.match(/^(.+) · (COMÚN|RARO|ÉPICO|TEMPORADA|HITO)$/))){
+    const rarity:Record<string,string>={"COMÚN":"COMMON","RARO":"RARE","ÉPICO":"EPIC","TEMPORADA":"SEASONAL","HITO":"MILESTONE"};
+    return `${match[1]} · ${rarity[match[2]!]}`;
+  }
+  if((match=value.match(/^¿Borrar (.+)\?$/)))return `Delete ${match[1]}?`;
+  if((match=value.match(/^¿Actualizar (.+) con el mapa actual del editor\? Tendrá que volver a pasar el playtest\.$/)))return `Update ${match[1]} with the current editor map? It will need to pass playtest again.`;
   if((match=value.match(/^PARCHE · (.+)$/)))return `PATCH · ${match[1]}`;
   if((match=value.match(/^TIEMPO ESTIMADO · (.+)$/)))return `ESTIMATED TIME · ${match[1]}`;
   if((match=value.match(/^CARGADA · (.+)\nACTUAL · (.+)$/)))return `LOADED · ${match[1]}\nCURRENT · ${match[2]}`;
