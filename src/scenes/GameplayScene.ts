@@ -334,7 +334,7 @@ export class GameplayScene extends Phaser.Scene {
   }
   private setControlHintDragging(dragging:boolean):void{
     if(!this.controlHint)return;
-    this.controlHint.setAlpha(dragging?.58:1);
+    this.controlHint.setAlpha(dragging ? .58 : 1);
     this.controlHintLabel?.setText(dragging?"SUELTA PARA TIRAR":"ARRASTRA DESDE LA BOLA HACIA ATRÁS");
   }
   private hideControlHint():void{
