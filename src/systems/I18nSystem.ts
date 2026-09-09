@@ -22,6 +22,10 @@ function translateDynamic(value:string):string{
   let match:RegExpMatchArray|null;
   const surface=translateSurfaceDynamic(value);if(surface!==undefined)return surface;
   if(value==="TOCA")return "TAP";
+  if(value==="BIENVENIDO A HOLE IN WHAT?")return "WELCOME TO HOLE IN WHAT?";
+  if(value==="Parece golf. De momento.")return "Looks like golf. For now.";
+  if(value==="ARRASTRA DESDE LA BOLA HACIA ATRÁS")return "DRAG BACK FROM THE BALL";
+  if(value==="SUELTA PARA TIRAR")return "RELEASE TO SHOOT";
   if(value==="No hace falta completar el hoyo.")return "You do not need to complete the hole.";
   if(value==="MUY FÁCIL")return "TOO EASY";
   if(value==="MUY DIFÍCIL")return "TOO HARD";
