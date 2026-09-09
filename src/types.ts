@@ -143,6 +143,8 @@ export interface LevelDefinition {
   twoStar: StarRequirement;
   /** Hand-authored courses bypass procedural geometry patches but still use common sanitising/auditing. */
   authored?: boolean;
+  /** First-run onboarding hole. Excluded from normal campaign pacing comparisons. */
+  onboarding?: boolean;
   /** Intended route used by deterministic generation, auditing and bot research. */
   designPath?: Vec2[];
   /** Mechanic the authored mastery route is expected to engage with. */

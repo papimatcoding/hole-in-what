@@ -34,7 +34,7 @@ interface PendingShotTelemetry {
 const BALL_R=GOLF_PHYSICS.ballRadius;
 const AIR_VISUAL_SCALE=.18;
 // Legacy key intentionally retained so the Hole in What? rename does not replay onboarding for existing testers.
-const CONTROL_TUTORIAL_KEY="troll-golf-control-onboarding-v1";
+const CONTROL_TUTORIAL_KEY="troll-golf-control-onboarding-v2";
 
 export class GameplayScene extends Phaser.Scene {
   private mode:GameSceneData["mode"]="classic";
@@ -63,6 +63,8 @@ export class GameplayScene extends Phaser.Scene {
   private tutorialQueue:MechanicId[]=[];
   private tutorialCard:Phaser.GameObjects.Container|null=null;
   private controlHint:Phaser.GameObjects.Container|null=null;
+  private controlHintLabel:Phaser.GameObjects.Text|null=null;
+  private controlHintFinger:Phaser.GameObjects.Container|null=null;
   private trail:TrailParticle[]=[];
   private trailClock=0;
   private soundCooldown=new Map<FeedbackSound,number>();
@@ -129,38 +131,37 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private createHud():void{
-    // Gameplay controls live in a dedicated top dock rather than floating over the course.
-    // The authored playfield begins below this visual rail, so navigation can never compete
-    // with a shot gesture or hide a ball sitting in the playable area.
-    this.add.rectangle(270,58,522,108,0x070c11,.98).setStrokeStyle(1,0x263640,.95).setDepth(40);
-    this.add.rectangle(270,113,500,1,0x50626f,.45).setDepth(41);
+    // Compact reserved chrome: controls stay above the authored playfield instead of
+    // occupying the course. The rail ends at y=70; authored balls/holes sit well below it.
+    this.add.rectangle(270,35,522,68,0x070c11,.98).setStrokeStyle(1,0x263640,.95).setDepth(40);
+    this.add.rectangle(270,70,500,1,0x50626f,.45).setDepth(41);
 
-    const bg=this.add.rectangle(270,43,250,50,0x0d141a,.96).setStrokeStyle(1,0x2d3d48,.9);
-    const three=this.add.text(270,35,`★★★  ${formatRequirement(this.level.threeStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#f0d37e"}).setOrigin(.5);
-    const two=this.add.text(270,55,`★★  ${formatRequirement(this.level.twoStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"11px",color:"#bcc7d0"}).setOrigin(.5);
+    const bg=this.add.rectangle(270,29,232,38,0x0d141a,.96).setStrokeStyle(1,0x2d3d48,.9);
+    const three=this.add.text(270,22,`★★★  ${formatRequirement(this.level.threeStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#f0d37e"}).setOrigin(.5);
+    const two=this.add.text(270,37,`★★  ${formatRequirement(this.level.twoStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"9px",color:"#bcc7d0"}).setOrigin(.5);
     this.objectiveHud=this.add.container(0,0,[bg,three,two]).setDepth(42);
 
-    this.strokeText=this.add.text(28,88,"Golpes 0",{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#f5f7fa"}).setDepth(43);
-    this.timeText=this.add.text(512,88,"0.0 s",{fontFamily:"system-ui, sans-serif",fontSize:"13px",color:"#f5f7fa"}).setOrigin(1,0).setDepth(43);
+    this.strokeText=this.add.text(78,53,"Golpes 0",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#f5f7fa"}).setDepth(43);
+    this.timeText=this.add.text(505,53,"0.0 s",{fontFamily:"system-ui, sans-serif",fontSize:"11px",color:"#f5f7fa"}).setOrigin(1,0).setDepth(43);
 
-    const back=this.add.rectangle(38,43,46,46,0x111920,.98).setStrokeStyle(1,0x405563).setDepth(43).setInteractive({useHandCursor:true});
-    const backText=this.add.text(38,39,"‹",{fontFamily:"system-ui, sans-serif",fontSize:"32px",color:"#f5f7fa"}).setOrigin(.5).setDepth(44);
+    const back=this.add.rectangle(34,34,42,42,0x111920,.98).setStrokeStyle(1,0x405563).setDepth(43).setInteractive({useHandCursor:true});
+    const backText=this.add.text(34,31,"‹",{fontFamily:"system-ui, sans-serif",fontSize:"29px",color:"#f5f7fa"}).setOrigin(.5).setDepth(44);
     this.bindHudButton(back,backText,.96,()=>this.scene.start("level-select",{mode:this.mode,page:Math.floor(this.levelIndex/10)}));
 
     if(BETA_TESTING){
       const levels=levelsForMode(this.mode);
-      this.betaLevelButton(438,43,"‹",this.levelIndex>0,()=>this.goRelative(-1));
-      this.betaLevelButton(494,43,"›",this.levelIndex<levels.length-1,()=>this.goRelative(1));
-      this.add.text(455,91,`${this.mode==="troll"?"H":"C"}${String(this.levelIndex+1).padStart(2,"0")}`,{fontFamily:"system-ui, sans-serif",fontSize:"9px",fontStyle:"bold",color:"#7d91a0"}).setOrigin(.5).setDepth(43);
-      const report=this.add.rectangle(270,92,94,30,0x17242d,.98).setStrokeStyle(1,0x557184).setDepth(43).setInteractive({useHandCursor:true});
-      const reportText=this.add.text(270,92,"⚑ REPORTAR",{fontFamily:"system-ui, sans-serif",fontSize:"9px",fontStyle:"bold",color:"#afd2e4"}).setOrigin(.5).setDepth(44);
+      this.betaLevelButton(440,29,"‹",this.levelIndex>0,()=>this.goRelative(-1));
+      this.betaLevelButton(496,29,"›",this.levelIndex<levels.length-1,()=>this.goRelative(1));
+      this.add.text(468,55,`${this.mode==="troll"?"H":"C"}${String(this.levelIndex+1).padStart(2,"0")}`,{fontFamily:"system-ui, sans-serif",fontSize:"8px",fontStyle:"bold",color:"#7d91a0"}).setOrigin(.5).setDepth(43);
+      const report=this.add.rectangle(270,57,82,20,0x17242d,.98).setStrokeStyle(1,0x557184).setDepth(43).setInteractive({useHandCursor:true});
+      const reportText=this.add.text(270,57,"⚑ REPORT",{fontFamily:"system-ui, sans-serif",fontSize:"8px",fontStyle:"bold",color:"#afd2e4"}).setOrigin(.5).setDepth(44);
       this.bindHudButton(report,reportText,.97,()=>this.openReport());
     }
   }
 
   private betaLevelButton(x:number,y:number,label:string,enabled:boolean,action:()=>void):void{
-    const bg=this.add.rectangle(x,y,50,42,enabled?0x16232d:0x10171d,.92).setStrokeStyle(1,enabled?0x496273:0x252f37).setDepth(20);
-    const text=this.add.text(x,y-1,label,{fontFamily:"system-ui, sans-serif",fontSize:"21px",fontStyle:"bold",color:enabled?"#dce8ef":"#46535d"}).setOrigin(.5).setDepth(21);
+    const bg=this.add.rectangle(x,y,42,38,enabled?0x16232d:0x10171d,.92).setStrokeStyle(1,enabled?0x496273:0x252f37).setDepth(43);
+    const text=this.add.text(x,y-1,label,{fontFamily:"system-ui, sans-serif",fontSize:"19px",fontStyle:"bold",color:enabled?"#dce8ef":"#46535d"}).setOrigin(.5).setDepth(44);
     if(!enabled)return;
     bg.setInteractive({useHandCursor:true});this.bindHudButton(bg,text,.96,action);
   }
@@ -198,10 +199,11 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private updateHudOcclusion():void{
-    // The navigation/objective dock is now outside the course surface, so it remains stable
-    // instead of fading or jumping above the ball as the old floating HUD did.
     this.objectiveHud.setAlpha(1);
-    this.ballView.setDepth(this.sim.isAirborne()?12:10);
+    const b=this.sim.state.ball,visualY=b.y-Math.max(0,b.z)*AIR_VISUAL_SCALE;
+    // Airborne cosmetics may visually enter the reserved chrome. Keep the ball readable
+    // instead of allowing the HUD to cover it.
+    this.ballView.setDepth(visualY<76?45:this.sim.isAirborne()?12:10);
   }
 
   private recoverStoppedState():void{
@@ -213,15 +215,15 @@ export class GameplayScene extends Phaser.Scene {
     AudioFeedback.unlock();this.recoverStoppedState();
     if(this.reportOpen||this.tutorialCard||this.sim.state.moving||this.sinking||this.voidAnimating||this.sim.isAirborne())return;
     const p=pointerToDesign(this,pointer),b=this.sim.state.ball;
-    if(Phaser.Math.Distance.Between(p.x,p.y,b.x,b.y)<=SHOT_GRAB_RADIUS){this.dragPointer=pointer;this.drawAim(p.x,p.y);}
+    if(Phaser.Math.Distance.Between(p.x,p.y,b.x,b.y)<=SHOT_GRAB_RADIUS){this.dragPointer=pointer;this.setControlHintDragging(true);this.drawAim(p.x,p.y);}
   }
   private pointerMove(pointer:Phaser.Input.Pointer):void{if(!this.dragPointer||this.reportOpen||this.sim.state.moving||this.sinking)return;const p=pointerToDesign(this,pointer);this.drawAim(p.x,p.y);}
   private pointerUp(pointer:Phaser.Input.Pointer):void{
     if(!this.dragPointer||this.reportOpen||this.sim.state.moving||this.sinking)return;
     const p=pointerToDesign(this,pointer),b=this.sim.state.ball,pull=resolveShotPull(b,p);this.dragPointer=null;this.aim.clear();
-    if(pull.length<12)return;
+    if(pull.length<12){this.setControlHintDragging(false);return;}
     const angle=Math.atan2(pull.dy,pull.dx),power=pull.power,startX=b.x,startY=b.y;
-    if(!this.sim.launch(angle,power))return;
+    if(!this.sim.launch(angle,power)){this.setControlHintDragging(false);return;}
     this.strokes+=1;
     if(BETA_TESTING&&this.attemptId){
       const angleDeg=(Phaser.Math.RadToDeg(angle)+360)%360;
@@ -307,12 +309,39 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private showControlHintIfNeeded():void{
-    if(this.mode!=="classic"||this.levelIndex!==0)return;try{if(localStorage.getItem(CONTROL_TUTORIAL_KEY)==="1")return;}catch{/* show */}
-    const b=this.sim.state.ball,g=this.add.graphics();g.lineStyle(4,0xdceeff,.82);g.beginPath();g.moveTo(b.x,b.y+24);g.lineTo(b.x,b.y+104);g.strokePath();g.fillStyle(0xdceeff,.9);g.fillTriangle(b.x,b.y+118,b.x-10,b.y+96,b.x+10,b.y+96);
-    const finger=this.add.circle(b.x,b.y+22,13,0xf4f7fa,.88).setStrokeStyle(3,0x7890a2,.8),label=this.add.text(b.x,b.y+146,"ARRASTRA HACIA ATRÁS · SUELTA",{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#eff7fb"}).setOrigin(.5);
-    this.controlHint=this.add.container(0,0,[g,finger,label]).setDepth(30);this.tweens.add({targets:finger,y:b.y+88,duration:850,yoyo:true,repeat:-1,ease:"Sine.easeInOut"});
+    if(!this.level.onboarding)return;
+    try{if(localStorage.getItem(CONTROL_TUTORIAL_KEY)==="1")return;}catch{/* show */}
+    const b=this.sim.state.ball;
+
+    const panel=this.add.rectangle(270,430,410,118,0x101820,.94).setStrokeStyle(1.5,0x405364,.9);
+    const title=this.add.text(270,398,"BIENVENIDO A HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:"17px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
+    const subtitle=this.add.text(270,426,"Parece golf. De momento.",{fontFamily:"system-ui, sans-serif",fontSize:"12px",color:"#aebdca"}).setOrigin(.5);
+    const label=this.add.text(270,462,"ARRASTRA DESDE LA BOLA HACIA ATRÁS",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#dceeff"}).setOrigin(.5);
+
+    const guide=this.add.graphics();
+    guide.lineStyle(3,0xdceeff,.72);guide.beginPath();guide.moveTo(b.x,b.y+24);guide.lineTo(b.x,b.y+94);guide.strokePath();
+    guide.fillStyle(0xdceeff,.84);guide.fillTriangle(b.x,b.y+108,b.x-9,b.y+88,b.x+9,b.y+88);
+
+    const fingerGraphic=this.add.graphics();
+    fingerGraphic.fillStyle(0xf4f7fa,.94);fingerGraphic.fillRoundedRect(-6,-20,12,30,6);fingerGraphic.fillCircle(0,10,13);
+    fingerGraphic.lineStyle(2,0x7890a2,.9);fingerGraphic.strokeRoundedRect(-6,-20,12,30,6);fingerGraphic.strokeCircle(0,10,13);
+    const finger=this.add.container(b.x,b.y+18,[fingerGraphic]);
+
+    this.controlHintLabel=label;
+    this.controlHintFinger=finger;
+    this.controlHint=this.add.container(0,0,[panel,title,subtitle,label,guide,finger]).setDepth(30);
+    this.tweens.add({targets:finger,y:b.y+82,duration:820,yoyo:true,repeat:-1,ease:"Sine.easeInOut"});
   }
-  private hideControlHint():void{if(this.controlHint){this.controlHint.destroy(true);this.controlHint=null;}}
+  private setControlHintDragging(dragging:boolean):void{
+    if(!this.controlHint)return;
+    this.controlHint.setAlpha(dragging ? .58 : 1);
+    this.controlHintLabel?.setText(dragging?"SUELTA PARA TIRAR":"ARRASTRA DESDE LA BOLA HACIA ATRÁS");
+  }
+  private hideControlHint():void{
+    if(this.controlHintFinger)this.tweens.killTweensOf(this.controlHintFinger);
+    if(this.controlHint){this.controlHint.destroy(true);this.controlHint=null;}
+    this.controlHintLabel=null;this.controlHintFinger=null;
+  }
 
   private showMechanicTutorial():void{
     const id=this.tutorialQueue[0];if(!id){this.tutorialCard=null;this.startedAt=performance.now();this.showControlHintIfNeeded();return;}const t=MECHANIC_TUTORIALS[id];

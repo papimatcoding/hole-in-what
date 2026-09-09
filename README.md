@@ -13,8 +13,8 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 - Public Pages: `https://papimatcoding.github.io/hole-in-what/`
 - Repository: `papimatcoding/hole-in-what`
 - Pages source: `dev`
-- Current public runtime head: `767d887d32cd1f40299b3f24aaa91c34d437feca`
-- Latest change: **open-beta UI hotfix**, PR #18
+- Current public runtime head before this candidate: `7c8c74d892b0331421ba976380ef1dabd64f30ca`
+- Latest public change: **external-feedback polish**, PR #19
 - Feature/artificial-review CI run: `33245412783` — **SUCCESS**
 - Post-merge CI run: `33245469424` — **SUCCESS**
 - Post-merge Pages run: `33245469418` — **SUCCESS**
@@ -27,6 +27,49 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 The open-beta UI hotfix changes presentation/localisation only. Golf physics, scoring and campaign geometry were not changed, so the accepted campaign certification remains valid.
 
 Legacy `troll-golf-*` localStorage keys intentionally remain stable so existing anonymous tester identity, save data and progression are not reset after the repository rename.
+
+## Audit-calibrated onboarding pass — 2026-09-09
+
+Candidate branch: `feature/audit-calibrated-classic`.
+
+This pass corrects the first external-feedback rework using the campaign audit as the design gate rather than intuition alone.
+
+### C01 is onboarding, not normal pacing
+
+- `LevelDefinition.onboarding` explicitly marks tutorial holes.
+- C01 is now a clean centred ball → cup shot with **3★ = 1 stroke** and no required mechanic.
+- C01 is excluded from normal difficulty-delta/pacing comparisons; C02 is the first real campaign level for pacing analysis.
+- First-run guidance is non-blocking and disappears on the first valid shot:
+  - `BIENVENIDO A HOLE IN WHAT?`
+  - `Parece golf. De momento.`
+  - animated finger showing the pull-back gesture;
+  - `ARRASTRA DESDE LA BOLA HACIA ATRÁS` → `SUELTA PARA TIRAR` while dragging.
+- Onboarding storage is versioned as `troll-golf-control-onboarding-v2` so existing RC6 testers see the redesigned tutorial exactly once.
+- ES/EN localisation is included.
+
+### Classic audit calibration retained
+
+The preceding audit-guided corrections remain:
+
+- C02: broad S-route retained; no further geometry changes.
+- C03: widened central-island route; full human model PASS.
+- C06: alternating bumper-gate route with larger forgiving bumpers; mechanic relevance restored and full human model PASS.
+- C04→C05 and C10→C11 remain intentional teaching resets, not pacing defects to flatten.
+
+### Certified candidate
+
+Exact level/audit code head: `863a2fa1221db97e2b459f00ee0222ac3e370dfd`.
+
+- Lab Smoke Checks run `34374050690`: **SUCCESS**.
+- Lab Full Audit run `34374051437`: **SUCCESS**.
+- Full adversarial solver: **13/13 Classic clean + 5/5 HARD clean**.
+- Audit 2.1 human model: **18/18 PASS · 0 REVIEW · 0 BLOCKER**.
+- C01: touch **94%**, casual **89%**, shot tolerance **83%**, human score **90%**, recovery **94%**.
+- C03: touch **89%**, tolerance **51%**.
+- C06: touch **90%**, tolerance **67%**, recovery **100%**, mechanic relevant.
+- Originality: **0 structurally similar pairs flagged**.
+
+For authored level changes, **Lab Full Audit success is a mandatory gate before merge to `dev`**. Fast CI/smoke alone is never sufficient design certification.
 
 ## External-feedback polish — 2026-09-09
 
@@ -378,10 +421,10 @@ Do not let roadmap cosmetics imply a live pass before that feature exists.
 
 ## Immediate next steps — resume here
 
-1. Validate and merge `feature/external-feedback-polish` into `dev` only if CI/audits stay clean.
-2. Human-smoke the new top gameplay dock on mobile + desktop: no course interaction should be obscured or accidentally triggered.
-3. Play C01, C02, C03 and C06 as a fresh player; judge **fun/readability**, not merely solver difficulty.
-4. Keep collecting external feedback with all `DEV*` aliases excluded from human-review averages.
-5. If the reworked Classic opening feels better, expand content by using C04/C05/C07 as Classic references and H04/H05 as HARD references.
-6. Do not start ranked/season-pass implementation yet; campaign quality and content depth remain the immediate product priority.
-7. Update this handoff after the public `dev` deployment and record the accepted runtime head.
+1. Merge the certified `feature/audit-calibrated-classic` candidate to `dev` only if the PR CI remains green.
+2. Human-smoke public C01 once as a fresh/onboarding user: welcome copy, animated finger, pull-back instruction, release instruction and no input blocking.
+3. Re-enter C01 after onboarding is stored: the guidance must not replay.
+4. Human-smoke the compact top gameplay dock on mobile + desktop; the ball must never disappear behind it.
+5. Play C02→C06 in order and judge pacing/fun; use Audit 2.1 as the numerical baseline, not as a replacement for human feel.
+6. Keep collecting external feedback with all `DEV*` aliases excluded from human-review averages.
+7. Next content expansion should use C04/C05/C07 as Classic references and H04/H05 as HARD references; ranked/seasons remain later.
