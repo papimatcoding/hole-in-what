@@ -98,6 +98,7 @@ function originalityRaw(level:LevelDefinition,row:AuditRow):number{
 }
 function confidence(row:AuditRow,fb:FeedbackLevel|null):"LOW"|"MEDIUM"|"HIGH"{if((fb?.sampleSize??0)>=5)return"HIGH";if((fb?.sampleSize??0)>=2)return"MEDIUM";return profile(row,"touch").successRate>0&&(row.humanStrokes??row.learnedStrokes)!==null?"MEDIUM":"LOW";}
 function recommendations(row:AuditRow,level:LevelDefinition,fb:FeedbackLevel|null,pacingFlags:string[],difficulty:number,originality:number):string[]{
+  if(level.onboarding)return["Onboarding intencional: validar claridad del gesto, comprensión y finalización; no balancear C01 como un nivel normal de campaña."];
   const out:string[]=[];const touch=profile(row,"touch"),tol=row.minShotTolerance??0;
   if(row.status==="BLOCKER")out.push("Corregir primero el blocker técnico/de jugabilidad antes de balancear el nivel.");
   if(touch.successRate<.25||tol<.22)out.push("Aumentar margen de ejecución: ensanchar pasos, reducir precisión obligatoria o crear una zona de aterrizaje más tolerante; no solucionarlo con pistas visuales solamente.");
@@ -134,7 +135,7 @@ const globalSorted=[...base].sort((a,b)=>a.difficultyRaw-b.difficultyRaw),global
 const originalSorted=[...base].sort((a,b)=>b.originalityRaw-a.originalityRaw),originalRank=new Map(originalSorted.map((x,i)=>[x.row.id,i+1]));
 const modeRanks=new Map<string,number>();for(const mode of["classic","troll"]){[...base].filter(x=>x.row.mode===mode).sort((a,b)=>a.difficultyRaw-b.difficultyRaw).forEach((x,i)=>modeRanks.set(x.row.id,i+1));}
 const pacingById=new Map<string,string[]>();
-for(const mode of["classic","troll"]){const authored=base.filter(x=>x.row.mode===mode);let prev:number|null=null;for(const x of authored){const flags:string[]=[];if(prev!==null){const delta=x.difficulty-prev;if(delta>=1.0)flags.push(`SPIKE:+${delta.toFixed(1)}`);if(delta<=-.8)flags.push(`DIP:${delta.toFixed(1)}`);}pacingById.set(x.row.id,flags);prev=x.difficulty;}}
+for(const mode of["classic","troll"]){const authored=base.filter(x=>x.row.mode===mode);let prev:number|null=null;for(const x of authored){const flags:string[]=[];if(x.level.onboarding){flags.push("ONBOARDING");pacingById.set(x.row.id,flags);continue;}if(prev!==null){const delta=x.difficulty-prev;if(delta>=1.0)flags.push(`SPIKE:+${delta.toFixed(1)}`);if(delta<=-.8)flags.push(`DIP:${delta.toFixed(1)}`);}pacingById.set(x.row.id,flags);prev=x.difficulty;}}
 const rows:DesignRow[]=base.map(x=>{const pacing=pacingById.get(x.row.id)??[];return{id:x.row.id,mode:x.row.mode,authoredOrder:x.level.group,difficulty:x.difficulty,difficultyRank:globalRank.get(x.row.id)!,modeRank:modeRanks.get(x.row.id)!,originality:x.originality,originalityRank:originalRank.get(x.row.id)!,confidence:confidence(x.row,x.fb),pacingFlags:pacing,auditFlags:x.row.flags,feedback:x.fb,recommendations:recommendations(x.row,x.level,x.fb,pacing,x.difficulty,x.originality)};});
 const ranked=[...rows].sort((a,b)=>a.difficultyRank-b.difficultyRank);
 console.log("\nAUDIT 2.0 · DIFFICULTY 1–5");for(const r of ranked)console.log(`${String(r.difficultyRank).padStart(2)}. ${r.id.padEnd(10)} dificultad=${r.difficulty.toFixed(1)}/5 · originalidad=${r.originality.toFixed(1)}/5 · ${r.confidence}${r.pacingFlags.length?` · ${r.pacingFlags.join(",")}`:""}`);
