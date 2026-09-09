@@ -11,7 +11,7 @@ path(c1,pt(120,620),pt(120,448),pt(420,166));
 
 // Alternating shelves create a broad S-route. The gaps are generous enough for touch,
  // but the player must now read the course instead of firing directly at the cup.
-const c2=base("classic",2,pt(420,836),pt(110,166),3,4,"wall");
+const c2=base("classic",2,pt(420,836),pt(110,166),2,3,"wall");
 c2.walls=[r(28,620,330,24),r(182,380,330,24)];
 path(c2,pt(430,548),pt(132,500),pt(132,318),pt(110,166));
 
@@ -33,7 +33,7 @@ path(c5,pt(390,626),pt(426,510),pt(270,420),pt(238,258),pt(422,166));
 
 // Feedback pass: C06 kept scoring as original but not fun. Turn it into a forgiving
 // two-bumper pinball line: large targets, clear open gaps and one optional recovery route.
-const c6=base("classic",6,pt(420,836),pt(108,166),3,4,"bumper");
+const c6=base("classic",6,pt(420,836),pt(108,166),2,3,"bumper");
 c6.walls=[r(28,568,300,24),r(258,318,254,24)];
 c6.bumpers=[{x:408,y:650,r:46},{x:154,y:420,r:42}];
 path(c6,pt(408,650),pt(430,510),pt(154,420),pt(142,276),pt(108,166));
