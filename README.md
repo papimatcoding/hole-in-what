@@ -2,7 +2,7 @@
 
 Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 
-> **SOURCE OF TRUTH / CHAT HANDOFF — 2026-08-29**
+> **SOURCE OF TRUTH / CHAT HANDOFF — 2026-09-09**
 >
 > Read this file first when continuing in another chat. Update it after meaningful changes to campaign state, architecture, validation, backend/live ops, beta status or immediate priorities.
 
@@ -27,6 +27,42 @@ Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
 The open-beta UI hotfix changes presentation/localisation only. Golf physics, scoring and campaign geometry were not changed, so the accepted campaign certification remains valid.
 
 Legacy `troll-golf-*` localStorage keys intentionally remain stable so existing anonymous tester identity, save data and progression are not reset after the repository rename.
+
+## External-feedback polish — 2026-09-09
+
+Current working branch: `feature/external-feedback-polish`.
+
+Human-feedback interpretation rule is now explicit: **exclude every tester whose `beta_testers.alias` begins with `DEV`**. Developer sessions remain useful for smoke/telemetry debugging but must not influence product-rating averages.
+
+The older shot-release-over-HUD bug and exact duplicate beta-report bug are already fixed in RC6; do not reopen them unless a fresh regression reproduces them.
+
+This pass responds to the current non-DEV signal:
+
+- HARD/Troll remains the strongest expression of the game identity;
+- C01–C03 are consistently read as too plain;
+- C06 is unusually original but low-fun, suggesting execution/friction rather than a bad concept;
+- C04/C05/C07 provide healthier Classic reference points.
+
+Changes in this branch:
+
+1. **Gameplay navigation dock**
+   - Back, beta previous/next and in-hole report controls now live in a dedicated solid top HUD dock.
+   - Interactive controls no longer float independently over the course.
+   - The objective/strokes/time HUD is grouped into the same stable chrome.
+   - The old objective-fade/depth-jump workaround is removed because navigation is no longer treated as part of the play surface.
+
+2. **Classic feedback rework**
+   - C01: basic-shot lesson becomes a simple route decision rather than a straight free shot.
+   - C02: broad alternating shelves create an easy-to-read S route.
+   - C03: central island creates a genuine left/right route choice.
+   - C06: preserves the bumper identity but becomes a forgiving two-bumper pinball line with larger targets and clearer recovery space.
+
+Acceptance before calling this public:
+
+- normal TypeScript build;
+- geometry / clearance / mechanic integrity checks;
+- fast + strict/full campaign audits where CI supports them;
+- visual smoke on mobile and desktop, especially top-dock spacing and C01/C02/C03/C06 feel.
 
 ## Open-beta UI hotfix — PR #18
 
@@ -342,10 +378,10 @@ Do not let roadmap cosmetics imply a live pass before that feature exists.
 
 ## Immediate next steps — resume here
 
-1. **Human-smoke the public UI hotfix** at `https://papimatcoding.github.io/hole-in-what/` in both ES and EN.
-2. Priority translation checks: Editor, Customization, Shop, Rewards, Level Preview, Community Publish prompts, Patch Notes, Maintenance/Update screens where reproducible.
-3. Visual check Customization + Shop: trail compositions and hole-effect previews/icons should look optically centered; seasonal teasers should say `PRÓXIMAMENTE` / `COMING SOON`, never `PASE`.
-4. Recheck DOM fields on a real mobile device and make a fresh mobile shot; confirm `input_kind = touch`.
-5. Recheck shot-release-over-HUD behavior and one normal in-hole report if not already reconfirmed on the current URL.
-6. If no blocker appears, **the build is ready for the Reddit/open-beta wave**. Use only the canonical `/hole-in-what/` Pages URL.
-7. Keep collecting external data while feature work continues. Do not promote ordinary beta iteration to `main` until beta acceptance.
+1. Validate and merge `feature/external-feedback-polish` into `dev` only if CI/audits stay clean.
+2. Human-smoke the new top gameplay dock on mobile + desktop: no course interaction should be obscured or accidentally triggered.
+3. Play C01, C02, C03 and C06 as a fresh player; judge **fun/readability**, not merely solver difficulty.
+4. Keep collecting external feedback with all `DEV*` aliases excluded from human-review averages.
+5. If the reworked Classic opening feels better, expand content by using C04/C05/C07 as Classic references and H04/H05 as HARD references.
+6. Do not start ranked/season-pass implementation yet; campaign quality and content depth remain the immediate product priority.
+7. Update this handoff after the public `dev` deployment and record the accepted runtime head.
