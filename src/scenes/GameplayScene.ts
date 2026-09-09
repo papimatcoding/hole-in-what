@@ -34,7 +34,7 @@ interface PendingShotTelemetry {
 const BALL_R=GOLF_PHYSICS.ballRadius;
 const AIR_VISUAL_SCALE=.18;
 // Legacy key intentionally retained so the Hole in What? rename does not replay onboarding for existing testers.
-const CONTROL_TUTORIAL_KEY="troll-golf-control-onboarding-v1";
+const CONTROL_TUTORIAL_KEY="troll-golf-control-onboarding-v2";
 
 export class GameplayScene extends Phaser.Scene {
   private mode:GameSceneData["mode"]="classic";
