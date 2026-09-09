@@ -5,7 +5,7 @@ import { base, path, pt, r } from "./authoring";
 
 // C01 is deliberate onboarding, not a normal puzzle. Keep the shot obvious and forgiving;
 // the first real course-design question starts at C02.
-const c1=base("classic",1,pt(270,836),pt(270,176),1,2,"wall");
+const c1=base("classic",1,pt(270,800),pt(270,176),1,2,"wall");
 c1.onboarding=true;
 delete c1.primaryMechanic;
 path(c1);
