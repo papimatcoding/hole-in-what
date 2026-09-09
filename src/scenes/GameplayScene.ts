@@ -129,24 +129,31 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private createHud():void{
-    const bg=this.add.rectangle(270,69,310,54,0x0a0f14,.80).setStrokeStyle(1,0x26323d,.82);
-    const three=this.add.text(270,58,`★★★  ${formatRequirement(this.level.threeStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#f0d37e"}).setOrigin(.5);
-    const two=this.add.text(270,80,`★★  ${formatRequirement(this.level.twoStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"11px",color:"#bcc7d0"}).setOrigin(.5);
-    this.objectiveHud=this.add.container(0,0,[bg,three,two]).setDepth(18);
-    this.strokeText=this.add.text(42,42,"Golpes 0",{fontFamily:"system-ui, sans-serif",fontSize:"15px",fontStyle:"bold",color:"#f5f7fa"}).setDepth(20);
-    this.timeText=this.add.text(498,42,"0.0 s",{fontFamily:"system-ui, sans-serif",fontSize:"15px",color:"#f5f7fa"}).setOrigin(1,0).setDepth(20);
+    // Gameplay controls live in a dedicated top dock rather than floating over the course.
+    // The authored playfield begins below this visual rail, so navigation can never compete
+    // with a shot gesture or hide a ball sitting in the playable area.
+    this.add.rectangle(270,58,522,108,0x070c11,.98).setStrokeStyle(1,0x263640,.95).setDepth(40);
+    this.add.rectangle(270,113,500,1,0x50626f,.45).setDepth(41);
 
-    const back=this.add.rectangle(43,86,50,44,0x111920,.88).setStrokeStyle(1,0x344754).setDepth(20).setInteractive({useHandCursor:true});
-    const backText=this.add.text(43,82,"‹",{fontFamily:"system-ui, sans-serif",fontSize:"34px",color:"#f5f7fa"}).setOrigin(.5).setDepth(21);
-    this.bindHudButton(back,backText,.97,()=>this.scene.start("level-select",{mode:this.mode,page:Math.floor(this.levelIndex/10)}));
+    const bg=this.add.rectangle(270,43,250,50,0x0d141a,.96).setStrokeStyle(1,0x2d3d48,.9);
+    const three=this.add.text(270,35,`★★★  ${formatRequirement(this.level.threeStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#f0d37e"}).setOrigin(.5);
+    const two=this.add.text(270,55,`★★  ${formatRequirement(this.level.twoStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"11px",color:"#bcc7d0"}).setOrigin(.5);
+    this.objectiveHud=this.add.container(0,0,[bg,three,two]).setDepth(42);
+
+    this.strokeText=this.add.text(28,88,"Golpes 0",{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#f5f7fa"}).setDepth(43);
+    this.timeText=this.add.text(512,88,"0.0 s",{fontFamily:"system-ui, sans-serif",fontSize:"13px",color:"#f5f7fa"}).setOrigin(1,0).setDepth(43);
+
+    const back=this.add.rectangle(38,43,46,46,0x111920,.98).setStrokeStyle(1,0x405563).setDepth(43).setInteractive({useHandCursor:true});
+    const backText=this.add.text(38,39,"‹",{fontFamily:"system-ui, sans-serif",fontSize:"32px",color:"#f5f7fa"}).setOrigin(.5).setDepth(44);
+    this.bindHudButton(back,backText,.96,()=>this.scene.start("level-select",{mode:this.mode,page:Math.floor(this.levelIndex/10)}));
 
     if(BETA_TESTING){
       const levels=levelsForMode(this.mode);
-      this.betaLevelButton(442,84,"‹",this.levelIndex>0,()=>this.goRelative(-1));
-      this.betaLevelButton(496,84,"›",this.levelIndex<levels.length-1,()=>this.goRelative(1));
-      this.add.text(469,113,`${this.mode==="troll"?"H":"C"}${String(this.levelIndex+1).padStart(2,"0")}`,{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#7d91a0"}).setOrigin(.5).setDepth(20);
-      const report=this.add.rectangle(62,136,104,40,0x17242d,.94).setStrokeStyle(1,0x557184).setDepth(20).setInteractive({useHandCursor:true});
-      const reportText=this.add.text(62,136,"⚑ REPORTAR",{fontFamily:"system-ui, sans-serif",fontSize:"9px",fontStyle:"bold",color:"#afd2e4"}).setOrigin(.5).setDepth(21);
+      this.betaLevelButton(438,43,"‹",this.levelIndex>0,()=>this.goRelative(-1));
+      this.betaLevelButton(494,43,"›",this.levelIndex<levels.length-1,()=>this.goRelative(1));
+      this.add.text(455,91,`${this.mode==="troll"?"H":"C"}${String(this.levelIndex+1).padStart(2,"0")}`,{fontFamily:"system-ui, sans-serif",fontSize:"9px",fontStyle:"bold",color:"#7d91a0"}).setOrigin(.5).setDepth(43);
+      const report=this.add.rectangle(270,92,94,30,0x17242d,.98).setStrokeStyle(1,0x557184).setDepth(43).setInteractive({useHandCursor:true});
+      const reportText=this.add.text(270,92,"⚑ REPORTAR",{fontFamily:"system-ui, sans-serif",fontSize:"9px",fontStyle:"bold",color:"#afd2e4"}).setOrigin(.5).setDepth(44);
       this.bindHudButton(report,reportText,.97,()=>this.openReport());
     }
   }
@@ -191,12 +198,10 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private updateHudOcclusion():void{
-    const b=this.sim.state.ball,visualY=b.y-Math.max(0,b.z)*AIR_VISUAL_SCALE;
-    const underObjectives=b.x>98&&b.x<442&&visualY<122;
-    const targetAlpha=underObjectives?.14:1;
-    this.objectiveHud.alpha+=(targetAlpha-this.objectiveHud.alpha)*.24;
-    const airborne=this.sim.isAirborne();
-    this.ballView.setDepth(underObjectives?24:airborne?12:10);
+    // The navigation/objective dock is now outside the course surface, so it remains stable
+    // instead of fading or jumping above the ball as the old floating HUD did.
+    this.objectiveHud.setAlpha(1);
+    this.ballView.setDepth(this.sim.isAirborne()?12:10);
   }
 
   private recoverStoppedState():void{

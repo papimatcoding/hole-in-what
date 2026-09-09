@@ -3,17 +3,23 @@ import { base, path, pt, r } from "./authoring";
 
 /** Beta block 1: each hole asks a different question and the mastery curve rises deliberately. */
 
-const c1=base("classic",1,pt(150,828),pt(390,176),1,2,"wall");
-path(c1,pt(270,505));
+// Feedback pass: the opener still teaches a basic pull-and-release, but now asks for one
+// readable route decision instead of rewarding an entirely straight first shot.
+const c1=base("classic",1,pt(120,836),pt(420,166),2,3,"wall");
+c1.walls=[r(210,505,302,24)];
+path(c1,pt(120,620),pt(120,448),pt(420,166));
 
-const c2=base("classic",2,pt(104,824),pt(424,176),1,2,"wall");
-c2.walls=[r(238,380,26,286)];
-path(c2,pt(452,610),pt(452,360),pt(424,176));
+// Alternating shelves create a broad S-route. The gaps are generous enough for touch,
+ // but the player must now read the course instead of firing directly at the cup.
+const c2=base("classic",2,pt(420,836),pt(110,166),3,4,"wall");
+c2.walls=[r(28,620,330,24),r(182,380,330,24)];
+path(c2,pt(430,548),pt(132,500),pt(132,318),pt(110,166));
 
-// Wider island makes the HIO a real trick shot rather than the default answer.
-const c3=base("classic",3,pt(270,836),pt(296,158),2,3,"wall");
-c3.walls=[r(170,370,200,230)];
-path(c3,pt(126,650),pt(126,310),pt(296,158));
+// Route-choice lesson: a central island blocks the obvious line and leaves two equally
+// readable lanes. It stays simple, but the first attempt now contains an actual decision.
+const c3=base("classic",3,pt(270,836),pt(270,166),2,3,"wall");
+c3.walls=[r(190,392,160,248)];
+path(c3,pt(124,672),pt(124,306),pt(270,166));
 
 const c4=base("classic",4,pt(92,836),pt(430,156),2,3,"wall");
 c4.walls=[r(28,588,324,26),r(188,346,324,26),r(330,462,26,126)];
@@ -25,11 +31,12 @@ c5.walls=[r(210,548,24,164),r(326,320,24,174),r(88,300,144,24),r(28,714,248,24),
 c5.bumpers=[{x:390,y:626,r:32}];
 path(c5,pt(390,626),pt(426,510),pt(270,420),pt(238,258),pt(422,166));
 
-// Bumper application: the lower shelf now closes most of the old clean bypass and the larger first bumper becomes the broad, forgiving way through the gate. The upper bumper remains a second rebound option rather than mandatory precision.
-const c6=base("classic",6,pt(420,836),pt(108,166),2,3,"bumper");
-c6.walls=[r(220,564,292,24),r(28,332,250,24),r(28,220,210,24)];
-c6.bumpers=[{x:142,y:650,r:44},{x:398,y:432,r:32}];
-path(c6,pt(142,650),pt(398,432),pt(300,280),pt(108,166));
+// Feedback pass: C06 kept scoring as original but not fun. Turn it into a forgiving
+// two-bumper pinball line: large targets, clear open gaps and one optional recovery route.
+const c6=base("classic",6,pt(420,836),pt(108,166),3,4,"bumper");
+c6.walls=[r(28,568,300,24),r(258,318,254,24)];
+c6.bumpers=[{x:408,y:650,r:46},{x:154,y:420,r:42}];
+path(c6,pt(408,650),pt(430,510),pt(154,420),pt(142,276),pt(108,166));
 
 // Geometry exam. Solver mastery is genuinely two strokes, so the stars say two.
 const c7=base("classic",7,pt(104,840),pt(430,150),2,3,"wall");
