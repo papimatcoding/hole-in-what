@@ -3,11 +3,12 @@ import { base, path, pt, r } from "./authoring";
 
 /** Beta block 1: each hole asks a different question and the mastery curve rises deliberately. */
 
-// Feedback pass: the opener still teaches a basic pull-and-release, but now asks for one
-// readable route decision instead of rewarding an entirely straight first shot.
-const c1=base("classic",1,pt(120,836),pt(420,166),2,3,"wall");
-c1.walls=[r(250,505,262,24)];
-path(c1,pt(132,620),pt(132,448),pt(420,166));
+// C01 is deliberate onboarding, not a normal puzzle. Keep the shot obvious and forgiving;
+// the first real course-design question starts at C02.
+const c1=base("classic",1,pt(270,836),pt(270,176),1,2,"wall");
+c1.onboarding=true;
+delete c1.primaryMechanic;
+path(c1);
 
 // Alternating shelves create a broad S-route. The gaps are generous enough for touch,
  // but the player must now read the course instead of firing directly at the cup.
