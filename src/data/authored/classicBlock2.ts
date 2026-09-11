@@ -11,10 +11,10 @@ import { base, path, pt, r } from "./authoring";
  */
 
 // 11 — First ice lesson. Alternating L-gates require a real setup before the cup while leaving
-// large, readable corridors. Ice occupies the middle transfer so the player learns extra carry,
-// then lands on grass before making the final approach.
+// large, readable corridors. Ice occupies the transfer between both gates without touching their
+// collision geometry, so the player learns extra carry and then gets grass for the final approach.
 const c11=base("classic",11,pt(110,840),pt(420,160),2,3,"ice");
-c11.ice=[r(92,470,356,92)];
+c11.ice=[r(92,474,356,52)];
 c11.walls=[
   r(28,650,338,24),r(342,530,24,120),
   r(176,350,336,24),r(176,350,24,118)
