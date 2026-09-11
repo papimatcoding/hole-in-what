@@ -62,12 +62,12 @@ c15.walls=[r(244,268,42,426)];
 c15.portals=[{a:{x:390,y:620,r:30},b:{x:140,y:356,r:30}}];
 path(c15,pt(390,620),pt(140,356),pt(118,248),pt(80,160));
 
-// 16 — Portal angle lesson. A full-width divider turns the course into two readable rooms. A direct
-// shot at the portal exits in the wrong direction; the robust solution first moves left, then aims
-// through the lower portal so the preserved travel vector leaves the upper portal toward the cup.
-// This asks a different question from C15 while keeping broad setup areas on both sides of the wall.
+// 16 — Portal angle lesson. A long divider creates two readable rooms but leaves a generous
+// far-left fallback lane, so completion never depends on the portal. The mastery route first moves
+// left, then aims through the lower portal so preserved travel direction leaves the upper portal
+// toward the cup. The grass fallback is intentionally much longer than solving the portal angle.
 const c16=base("classic",16,pt(420,842),pt(420,160),3,4,"portal");
-c16.walls=[r(28,490,484,24)];
+c16.walls=[r(118,490,394,24)];
 c16.portals=[{a:{x:320,y:620,r:30},b:{x:150,y:356,r:30}}];
 path(c16,pt(118,760),pt(320,620),pt(150,356),pt(318,238),pt(420,160));
 
