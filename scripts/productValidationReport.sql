@@ -74,7 +74,14 @@ select metric,value from (
 ) metrics
 order by ord;
 
--- Level quality snapshot (external RC7 only)
+-- Level quality snapshot (external RC7 only). This is a separate statement,
+-- so it intentionally repeats the external tester CTE.
+with external_testers as (
+  select tester_id
+  from public.beta_testers
+  where coalesce(alias,'') !~* '^DEV'
+    and coalesce(alias,'') <> 'Matkiller'
+)
 select f.mode,f.level_id,count(*) as ratings,
        round(avg(f.fun),2) as avg_fun,
        round(avg(f.originality),2) as avg_originality,
