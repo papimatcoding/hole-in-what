@@ -57,9 +57,11 @@ export class ResultsScene extends Phaser.Scene{
     const canPrev=this.resultData.levelIndex>0,canNext=this.resultData.levelIndex<levels.length-1&&(BETA_TESTING||SaveSystem.isLevelUnlocked(this.resultData.mode,this.resultData.levelIndex+1));
     const retry=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex}),prev=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex-1}),next=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex+1});
     if(this.resultData.stars<3){this.makeButton("REINTENTAR",620,retry,true);if(canNext)this.makeButton("SIGUIENTE",696,next,false);}else{if(canNext)this.makeButton("SIGUIENTE",620,next,true);this.makeButton("REINTENTAR",696,retry,false);}
-    if(BETA_TESTING){this.nav(126,768,"‹ ANTERIOR",canPrev,prev);this.add.text(270,768,`${this.resultData.mode==="troll"?"H":"C"} ${String(this.resultData.levelIndex+1).padStart(2,"0")} / ${String(levels.length).padStart(2,"0")}`,{fontFamily:"system-ui",fontSize:uiFontSize(11),fontStyle:"bold",color:"#8193a1"}).setOrigin(.5);this.nav(414,768,"SIGUIENTE ›",canNext,next);}
-    this.smallAction(270,812,"NIVELES",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(this.resultData.levelIndex/10)}),160,0x172129,"#c8d3dc");
-    if(BETA_TESTING){this.smallAction(175,858,"🏆 RANKING",()=>{void this.openLeaderboard();},174,0x211f1a,"#e5d293");this.smallAction(365,858,"⚑ REPORTAR",()=>this.openFeedback(),174,0x17242d,"#a9d1e5");}
+    // Three independent rows with explicit breathing room. Previous centres (768/812/858)
+    // made their 48px hitboxes overlap by 4px and 2px respectively.
+    if(BETA_TESTING){this.nav(126,758,"‹ ANTERIOR",canPrev,prev);this.add.text(270,758,`${this.resultData.mode==="troll"?"H":"C"} ${String(this.resultData.levelIndex+1).padStart(2,"0")} / ${String(levels.length).padStart(2,"0")}`,{fontFamily:"system-ui",fontSize:uiFontSize(11),fontStyle:"bold",color:"#8193a1"}).setOrigin(.5);this.nav(414,758,"SIGUIENTE ›",canNext,next);}
+    this.smallAction(270,814,"NIVELES",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(this.resultData.levelIndex/10)}),160,0x172129,"#c8d3dc");
+    if(BETA_TESTING){this.smallAction(175,870,"🏆 RANKING",()=>{void this.openLeaderboard();},174,0x211f1a,"#e5d293");this.smallAction(365,870,"⚑ REPORTAR",()=>this.openFeedback(),174,0x17242d,"#a9d1e5");}
     sharpenSceneText(this);
     if(BETA_TESTING&&!BetaTelemetry.levelSurveyDone(this.resultData.levelId))this.time.delayedCall(180,()=>this.openSurvey());
   }
