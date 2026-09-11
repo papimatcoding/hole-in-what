@@ -44,4 +44,31 @@ c13.walls=[
 ];
 path(c13,pt(224,700),pt(408,574),pt(408,454),pt(146,370),pt(146,248),pt(420,160));
 
-export const CLASSIC_BLOCK_2:LevelDefinition[]=[c11,c12,c13];
+// 14 — Booster route choice. A single central monolith creates two genuinely different routes:
+// the left lane commits to a large upward booster and earns a fast top-side finish, while the
+// right lane remains a slower all-grass recovery route. The shortcut is about managing exit speed,
+// not threading a tiny gap, and the silhouette deliberately breaks from the C11-C13 shelf pattern.
+const c14=base("classic",14,pt(110,842),pt(420,160),2,3,"booster");
+c14.walls=[r(184,426,172,266)];
+c14.boosters=[{x:52,y:514,w:104,h:214,dx:.08,dy:-1,power:.82}];
+path(c14,pt(108,666),pt(112,390),pt(280,260),pt(420,160));
+
+// 15 — Portal introduction. The tall central spine makes the displacement useful without hiding
+// either endpoint. The natural first shot enters the lower-right portal almost vertically; the
+// ball reappears upper-left preserving that direction, leaving one simple finishing putt. Going
+// around the spine is always possible, so the portal teaches a shortcut rather than acting as a key.
+const c15=base("classic",15,pt(420,842),pt(80,160),2,3,"portal");
+c15.walls=[r(244,268,42,426)];
+c15.portals=[{a:{x:390,y:620,r:30},b:{x:140,y:356,r:30}}];
+path(c15,pt(390,620),pt(140,356),pt(118,248),pt(80,160));
+
+// 16 — Portal angle lesson. A full-width divider turns the course into two readable rooms. A direct
+// shot at the portal exits in the wrong direction; the robust solution first moves left, then aims
+// through the lower portal so the preserved travel vector leaves the upper portal toward the cup.
+// This asks a different question from C15 while keeping broad setup areas on both sides of the wall.
+const c16=base("classic",16,pt(420,842),pt(420,160),3,4,"portal");
+c16.walls=[r(28,490,484,24)];
+c16.portals=[{a:{x:320,y:620,r:30},b:{x:150,y:356,r:30}}];
+path(c16,pt(118,760),pt(320,620),pt(150,356),pt(318,238),pt(420,160));
+
+export const CLASSIC_BLOCK_2:LevelDefinition[]=[c11,c12,c13,c14,c15,c16];
