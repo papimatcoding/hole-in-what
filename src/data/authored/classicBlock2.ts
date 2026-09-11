@@ -54,14 +54,15 @@ c14.walls=[r(184,418,172,282),r(28,286,242,24)];
 c14.boosters=[{x:112,y:700,w:252,h:102,dx:1,dy:-.08,power:.9}];
 path(c14,pt(250,754),pt(430,690),pt(426,390),pt(314,242),pt(420,160));
 
-// 15 — Portal introduction. The lower room's spine advertises the shortcut and both portal rings
-// stay visible. The exit lands below a broad upper shelf: the player immediately understands the
-// displacement/direction, but the shelf catches the old portal→cup HIO and asks for one ordinary
-// finishing decision around its right edge. The long outside route remains possible and readable.
-const c15=base("classic",15,pt(420,842),pt(420,160),2,3,"portal");
-c15.walls=[r(244,430,42,280),r(28,278,300,24)];
-c15.portals=[{a:{x:410,y:620,r:30},b:{x:120,y:382,r:30}}];
-path(c15,pt(410,620),pt(120,382),pt(370,342),pt(420,160));
+// 15 — Portal introduction. A tall central spine deliberately separates start and cup into two
+// sides. The lower-right portal is the obvious fast crossing and its upper-left exit immediately
+// demonstrates preserved travel direction; from there the cup is a readable finishing putt. A
+// grass route still exists around the spine, but it takes the long way and cannot beat the portal
+// by firing a single bank shot past the lesson.
+const c15=base("classic",15,pt(420,842),pt(80,160),2,3,"portal");
+c15.walls=[r(244,300,42,410)];
+c15.portals=[{a:{x:430,y:620,r:30},b:{x:120,y:360,r:30}}];
+path(c15,pt(430,620),pt(120,360),pt(80,160));
 
 // 16 — Portal angle lesson. A long divider makes the two rooms obvious while preserving a broad
 // left-side fallback. The lower pillar kills the direct outer-bank HIO without narrowing the portal
