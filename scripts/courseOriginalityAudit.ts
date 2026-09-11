@@ -1,7 +1,7 @@
 import { levelsForMode } from "../src/data/campaign";
 import type { CurveDef, LevelDefinition, TriangleDef, Vec2 } from "../src/types";
 
-const FIELD={left:28,right:512,top:28,bottom:932};
+const FIELD={left:28,right:512,top:96,bottom:932};
 const COLS=18,ROWS=30;
 
 function pointInTriangle(p:Vec2,t:TriangleDef):boolean{

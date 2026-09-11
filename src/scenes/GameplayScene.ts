@@ -125,13 +125,11 @@ export class GameplayScene extends Phaser.Scene {
   update(time:number,deltaMs:number):void{
     if(this.sinking)return;
     this.timeText.setText(`${((performance.now()-this.startedAt)/1000).toFixed(1)} s`);
-    if(this.tutorialCard||this.voidAnimating){this.updateHudOcclusion();drawDynamicCourse(this.dynamic,this.level,time/1000);return;}
-    const dt=Math.min(deltaMs/1000,.033);
-    if(this.sim.state.moving){
-      this.consume(this.sim.step(dt));
-      if(!this.sim.state.moving&&this.pendingShot&&!this.voidAnimating&&!this.sinking)this.finishShotTelemetry("rest");
-    }
-    this.updateTrail(dt);this.updateBallView();this.updateHudOcclusion();drawCourse(this.course,this.level,this.sim.state);drawDynamicCourse(this.dynamic,this.level,time/1000);
+    if(this.tutorialCard||this.voidAnimating){this.updateHudOcclusion();drawDynamicCourse(this.dynamic,this.level,this.sim.state.time);return;}
+    const dt=Math.min(deltaMs/1000,.033),wasMoving=this.sim.state.moving;
+    this.consume(this.sim.step(dt));
+    if(wasMoving&&!this.sim.state.moving&&this.pendingShot&&!this.voidAnimating&&!this.sinking)this.finishShotTelemetry("rest");
+    this.updateTrail(dt);this.updateBallView();this.updateHudOcclusion();drawCourse(this.course,this.level,this.sim.state);drawDynamicCourse(this.dynamic,this.level,this.sim.state.time);
   }
 
   private createHud():void{
@@ -218,12 +216,12 @@ export class GameplayScene extends Phaser.Scene {
     AudioFeedback.unlock();this.recoverStoppedState();
     if(this.reportOpen||this.tutorialCard||this.sim.state.moving||this.sinking||this.voidAnimating||this.sim.isAirborne())return;
     const p=pointerToDesign(this,pointer),b=this.sim.state.ball;
-    if(Phaser.Math.Distance.Between(p.x,p.y,b.x,b.y)<=SHOT_GRAB_RADIUS){this.dragPointer=pointer;this.setControlHintDragging(true);this.drawAim(p.x,p.y);}
+    if(Phaser.Math.Distance.Between(p.x,p.y,b.x,b.y)<=SHOT_GRAB_RADIUS){this.captureAimPointer(pointer);this.dragPointer=pointer;this.setControlHintDragging(true);this.drawAim(p.x,p.y);}
   }
   private pointerMove(pointer:Phaser.Input.Pointer):void{if(!this.dragPointer||this.reportOpen||this.sim.state.moving||this.sinking)return;const p=pointerToDesign(this,pointer);this.drawAim(p.x,p.y);}
   private pointerUp(pointer:Phaser.Input.Pointer):void{
     if(!this.dragPointer||this.reportOpen||this.sim.state.moving||this.sinking)return;
-    const p=pointerToDesign(this,pointer),b=this.sim.state.ball,pull=resolveShotPull(b,p);this.dragPointer=null;this.aim.clear();
+    const p=pointerToDesign(this,pointer),b=this.sim.state.ball,pull=resolveShotPull(b,p);this.dragPointer=null;this.releaseAimPointer(pointer);this.aim.clear();
     if(pull.length<12){this.setControlHintDragging(false);return;}
     const angle=Math.atan2(pull.dy,pull.dx),power=pull.power,startX=b.x,startY=b.y;
     if(!this.sim.launch(angle,power)){this.setControlHintDragging(false);return;}
@@ -234,6 +232,14 @@ export class GameplayScene extends Phaser.Scene {
     }
     this.strokeText.setText(`Golpes ${this.strokes}`);this.hideControlHint();try{localStorage.setItem(CONTROL_TUTORIAL_KEY,"1");}catch{/* optional */}
     AudioFeedback.play("shot",.65+power*.45);this.impact(startX,startY,0xcbe8ff,18,.35);
+  }
+  private captureAimPointer(pointer:Phaser.Input.Pointer):void{
+    const event=pointer.event as PointerEvent|undefined;if(!event)return;
+    try{this.game.canvas.setPointerCapture(event.pointerId);}catch{/* browser may reject stale capture */}
+  }
+  private releaseAimPointer(pointer:Phaser.Input.Pointer):void{
+    const event=pointer.event as PointerEvent|undefined;if(!event)return;
+    try{if(this.game.canvas.hasPointerCapture(event.pointerId))this.game.canvas.releasePointerCapture(event.pointerId);}catch{/* optional */}
   }
   private pointerInputKind(pointer:Phaser.Input.Pointer):BetaInputKind{
     const kind=(pointer.event as PointerEvent|undefined)?.pointerType;

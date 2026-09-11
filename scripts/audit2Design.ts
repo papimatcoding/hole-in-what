@@ -56,7 +56,7 @@ function difficultyRaw(row:AuditRow,level:LevelDefinition):number{
 }
 function rating5(raw:number):number{return Number(clamp(1+raw/25,1,5).toFixed(1));}
 
-const FIELD={left:28,right:512,top:28,bottom:932};
+const FIELD={left:28,right:512,top:96,bottom:932};
 const COLS=18,ROWS=30;
 function pointInTriangle(p:Vec2,t:TriangleDef):boolean{
   const sign=(p1:Vec2,p2:Vec2,p3:Vec2)=>(p1.x-p3.x)*(p2.y-p3.y)-(p2.x-p3.x)*(p1.y-p3.y);
@@ -101,6 +101,7 @@ function recommendations(row:AuditRow,level:LevelDefinition,fb:FeedbackLevel|nul
   if(level.onboarding)return["Onboarding intencional: validar claridad del gesto, comprensión y finalización; no balancear C01 como un nivel normal de campaña."];
   const out:string[]=[];const touch=profile(row,"touch"),tol=row.minShotTolerance??0;
   if(row.status==="BLOCKER")out.push("Corregir primero el blocker técnico/de jugabilidad antes de balancear el nivel.");
+  if(row.flags.some(x=>x.startsWith("OBJECTIVE_")))out.push("Ajustar el objetivo de golpes al recorrido humano modelado; no cambiar geometría solo para hacer cuadrar una cifra de estrellas.");
   if(touch.successRate<.25||tol<.22)out.push("Aumentar margen de ejecución: ensanchar pasos, reducir precisión obligatoria o crear una zona de aterrizaje más tolerante; no solucionarlo con pistas visuales solamente.");
   if((row.humanRouteDelta??0)>0)out.push("La línea récord es más estrecha que la ruta humana: conservarla como mastery line solo si la alternativa tolerante sigue siendo clara y divertida.");
   if(row.recovery.recoverableRate<.75)out.push("Añadir una salida o posición de recuperación para que un tiro mediocre cueste golpes sin convertir la run en un softlock.");

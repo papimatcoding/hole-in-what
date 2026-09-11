@@ -401,9 +401,12 @@ export class GolfSimulation {
     const s=this.state;
     const b=s.ball;
     const events:SimulationEvent[]=[];
-    if(!s.moving||s.sunk||s.voided)return events;
+    if(s.sunk||s.voided)return events;
 
+    // World time advances even while the ball is resting so moving mechanics have one
+    // authoritative phase for both rendering and collision.
     s.time+=dt;
+    if(!s.moving)return events;
     s.portalCooldown=Math.max(0,s.portalCooldown-dt);
     s.bumperCooldown=Math.max(0,s.bumperCooldown-dt);
     s.launchCooldown=Math.max(0,s.launchCooldown-dt);
