@@ -37,8 +37,10 @@ h4.popWalls=[
 ];
 path(h4,pt(420,730),pt(420,534),pt(158,392),pt(408,250),pt(270,144));trap(h4,"cross-gate");
 
-// 05 — First the entry wakes a bumper, then the narrowed waist forces interaction with the moving crossing, then a final wall guards the cup.
-// Blind players should land around three strokes; an elite line may remain, but it must not bypass the moving mechanic.
+// 05 — First the entry wakes a bumper, then the waist forces interaction with the moving crossing,
+// then a final wall guards the cup. Rendering and collision share the same clock, and the crossing
+// opens wide enough for the physical ball rather than merely looking open. The human baseline is
+// intentionally four strokes; elite shortcuts may exist only if they still interact with the moving mechanic.
 const h5=base("troll",5,pt(96,848),pt(430,140),4,5,"moving");
 h5.walls=[r(28,682,286,24),r(28,520,162,24),r(350,520,162,24),r(190,486,20,92),r(320,486,20,92),r(228,310,284,24)];
 h5.movingWalls=[{x:224,y:520,w:92,h:24,axis:"x",amplitude:62,speed:1.2,phase:.4}];
