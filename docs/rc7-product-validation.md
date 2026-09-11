@@ -36,7 +36,7 @@ Existing `beta_attempts`, `beta_runs`, `beta_shots` and level feedback remain th
 The product pulse appears only after meaningful play (a completed HARD hole or at least three completed Classic holes), never for a `DEV*` alias. It asks:
 
 1. whether the tester would keep playing;
-2. whether they would buy a complete version at €4.99: yes / maybe / no.
+2. whether they would buy a complete version at €1.99: yes / maybe / no.
 
 Purchase intent is directional research, **not a sales forecast**.
 
@@ -54,7 +54,7 @@ The report tracks:
 - voluntary level replay;
 - pulse response rate;
 - keep-playing intent;
-- €4.99 purchase intent;
+- €1.99 purchase intent;
 - per-level fun/originality/difficulty/surprise.
 
 ## Working validation targets

@@ -35,7 +35,7 @@ function openPulse(scene:Phaser.Scene,context:{levelId:string;mode:GameMode}):vo
   const title=scene.add.text(270,292,es?"DOS PREGUNTAS Y YA":"TWO QUICK QUESTIONS",{fontFamily:"system-ui",fontSize:uiFontSize(18,2),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
   const subtitle=scene.add.text(270,326,es?"Esto nos ayuda más que una encuesta larga.":"This helps us more than a long survey.",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),color:"#8fa3b0"}).setOrigin(.5);
   const q1=scene.add.text(270,382,es?"¿SEGUIRÍAS JUGANDO?":"WOULD YOU KEEP PLAYING?",{fontFamily:"system-ui",fontSize:uiFontSize(11,2),fontStyle:"bold",color:"#d8e4eb"}).setOrigin(.5);
-  const q2=scene.add.text(270,506,es?"SI EL JUEGO COMPLETO COSTARA 4,99 €…":"IF THE FULL GAME COST €4.99…",{fontFamily:"system-ui",fontSize:uiFontSize(11,2),fontStyle:"bold",color:"#d8e4eb"}).setOrigin(.5);
+  const q2=scene.add.text(270,506,es?"SI EL JUEGO COMPLETO COSTARA 1,99 €…":"IF THE FULL GAME COST €1.99…",{fontFamily:"system-ui",fontSize:uiFontSize(11,2),fontStyle:"bold",color:"#d8e4eb"}).setOrigin(.5);
   const hint=scene.add.text(270,536,es?"¿Lo comprarías?":"Would you buy it?",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),color:"#8395a2"}).setOrigin(.5);
   root.add([blocker,card,title,subtitle,q1,q2,hint]);
 
