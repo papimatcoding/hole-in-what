@@ -33,10 +33,11 @@ c12.walls=[
 path(c12,pt(126,722),pt(126,586),pt(420,500),pt(420,378),pt(110,154));
 
 // 13 — Booster application. The pad points naturally toward the first exit, then the upper gate
-// demands a follow-up placement. Gates are only modestly tighter than C11/C12: enough to stop the
-// chapter ending on its easiest hole, but still comfortably touch-friendly.
+// demands a follow-up placement. Audit 2.1 found the route touch-friendly but occasionally kept
+// the ball moving for too long at the old boost strength, so the launch is softened without
+// changing the route or reopening the one-shot solution.
 const c13=base("classic",13,pt(100,842),pt(420,160),2,3,"booster");
-c13.boosters=[{x:76,y:620,w:312,h:138,dx:.62,dy:-1,power:.86}];
+c13.boosters=[{x:76,y:620,w:312,h:138,dx:.62,dy:-1,power:.78}];
 c13.walls=[
   r(28,520,360,24),r(364,400,24,120),
   r(150,292,362,24),r(150,316,24,88)
