@@ -56,21 +56,22 @@ path(c14,pt(250,754),pt(430,690),pt(426,390),pt(314,242),pt(420,160));
 
 // 15 — Portal introduction. A tall central spine deliberately separates start and cup into two
 // sides. The lower-right portal is the obvious fast crossing and its upper-left exit immediately
-// demonstrates preserved travel direction; from there the cup is a readable finishing putt. A
-// grass route still exists around the spine, but it takes the long way and cannot beat the portal
-// by firing a single bank shot past the lesson.
-const c15=base("classic",15,pt(420,842),pt(80,160),2,3,"portal");
+// demonstrates preserved travel direction. The full human model consistently reads the intended
+// portal HIO, so three stars now reward that learned one-shot route instead of pretending two is par.
+const c15=base("classic",15,pt(420,842),pt(80,160),1,2,"portal");
 c15.walls=[r(244,300,42,410)];
 c15.portals=[{a:{x:430,y:620,r:30},b:{x:120,y:360,r:30}}];
 path(c15,pt(430,620),pt(120,360),pt(80,160));
 
-// 16 — Portal angle lesson. A long divider makes the two rooms obvious while preserving a broad
-// left-side fallback. The lower pillar kills the direct outer-bank HIO without narrowing the portal
-// route. Shooting straight at the portal from spawn exits upper-left in the wrong direction; the
-// mastery line first moves left, then enters A up-right so B preserves that vector toward the cup.
+// 16 — Portal angle application. Two broad shelves create an S-shaped grass fallback, while a
+// lower guard prevents a single bank from shortcutting that route. The competitive line is two
+// strokes: first place left of portal A, then enter A up-right. Portal B preserves that vector and
+// sends the ball through the wide right opening of the upper shelf toward the cup. A direct shot
+// from spawn into A exits in the wrong direction, so the lesson is angle planning rather than aim
+// precision; both portal and fallback corridors remain deliberately wide for touch play.
 const c16=base("classic",16,pt(420,842),pt(420,160),2,3,"portal");
-c16.walls=[r(166,490,346,24),r(156,550,32,150)];
-c16.portals=[{a:{x:320,y:620,r:30},b:{x:150,y:356,r:30}}];
-path(c16,pt(110,760),pt(320,620),pt(150,356),pt(420,160));
+c16.walls=[r(138,500,374,24),r(138,650,24,160),r(28,300,320,24)];
+c16.portals=[{a:{x:350,y:650,r:30},b:{x:200,y:400,r:30}}];
+path(c16,pt(190,760),pt(350,650),pt(200,400),pt(380,260),pt(420,160));
 
 export const CLASSIC_BLOCK_2:LevelDefinition[]=[c11,c12,c13,c14,c15,c16];
