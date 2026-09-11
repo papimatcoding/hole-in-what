@@ -32,10 +32,9 @@ h4.popWalls=[
 ];
 path(h4,pt(420,730),pt(420,534),pt(158,392),pt(408,250),pt(270,144));trap(h4,"cross-gate");
 
-// 05 — Moving gate lesson. Audit 3.0 found that the central fins created 4–14px fake passages at
-// the wall's neutral phase. Pull the shelves/fins apart symmetrically so an open state really looks
-// open, while the moving wall still overlaps either fin at its extremes and therefore still closes
-// the crossing. This preserves the joke but removes visually unsatisfying micro-gaps.
+// 05 — Moving gate lesson. The central crossing now has honest ball-width openings when the wall
+// moves away, and the surprise bumper sits clear of the right fin instead of creating another fake
+// 8px passage. The moving wall still overlaps either fin at its extremes and genuinely closes the gate.
 const h5=base("troll",5,pt(96,848),pt(430,140),3,4,"moving");
 h5.walls=[
   r(28,682,286,24),
@@ -46,8 +45,8 @@ h5.walls=[
   r(228,310,284,24)
 ];
 h5.movingWalls=[{x:224,y:520,w:92,h:24,axis:"x",amplitude:62,speed:1.2,phase:.4}];
-h5.popBumpers=[{x:404,y:610,r:36,triggerX:350,triggerY:720,triggerRadius:152}];
+h5.popBumpers=[{x:430,y:626,r:36,triggerX:350,triggerY:720,triggerRadius:152}];
 h5.popWalls=[{x:354,y:238,w:104,h:22,triggerX:362,triggerY:292,triggerRadius:92}];
-path(h5,pt(408,744),pt(408,610),pt(278,566),pt(170,456),pt(170,356),pt(390,260),pt(430,140));trap(h5,"late-combo");
+path(h5,pt(408,744),pt(430,626),pt(278,566),pt(170,456),pt(170,356),pt(390,260),pt(430,140));trap(h5,"late-combo");
 
 export const HARD_AUTHORED:LevelDefinition[]=[h1,h2,h3,h4,h5];
