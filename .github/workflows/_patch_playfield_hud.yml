@@ -1,0 +1,57 @@
+name: Patch playfield HUD boundary
+
+on:
+  push:
+    branches: [fix/playfield-hud-separation]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: fix/playfield-hud-separation
+      - name: Apply focused patch
+        shell: python
+        run: |
+          from pathlib import Path
+
+          sim = Path("src/systems/GolfSimulation.ts")
+          text = sim.read_text()
+          old = '  field: { x: 28, y: 28, w: 484, h: 904 },'
+          new = '  field: { x: 28, y: 96, w: 484, h: 836 },'
+          if old not in text:
+              raise SystemExit("Expected physics field definition not found")
+          sim.write_text(text.replace(old, new, 1))
+
+          scene = Path("src/scenes/GameplayScene.ts")
+          text = scene.read_text()
+          old = '''  private updateHudOcclusion():void{\n    this.objectiveHud.setAlpha(1);\n    const b=this.sim.state.ball,visualY=b.y-Math.max(0,b.z)*AIR_VISUAL_SCALE;\n    // Airborne balls can visually enter the reserved chrome. Raise the ball only for readability;\n    // the playfield itself remains behind the opaque HUD and cannot steal input from its controls.\n    this.ballView.setDepth(visualY<HUD_BOTTOM+4?45:this.sim.isAirborne()?12:10);\n  }'''
+          new = '''  private updateHudOcclusion():void{\n    this.objectiveHud.setAlpha(1);\n    // HUD chrome is outside the playfield. Game objects always remain below its depth.\n    this.ballView.setDepth(this.sim.isAirborne()?12:10);\n  }'''
+          if old not in text:
+              raise SystemExit("Expected HUD occlusion block not found")
+          text = text.replace(old, new, 1)
+
+          old = '''  private updateBallView():void{\n    const b=this.sim.state.ball,height=Math.max(0,b.z),lift=height*AIR_VISUAL_SCALE,scale=1+Math.min(.13,height/1700);this.ballView.setPosition(b.x,b.y-lift).setScale(scale).setDepth(height>1?12:10);\n    this.shadowView.clear();const s=Phaser.Math.Clamp(1-height/900,.52,1),a=Phaser.Math.Clamp(.24-height/2600,.07,.24);this.shadowView.fillStyle(0x07100b,a);this.shadowView.fillEllipse(b.x+2,b.y+5,28*s,12*s);\n  }'''
+          new = '''  private updateBallView():void{\n    const b=this.sim.state.ball,height=Math.max(0,b.z),lift=height*AIR_VISUAL_SCALE,visualY=Math.max(GOLF_PHYSICS.field.y+BALL_R,b.y-lift),scale=1+Math.min(.13,height/1700);this.ballView.setPosition(b.x,visualY).setScale(scale).setDepth(height>1?12:10);\n    this.shadowView.clear();const s=Phaser.Math.Clamp(1-height/900,.52,1),a=Phaser.Math.Clamp(.24-height/2600,.07,.24);this.shadowView.fillStyle(0x07100b,a);this.shadowView.fillEllipse(b.x+2,b.y+5,28*s,12*s);\n  }'''
+          if old not in text:
+              raise SystemExit("Expected ball rendering block not found")
+          text = text.replace(old, new, 1)
+
+          old = '        this.trail.push({x:b.x,y:b.y-b.z*AIR_VISUAL_SCALE,life:maxLife,maxLife,size:Phaser.Math.FloatBetween(2.5,5)});'
+          new = '        this.trail.push({x:b.x,y:Math.max(GOLF_PHYSICS.field.y+2,b.y-b.z*AIR_VISUAL_SCALE),life:maxLife,maxLife,size:Phaser.Math.FloatBetween(2.5,5)});'
+          if old not in text:
+              raise SystemExit("Expected trail rendering line not found")
+          scene.write_text(text.replace(old, new, 1))
+      - name: Commit focused patch and remove helper workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/_patch_playfield_hud.yml
+          git add src/systems/GolfSimulation.ts src/scenes/GameplayScene.ts
+          git commit -m "Fix playfield HUD separation"
+          git push origin HEAD:fix/playfield-hud-separation
