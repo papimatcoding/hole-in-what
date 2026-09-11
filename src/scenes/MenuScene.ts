@@ -1,12 +1,15 @@
 import Phaser from "phaser";
 import { BETA_TESTING } from "../config/beta";
 import { DESIGN_HEIGHT, DESIGN_WIDTH, isDesktopUI, setupDesignCamera, sharpenSceneText, uiFontSize } from "../config/display";
+import { PRODUCT_FEATURES, PRODUCT_STAGE_LABEL } from "../config/product";
 import { levelsForMode } from "../data/campaign";
 import { BetaFeedbackSystem } from "../systems/BetaFeedbackSystem";
 import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
 import { I18n, type GameLanguage } from "../systems/I18nSystem";
 import { LiveOps } from "../systems/LiveOpsSystem";
 import { PatchNotes } from "../systems/PatchNotesSystem";
+import { maybeOpenProductPulse } from "../systems/ProductPulseOverlay";
+import { ProductTelemetry } from "../systems/ProductTelemetrySystem";
 import { SaveSystem } from "../systems/SaveSystem";
 import type { GameMode } from "../types";
 
@@ -17,15 +20,16 @@ export class MenuScene extends Phaser.Scene {
   create():void{
     setupDesignCamera(this);this.desktop=isDesktopUI();
     this.cameras.main.setBackgroundColor("#0b0f14");
-    SaveSystem.claimEligibleStarRewards();
+    if(PRODUCT_FEATURES.cosmetics)SaveSystem.claimEligibleStarRewards();
     void BetaTelemetry.ensureTester(false);
+    void ProductTelemetry.ensureSession();
+    ProductTelemetry.track({eventName:"menu_view",scene:"menu"});
 
     const online=this.add.text(42,54,"● — ONLINE",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(12,2),fontStyle:"bold",color:"#78bfa0"}).setOrigin(0,.5);
     const stopOnline=LiveOps.onOnline(count=>online.setText(`● ${count==null?"—":count} ONLINE`));
     this.events.once("shutdown",stopOnline);
 
-    const wallet=SaveSystem.wallet();
-    this.add.text(DESIGN_WIDTH-42,54,`◈ ${wallet.coins}   ◆ ${wallet.gems}`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(15,1),fontStyle:"bold",color:"#d9e4ee"}).setOrigin(1,.5);
+    this.add.text(DESIGN_WIDTH-42,54,PRODUCT_STAGE_LABEL,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:"#8298a6"}).setOrigin(1,.5);
     this.languageSelector();
     this.add.text(DESIGN_WIDTH/2,106,"HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(39,2),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
     this.add.rectangle(270,139,72,3,0x6f98ae,.95);
@@ -44,6 +48,7 @@ export class MenuScene extends Phaser.Scene {
     if(this.desktop)this.createDesktopActions();else this.createMobileActions();
 
     sharpenSceneText(this);
+    maybeOpenProductPulse(this);
   }
 
   private languageSelector():void{
@@ -57,38 +62,33 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private createDesktopActions():void{
-    this.add.text(270,452,"JUEGO Y COLECCIÓN",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#667a89"}).setOrigin(.5);
-    this.makeCompactButton(125,492,118,"PERSONALIZAR",()=>this.scene.start("cosmetics"));
-    this.makeCompactButton(270,492,118,"TIENDA",()=>this.scene.start("shop"));
+    this.add.text(270,452,"PRODUCTO",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#667a89"}).setOrigin(.5);
+    if(PRODUCT_FEATURES.cosmetics)this.makeCompactButton(125,492,118,"PERSONALIZAR",()=>this.scene.start("cosmetics"));else this.makeLockedCompactButton(125,492,118,"PERSONALIZAR");
+    if(PRODUCT_FEATURES.shop)this.makeCompactButton(270,492,118,"TIENDA",()=>this.scene.start("shop"));else this.makeLockedCompactButton(270,492,118,"TIENDA");
     this.makeCompactButton(415,492,118,"RECOMPENSAS",()=>this.scene.start("rewards"));
 
-    this.add.text(270,550,"COMUNIDAD",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#667a89"}).setOrigin(.5);
+    this.add.text(270,550,"COMUNIDAD Y SOPORTE",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#667a89"}).setOrigin(.5);
     this.makeCompactButton(165,592,196,"COMMUNITY MAPS",()=>{void this.openCommunity();},true);
     this.makeCompactButton(375,592,196,"ASISTENCIA",()=>this.scene.start("assistance"),true);
     this.makeWideButton(PatchNotes.hasUnread()?"PATCH NOTES   ·   ● NUEVO":"PATCH NOTES",654,()=>this.scene.start("patch-notes"),PatchNotes.hasUnread());
 
-    const equipped=SaveSystem.cosmetics().equipped;
-    this.add.text(DESIGN_WIDTH/2,710,`● ${equipped.ball.replace("ball-","")}   ·   ─ ${equipped.trail.replace("trail-","")}`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(9,2),color:"#718491"}).setOrigin(.5);
-
-    const beta=this.add.rectangle(270,770,390,50,0x101820).setStrokeStyle(1,0x334956);
-    const betaText=this.add.text(270,770,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:"#a9bdc9"}).setOrigin(.5);
-    this.wirePress(beta,betaText,270,770,410,58,()=>this.scene.start("editor"),0x101820,0x1d2c36);
-    this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-48,BETA_TESTING?"BETA · DESKTOP":"CAMPAÑA · DESKTOP",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(9,2),color:"#5e707e"}).setOrigin(.5);
+    const beta=this.add.rectangle(270,728,390,50,0x101820).setStrokeStyle(1,0x334956);
+    const betaText=this.add.text(270,728,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:"#a9bdc9"}).setOrigin(.5);
+    this.wirePress(beta,betaText,270,728,410,58,()=>this.scene.start("editor"),0x101820,0x1d2c36);
+    this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-48,BETA_TESTING?"RC7 · PRODUCT VALIDATION · DESKTOP":"CAMPAÑA · DESKTOP",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(9,2),color:"#5e707e"}).setOrigin(.5);
   }
 
   private createMobileActions():void{
-    this.makeWideButton("PERSONALIZAR",472,()=>this.scene.start("cosmetics"));
-    this.makeWideButton("TIENDA",528,()=>this.scene.start("shop"));
+    if(PRODUCT_FEATURES.cosmetics)this.makeWideButton("PERSONALIZAR",472,()=>this.scene.start("cosmetics"));else this.makeLockedWideButton("PERSONALIZAR",472);
+    if(PRODUCT_FEATURES.shop)this.makeWideButton("TIENDA",528,()=>this.scene.start("shop"));else this.makeLockedWideButton("TIENDA",528);
     this.makeWideButton("RECOMPENSAS",584,()=>this.scene.start("rewards"));
     this.makeWideButton("COMMUNITY MAPS",648,()=>{void this.openCommunity();},true);
     this.makeWideButton("ASISTENCIA AL JUGADOR",708,()=>this.scene.start("assistance"),true);
     this.makeWideButton(PatchNotes.hasUnread()?"PATCH NOTES   ·   ● NUEVO":"PATCH NOTES",768,()=>this.scene.start("patch-notes"),PatchNotes.hasUnread());
-    const equipped=SaveSystem.cosmetics().equipped;
-    this.add.text(DESIGN_WIDTH/2,814,`● ${equipped.ball.replace("ball-","")}   ·   ─ ${equipped.trail.replace("trail-","")}`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,1),color:"#718090"}).setOrigin(.5);
-    const beta=this.add.rectangle(270,862,390,48,0x111922).setStrokeStyle(2,0x405666);
-    const betaText=this.add.text(270,862,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,1),fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5);
-    this.wirePress(beta,betaText,270,862,410,58,()=>this.scene.start("editor"),0x111922,0x1d2b36);
-    this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-25,BETA_TESTING?"CAMPAÑA BETA · TESTER MODE":"CAMPAÑA · CORE SLICE",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,1),color:"#657282"}).setOrigin(.5);
+    const beta=this.add.rectangle(270,842,390,48,0x111922).setStrokeStyle(2,0x405666);
+    const betaText=this.add.text(270,842,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,1),fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5);
+    this.wirePress(beta,betaText,270,842,410,58,()=>this.scene.start("editor"),0x111922,0x1d2b36);
+    this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-25,BETA_TESTING?"RC7 · PRODUCT VALIDATION":"CAMPAÑA · CORE SLICE",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,1),color:"#657282"}).setOrigin(.5);
   }
 
   private async openCommunity():Promise<void>{await BetaTelemetry.ensureTester(false);this.scene.start("community-maps");}
@@ -107,8 +107,28 @@ export class MenuScene extends Phaser.Scene {
       return;
     }
     const progress=this.add.text(435,y+15,BETA_TESTING?`BETA · ★ ${stars} / ${levels.length*3}`:`★ ${stars} / ${levels.length*3}`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(12,2),color:"#c9d4df"}).setOrigin(1,.5);
-    const open=():void=>{void(async()=>{if(BETA_TESTING)await BetaTelemetry.ensureTester(false);this.scene.start("level-select",{mode});})();};
+    const open=():void=>{void(async()=>{
+      ProductTelemetry.track({eventName:"mode_open",scene:"menu",mode});
+      if(mode==="troll")ProductTelemetry.trackOnce({eventName:"hard_discovered",scene:"menu",mode:"troll"});
+      if(BETA_TESTING)await BetaTelemetry.ensureTester(false);
+      this.scene.start("level-select",{mode});
+    })();};
     this.wirePress(bg,[title,progress],270,y,410,92,open,rest,hover);
+  }
+
+  private lockedCopy():string{return I18n.language()==="es"?"PRÓXIMAMENTE":"COMING SOON";}
+
+  private makeLockedWideButton(label:string,y:number):void{
+    const bg=this.add.rectangle(270,y,390,50,0x10161c).setStrokeStyle(1,0x293641);
+    this.add.text(108,y,label,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(12,2),fontStyle:"bold",color:"#687987"}).setOrigin(0,.5);
+    this.add.text(432,y,this.lockedCopy(),{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(8,2),fontStyle:"bold",color:"#786e7f"}).setOrigin(1,.5);
+    bg.setAlpha(.9);
+  }
+
+  private makeLockedCompactButton(x:number,y:number,w:number,label:string):void{
+    this.add.rectangle(x,y,w,54,0x10161c).setStrokeStyle(1,0x293641).setAlpha(.9);
+    this.add.text(x,y-7,label,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(8,2),fontStyle:"bold",color:"#687987",align:"center",wordWrap:{width:w-12}}).setOrigin(.5);
+    this.add.text(x,y+13,this.lockedCopy(),{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(6,2),fontStyle:"bold",color:"#786e7f"}).setOrigin(.5);
   }
 
   private makeWideButton(label:string,y:number,action:()=>void,accent=false):void{

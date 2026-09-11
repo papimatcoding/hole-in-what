@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { setupDesignCamera, sharpenSceneText } from "../config/display";
+import { PRODUCT_FEATURES } from "../config/product";
 import { cosmeticById } from "../data/cosmetics";
 import { STAR_REWARDS } from "../data/progression";
 import { drawBall } from "../systems/CosmeticRenderer";
@@ -13,7 +14,6 @@ export class RewardsScene extends Phaser.Scene {
   create(): void {
     setupDesignCamera(this);
     this.cameras.main.setBackgroundColor("#0d1117");
-    SaveSystem.claimEligibleStarRewards();
 
     this.add.text(42, 64, "‹", {
       fontFamily: "system-ui, sans-serif",
@@ -21,6 +21,26 @@ export class RewardsScene extends Phaser.Scene {
       color: "#f5f7fa"
     }).setInteractive({ useHandCursor: true })
       .on("pointerup", () => this.scene.start("menu"));
+
+    if (!PRODUCT_FEATURES.cosmetics) {
+      this.add.text(270, 236, "RECOMPENSAS", {
+        fontFamily: "system-ui, sans-serif", fontSize: "26px", fontStyle: "bold", color: "#f5f7fa"
+      }).setOrigin(0.5);
+      this.add.rectangle(270, 456, 420, 300, 0x111820, 0.98).setStrokeStyle(2, 0x354957);
+      this.add.text(270, 378, "EN DEFINICIÓN", {
+        fontFamily: "system-ui, sans-serif", fontSize: "13px", fontStyle: "bold", color: "#8aa1af"
+      }).setOrigin(0.5);
+      this.add.text(270, 438, "PRÓXIMAMENTE", {
+        fontFamily: "system-ui, sans-serif", fontSize: "27px", fontStyle: "bold", color: "#dce7ed"
+      }).setOrigin(0.5);
+      this.add.text(270, 510, "Las estrellas y el progreso siguen guardándose.\nLas recompensas cosméticas volverán cuando\nla colección y la economía estén bien definidas.", {
+        fontFamily: "system-ui, sans-serif", fontSize: "11px", color: "#82939f", align: "center", lineSpacing: 7
+      }).setOrigin(0.5);
+      sharpenSceneText(this);
+      return;
+    }
+
+    SaveSystem.claimEligibleStarRewards();
 
     this.add.text(270, 78, "RECOMPENSAS", {
       fontFamily: "system-ui, sans-serif",
