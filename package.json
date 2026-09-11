@@ -18,7 +18,11 @@
     "audit:human": "tsx scripts/audit2.ts",
     "audit:human:full": "AUDIT2_MODE=full tsx scripts/audit2.ts",
     "audit:human:strict": "AUDIT2_MODE=full AUDIT2_STRICT=1 tsx scripts/audit2.ts",
-    "audit:design": "tsx scripts/audit2Design.ts"
+    "audit:design": "tsx scripts/audit2Design.ts",
+    "audit:3:core": "tsx scripts/audit3.ts",
+    "audit:3": "npm run audit:human && npm run audit:design && npm run audit:originality && npm run audit:3:core",
+    "audit:3:full": "npm run audit:human:full && npm run audit:design && npm run audit:originality && npm run audit:3:core",
+    "audit:3:strict": "npm run audit:human:full && npm run audit:design && npm run audit:originality && AUDIT3_STRICT=1 npm run audit:3:core"
   },
   "dependencies": {
     "phaser": "4.2.1"

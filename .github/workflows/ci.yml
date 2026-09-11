@@ -34,9 +34,15 @@ jobs:
         run: npm run test:clearance
       - name: Simulate authored campaign
         run: npm run audit:courses
-      - name: Audit human playability
-        run: npm run audit:human
-      - name: Audit difficulty and design pacing
-        run: npm run audit:design
-      - name: Check course originality
-        run: npm run audit:originality
+      - name: Audit 3.0 map design
+        run: npm run audit:3
+      - name: Upload Audit 3.0 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-3-fast-report
+          path: |
+            artifacts/audit2-report.*
+            artifacts/audit2-design.*
+            artifacts/audit3-report.*
+          if-no-files-found: warn
