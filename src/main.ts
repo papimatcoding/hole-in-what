@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import "./styles.css";
-import { DESIGN_HEIGHT, DESIGN_WIDTH, RENDER_SCALE } from "./config/display";
+import { DESIGN_HEIGHT, RENDER_SCALE, VIEW_WIDTH } from "./config/display";
 import { BootScene } from "./scenes/BootScene";
 import { MaintenanceScene } from "./scenes/MaintenanceScene";
 import { UpdateRequiredScene } from "./scenes/UpdateRequiredScene";
@@ -25,7 +25,7 @@ import { LiveOps } from "./systems/LiveOpsSystem";
 
 I18n.install();
 
-const renderWidth=Math.round(DESIGN_WIDTH*RENDER_SCALE);
+const renderWidth=Math.round(VIEW_WIDTH*RENDER_SCALE);
 const renderHeight=Math.round(DESIGN_HEIGHT*RENDER_SCALE);
 
 const config:Phaser.Types.Core.GameConfig={

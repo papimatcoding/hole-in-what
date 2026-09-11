@@ -36,7 +36,7 @@ path(c12,pt(126,722),pt(126,586),pt(420,500),pt(420,378),pt(110,154));
 // changing the actual idea of the hole. Open both dogleg corridors by roughly one ball diameter
 // instead of weakening the booster: the pad still creates the first placement, but recovery and
 // the follow-up shot are no longer a narrow mobile-only precision check.
-const c13=base("classic",13,pt(100,842),pt(420,160),2,3,"booster");
+const c13=base("classic",13,pt(100,842),pt(420,160),3,4,"booster");
 c13.boosters=[{x:76,y:620,w:312,h:138,dx:.62,dy:-1,power:.86}];
 c13.walls=[
   r(28,520,340,24),r(344,400,24,120),

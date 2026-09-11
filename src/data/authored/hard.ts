@@ -29,7 +29,7 @@ h3.popVoids=[{x:28,y:620,w:340,h:96,triggerX:270,triggerY:738,triggerRadius:82}]
 path(h3,pt(440,738),pt(440,574),pt(292,566),pt(250,430),pt(376,270),pt(420,142));trap(h3,"floor-drop");
 
 // 04 — Two-stage joke: solving the first shutter reveals a second one later in the route.
-const h4=base("troll",4,pt(270,848),pt(270,144),3,4,"wall");
+const h4=base("troll",4,pt(270,848),pt(270,144),2,3,"wall");
 h4.walls=[r(28,664,308,24),r(204,420,308,24)];
 h4.popWalls=[
   {x:28,y:294,w:310,h:24,triggerX:116,triggerY:492,triggerRadius:116},
@@ -37,11 +37,13 @@ h4.popWalls=[
 ];
 path(h4,pt(420,730),pt(420,534),pt(158,392),pt(408,250),pt(270,144));trap(h4,"cross-gate");
 
-// 05 — First the entry wakes a bumper, then the narrowed waist forces interaction with the moving crossing, then a final wall guards the cup.
-// Blind players should land around three strokes; an elite line may remain, but it must not bypass the moving mechanic.
-const h5=base("troll",5,pt(96,848),pt(430,140),3,4,"moving");
+// 05 — First the entry wakes a bumper, then the waist forces interaction with the moving crossing,
+// then a final wall guards the cup. Rendering and collision share the same clock, and the crossing
+// opens wide enough for the physical ball rather than merely looking open. The repaired layout's
+// modeled human baseline is two strokes; elite lines are valid only if they still use the moving mechanic.
+const h5=base("troll",5,pt(96,848),pt(430,140),2,3,"moving");
 h5.walls=[r(28,682,286,24),r(28,520,162,24),r(350,520,162,24),r(190,486,20,92),r(320,486,20,92),r(228,310,284,24)];
-h5.movingWalls=[{x:210,y:520,w:110,h:24,axis:"x",amplitude:45,speed:1.2,phase:.4}];
+h5.movingWalls=[{x:224,y:520,w:92,h:24,axis:"x",amplitude:62,speed:1.2,phase:.4}];
 h5.popBumpers=[{x:404,y:610,r:36,triggerX:350,triggerY:720,triggerRadius:152}];
 h5.popWalls=[{x:354,y:238,w:104,h:22,triggerX:362,triggerY:292,triggerRadius:92}];
 path(h5,pt(408,744),pt(408,610),pt(278,566),pt(170,456),pt(170,356),pt(390,260),pt(430,140));trap(h5,"late-combo");

@@ -18,7 +18,7 @@ path(c2,pt(430,548),pt(132,500),pt(132,318),pt(110,166));
 
 // Route-choice lesson: a central island blocks the obvious line and leaves two equally
 // readable lanes. It stays simple, but the first attempt now contains an actual decision.
-const c3=base("classic",3,pt(270,836),pt(270,166),2,3,"wall");
+const c3=base("classic",3,pt(270,836),pt(270,166),1,2,"wall");
 c3.walls=[r(205,405,130,220)];
 path(c3,pt(132,670),pt(132,322),pt(270,166));
 
@@ -46,7 +46,7 @@ c6.bumpers=[{x:142,y:650,r:54},{x:398,y:432,r:50}];
 path(c6,pt(142,650),pt(398,432),pt(304,280),pt(108,166));
 
 // Geometry exam. Solver mastery is genuinely two strokes, so the stars say two.
-const c7=base("classic",7,pt(104,840),pt(430,150),2,3,"wall");
+const c7=base("classic",7,pt(104,840),pt(430,150),3,4,"wall");
 c7.walls=[r(28,654,304,24),r(208,458,304,24),r(28,262,294,24)];
 path(c7,pt(420,724),pt(420,548),pt(118,402),pt(118,218),pt(430,150));
 
@@ -57,7 +57,7 @@ c8.walls=[r(190,426,322,24),r(28,286,184,24)];
 path(c8,pt(126,522),pt(126,388),pt(420,344),pt(420,246),pt(112,154));
 
 // Sand application: commit to the right-side slow pocket, clear the middle shelf, then switch left. The lower shelf and short right fin prevent one-shot wall banks from bypassing the sand decision.
-const c9=base("classic",9,pt(424,840),pt(106,154),3,4,"sand");
+const c9=base("classic",9,pt(424,840),pt(106,154),2,3,"sand");
 c9.sand=[r(318,530,160,100)];
 c9.walls=[r(28,642,344,24),r(468,650,24,132),r(180,490,260,24),r(278,300,234,24)];
 path(c9,pt(420,580),pt(468,450),pt(220,390),pt(220,250),pt(106,154));
