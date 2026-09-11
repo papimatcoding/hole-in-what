@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { BETA_TESTING } from "../config/beta";
 import { pointerToDesign, setupDesignCamera, sharpenSceneText } from "../config/display";
+import { PRODUCT_FEATURES } from "../config/product";
 import { cosmeticById, type CosmeticDefinition } from "../data/cosmetics";
 import { levelFor, levelsForMode } from "../data/campaign";
 import { AudioFeedback, type FeedbackSound } from "../systems/AudioFeedback";
@@ -33,6 +34,7 @@ interface PendingShotTelemetry {
 
 const BALL_R=GOLF_PHYSICS.ballRadius;
 const AIR_VISUAL_SCALE=.18;
+const HUD_BOTTOM=84;
 // Legacy key intentionally retained so the Hole in What? rename does not replay onboarding for existing testers.
 const CONTROL_TUTORIAL_KEY="troll-golf-control-onboarding-v2";
 
@@ -89,7 +91,9 @@ export class GameplayScene extends Phaser.Scene {
     if(BETA_TESTING)this.attemptId=BetaTelemetry.beginAttempt(this.level.id,this.mode);
     this.events.once("shutdown",()=>this.closeAttempt("scene-exit",false));
 
-    const equipped=SaveSystem.cosmetics().equipped;
+    // RC7 validates core game feel. Existing tester saves may contain cosmetics from older builds,
+    // but disabled product systems must not change the visual/game-feel cohort while they are frozen.
+    const equipped=PRODUCT_FEATURES.cosmetics?SaveSystem.cosmetics().equipped:{ball:"ball-classic",trail:"trail-none",holeEffect:"hole-default"} as const;
     this.ballCosmetic=cosmeticById(equipped.ball)??cosmeticById("ball-classic")!;
     this.trailCosmetic=cosmeticById(equipped.trail)??cosmeticById("trail-none")!;
     this.holeCosmetic=cosmeticById(equipped.holeEffect)??cosmeticById("hole-default")!;
@@ -131,36 +135,37 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private createHud():void{
-    // Compact reserved chrome: controls stay above the authored playfield instead of
-    // occupying the course. The rail ends at y=70; authored balls/holes sit well below it.
-    this.add.rectangle(270,35,522,68,0x070c11,.98).setStrokeStyle(1,0x263640,.95).setDepth(40);
-    this.add.rectangle(270,70,500,1,0x50626f,.45).setDepth(41);
+    // RC7 uses two genuinely reserved rows. Primary navigation/objective live on the first row;
+    // runtime status/reporting live on the second. Nothing floats independently over the course.
+    this.add.rectangle(270,HUD_BOTTOM/2,522,HUD_BOTTOM-2,0x070c11,.985).setStrokeStyle(1,0x263640,.95).setDepth(40);
+    this.add.rectangle(270,49,500,1,0x334650,.7).setDepth(41);
+    this.add.rectangle(270,HUD_BOTTOM,500,1,0x50626f,.45).setDepth(41);
 
-    const bg=this.add.rectangle(270,29,232,38,0x0d141a,.96).setStrokeStyle(1,0x2d3d48,.9);
-    const three=this.add.text(270,22,`★★★  ${formatRequirement(this.level.threeStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#f0d37e"}).setOrigin(.5);
-    const two=this.add.text(270,37,`★★  ${formatRequirement(this.level.twoStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"9px",color:"#bcc7d0"}).setOrigin(.5);
+    const bg=this.add.rectangle(270,25,232,36,0x0d141a,.96).setStrokeStyle(1,0x2d3d48,.9);
+    const three=this.add.text(270,19,`★★★  ${formatRequirement(this.level.threeStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#f0d37e"}).setOrigin(.5);
+    const two=this.add.text(270,33,`★★  ${formatRequirement(this.level.twoStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"9px",color:"#bcc7d0"}).setOrigin(.5);
     this.objectiveHud=this.add.container(0,0,[bg,three,two]).setDepth(42);
 
-    this.strokeText=this.add.text(78,53,"Golpes 0",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#f5f7fa"}).setDepth(43);
-    this.timeText=this.add.text(505,53,"0.0 s",{fontFamily:"system-ui, sans-serif",fontSize:"11px",color:"#f5f7fa"}).setOrigin(1,0).setDepth(43);
+    this.strokeText=this.add.text(78,66,"Golpes 0",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(0,.5).setDepth(43);
+    this.timeText=this.add.text(505,66,"0.0 s",{fontFamily:"system-ui, sans-serif",fontSize:"11px",color:"#f5f7fa"}).setOrigin(1,.5).setDepth(43);
 
-    const back=this.add.rectangle(34,34,42,42,0x111920,.98).setStrokeStyle(1,0x405563).setDepth(43).setInteractive({useHandCursor:true});
-    const backText=this.add.text(34,31,"‹",{fontFamily:"system-ui, sans-serif",fontSize:"29px",color:"#f5f7fa"}).setOrigin(.5).setDepth(44);
+    const back=this.add.rectangle(34,25,40,38,0x111920,.98).setStrokeStyle(1,0x405563).setDepth(43).setInteractive({useHandCursor:true});
+    const backText=this.add.text(34,22,"‹",{fontFamily:"system-ui, sans-serif",fontSize:"28px",color:"#f5f7fa"}).setOrigin(.5).setDepth(44);
     this.bindHudButton(back,backText,.96,()=>this.scene.start("level-select",{mode:this.mode,page:Math.floor(this.levelIndex/10)}));
 
     if(BETA_TESTING){
       const levels=levelsForMode(this.mode);
-      this.betaLevelButton(440,29,"‹",this.levelIndex>0,()=>this.goRelative(-1));
-      this.betaLevelButton(496,29,"›",this.levelIndex<levels.length-1,()=>this.goRelative(1));
-      this.add.text(468,55,`${this.mode==="troll"?"H":"C"}${String(this.levelIndex+1).padStart(2,"0")}`,{fontFamily:"system-ui, sans-serif",fontSize:"8px",fontStyle:"bold",color:"#7d91a0"}).setOrigin(.5).setDepth(43);
-      const report=this.add.rectangle(270,57,82,20,0x17242d,.98).setStrokeStyle(1,0x557184).setDepth(43).setInteractive({useHandCursor:true});
-      const reportText=this.add.text(270,57,"⚑ REPORT",{fontFamily:"system-ui, sans-serif",fontSize:"8px",fontStyle:"bold",color:"#afd2e4"}).setOrigin(.5).setDepth(44);
+      this.betaLevelButton(442,25,"‹",this.levelIndex>0,()=>this.goRelative(-1));
+      this.betaLevelButton(498,25,"›",this.levelIndex<levels.length-1,()=>this.goRelative(1));
+      const report=this.add.rectangle(270,66,88,24,0x17242d,.98).setStrokeStyle(1,0x557184).setDepth(43).setInteractive({useHandCursor:true});
+      const reportText=this.add.text(270,66,"⚑ REPORT",{fontFamily:"system-ui, sans-serif",fontSize:"8px",fontStyle:"bold",color:"#afd2e4"}).setOrigin(.5).setDepth(44);
       this.bindHudButton(report,reportText,.97,()=>this.openReport());
+      this.add.text(424,66,`${this.mode==="troll"?"H":"C"}${String(this.levelIndex+1).padStart(2,"0")}`,{fontFamily:"system-ui, sans-serif",fontSize:"8px",fontStyle:"bold",color:"#7d91a0"}).setOrigin(.5).setDepth(43);
     }
   }
 
   private betaLevelButton(x:number,y:number,label:string,enabled:boolean,action:()=>void):void{
-    const bg=this.add.rectangle(x,y,42,38,enabled?0x16232d:0x10171d,.92).setStrokeStyle(1,enabled?0x496273:0x252f37).setDepth(43);
+    const bg=this.add.rectangle(x,y,42,36,enabled?0x16232d:0x10171d,.92).setStrokeStyle(1,enabled?0x496273:0x252f37).setDepth(43);
     const text=this.add.text(x,y-1,label,{fontFamily:"system-ui, sans-serif",fontSize:"19px",fontStyle:"bold",color:enabled?"#dce8ef":"#46535d"}).setOrigin(.5).setDepth(44);
     if(!enabled)return;
     bg.setInteractive({useHandCursor:true});this.bindHudButton(bg,text,.96,action);
@@ -201,9 +206,9 @@ export class GameplayScene extends Phaser.Scene {
   private updateHudOcclusion():void{
     this.objectiveHud.setAlpha(1);
     const b=this.sim.state.ball,visualY=b.y-Math.max(0,b.z)*AIR_VISUAL_SCALE;
-    // Airborne cosmetics may visually enter the reserved chrome. Keep the ball readable
-    // instead of allowing the HUD to cover it.
-    this.ballView.setDepth(visualY<76?45:this.sim.isAirborne()?12:10);
+    // Airborne balls can visually enter the reserved chrome. Raise the ball only for readability;
+    // the playfield itself remains behind the opaque HUD and cannot steal input from its controls.
+    this.ballView.setDepth(visualY<HUD_BOTTOM+4?45:this.sim.isAirborne()?12:10);
   }
 
   private recoverStoppedState():void{
