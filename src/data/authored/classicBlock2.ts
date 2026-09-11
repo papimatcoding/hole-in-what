@@ -44,31 +44,32 @@ c13.walls=[
 ];
 path(c13,pt(224,700),pt(408,574),pt(408,454),pt(146,370),pt(146,248),pt(420,160));
 
-// 14 — Booster route choice. A central monolith creates two route families; the left booster is
-// the fast commitment and the right side is the slower all-grass recovery. A broad upper shoulder
-// catches the old booster-assisted HIO and turns exit speed into a placement question instead of
-// rewarding one full-power swipe. Nothing here relies on a narrow gap.
-const c14=base("classic",14,pt(110,842),pt(420,160),3,4,"booster");
-c14.walls=[r(184,426,172,266),r(28,300,256,24)];
-c14.boosters=[{x:52,y:514,w:104,h:214,dx:.08,dy:-1,power:.82}];
-path(c14,pt(108,666),pt(112,380),pt(322,350),pt(360,244),pt(420,160));
+// 14 — Booster route choice, rebuilt around lateral speed instead of another upward runway.
+// The large pad slings the first placement across the foot of a central monolith into the right
+// lane. From there the cup is readable but still needs a second decision. Players can reject the
+// pad and crawl around the left side on grass, but that route is deliberately longer. The booster
+// therefore buys position rather than acting as a one-swipe cannon pointed anywhere near the cup.
+const c14=base("classic",14,pt(110,842),pt(420,160),2,3,"booster");
+c14.walls=[r(184,418,172,282),r(28,286,242,24)];
+c14.boosters=[{x:112,y:700,w:252,h:102,dx:1,dy:-.08,power:.9}];
+path(c14,pt(250,754),pt(430,690),pt(426,390),pt(314,242),pt(420,160));
 
-// 15 — Portal introduction. The central spine makes displacement useful without hiding either
-// endpoint. The first portal now sits slightly outside the start line: entering it naturally sends
-// the ball out of the upper-left portal in a visibly preserved direction that is deliberately NOT
-// aimed at the cup. The player sees what the portal did, then gets one simple finishing putt.
-const c15=base("classic",15,pt(420,842),pt(80,160),2,3,"portal");
-c15.walls=[r(244,268,42,426)];
-c15.portals=[{a:{x:452,y:620,r:30},b:{x:126,y:356,r:30}}];
-path(c15,pt(452,620),pt(126,356),pt(190,242),pt(80,160));
+// 15 — Portal introduction. The lower room's spine advertises the shortcut and both portal rings
+// stay visible. The exit lands below a broad upper shelf: the player immediately understands the
+// displacement/direction, but the shelf catches the old portal→cup HIO and asks for one ordinary
+// finishing decision around its right edge. The long outside route remains possible and readable.
+const c15=base("classic",15,pt(420,842),pt(420,160),2,3,"portal");
+c15.walls=[r(244,430,42,280),r(28,278,300,24)];
+c15.portals=[{a:{x:410,y:620,r:30},b:{x:120,y:382,r:30}}];
+path(c15,pt(410,620),pt(120,382),pt(370,342),pt(420,160));
 
-// 16 — Portal angle lesson. The long divider leaves a generous left fallback corridor, but a
-// visible lower pillar breaks the old full-power outer-bank HIO. Mastery first sets up in the lower
-// room, then approaches the portal from the left so its preserved vector exits upper-left toward
-// the cup. The fallback stays possible, just intentionally longer than understanding the portal.
-const c16=base("classic",16,pt(420,842),pt(420,160),3,4,"portal");
-c16.walls=[r(166,490,346,24),r(52,520,24,210)];
+// 16 — Portal angle lesson. A long divider makes the two rooms obvious while preserving a broad
+// left-side fallback. The lower pillar kills the direct outer-bank HIO without narrowing the portal
+// route. Shooting straight at the portal from spawn exits upper-left in the wrong direction; the
+// mastery line first moves left, then enters A up-right so B preserves that vector toward the cup.
+const c16=base("classic",16,pt(420,842),pt(420,160),2,3,"portal");
+c16.walls=[r(166,490,346,24),r(156,550,32,150)];
 c16.portals=[{a:{x:320,y:620,r:30},b:{x:150,y:356,r:30}}];
-path(c16,pt(160,760),pt(320,620),pt(150,356),pt(318,238),pt(420,160));
+path(c16,pt(110,760),pt(320,620),pt(150,356),pt(420,160));
 
 export const CLASSIC_BLOCK_2:LevelDefinition[]=[c11,c12,c13,c14,c15,c16];
