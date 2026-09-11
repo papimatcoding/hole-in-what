@@ -59,12 +59,12 @@ c9.sand=[r(318,530,160,100)];
 c9.walls=[r(28,642,344,24),r(468,650,24,132),r(180,490,260,24),r(278,300,234,24)];
 path(c9,pt(420,580),pt(468,450),pt(220,390),pt(220,250),pt(106,154));
 
-// Chapter exam: retain the proven three-stroke skeleton. A slightly larger bumper improves the
-// intended contact window without reopening the two-shot bypass found by the first curve pass.
+// Chapter exam: retain the proven three-stroke skeleton and original bumper footprint. The audit
+// confirms this keeps the intended mechanic on the mastery route while preserving C10 as the peak.
 const c10=base("classic",10,pt(104,850),pt(430,136),3,4,"bumper");
 c10.walls=[r(28,672,286,24),r(250,474,262,24),r(28,268,286,24),r(350,204,162,24),r(326,650,24,104)];
 c10.sand=[r(54,350,164,124)];
-c10.bumpers=[{x:404,y:736,r:40}];
+c10.bumpers=[{x:404,y:736,r:34}];
 path(c10,pt(404,736),pt(404,570),pt(160,520),pt(132,394),pt(386,244),pt(326,184),pt(430,136));
 
 export const CLASSIC_AUTHORED:LevelDefinition[]=[c1,c2,c3,c4,c5,c6,c7,c8,c9,c10];
