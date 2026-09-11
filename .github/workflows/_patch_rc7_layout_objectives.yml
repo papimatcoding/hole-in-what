@@ -1,0 +1,95 @@
+name: Apply RC7 layout objective fixes
+on:
+  push:
+    branches: [feature/rc7-layout-objectives-h05]
+    paths: ['.github/workflows/_patch_rc7_layout_objectives.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/rc7-layout-objectives-h05
+      - name: Apply focused product fixes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new):
+              p=Path(path); s=p.read_text()
+              if old not in s:
+                  raise SystemExit(f'expected snippet not found in {path}: {old[:80]!r}')
+              p.write_text(s.replace(old,new))
+
+          # Desktop keeps the authored 540x960 course intact, but gives it 16:9 side gutters.
+          p=Path('src/config/display.ts')
+          p.write_text('''import Phaser from "phaser";\nimport { I18n } from "../systems/I18nSystem";\n\nexport const DESIGN_WIDTH = 540;\nexport const DESIGN_HEIGHT = 960;\nexport const RENDER_SCALE = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);\n\nfunction desktopPresentation(): boolean {\n  const finePointer = window.matchMedia?.("(pointer: fine)").matches ?? false;\n  const hover = window.matchMedia?.("(hover: hover)").matches ?? false;\n  return finePointer && hover && window.innerWidth >= 760;\n}\n\n/** Desktop renders a 16:9 viewport around the unchanged portrait course. The extra\n * horizontal world space is intentional input room, not extra playable golf terrain. */\nexport const VIEW_WIDTH = desktopPresentation() ? Math.round(DESIGN_HEIGHT * 16 / 9) : DESIGN_WIDTH;\n\n/** Presentation-only form factor. Gameplay coordinates/physics stay identical on every device. */\nexport function isDesktopUI(): boolean {\n  return desktopPresentation();\n}\n\nexport function uiFontSize(basePx:number, desktopBoost=2):string {\n  return `${Math.round(basePx + (isDesktopUI()?desktopBoost:0))}px`;\n}\n\nexport function setupDesignCamera(scene: Phaser.Scene): void {\n  const camera = scene.cameras.main;\n  camera.setZoom(RENDER_SCALE);\n  // Always center on the authored 540px course. A desktop camera simply sees more world left/right.\n  camera.centerOn(DESIGN_WIDTH / 2, DESIGN_HEIGHT / 2);\n}\n\nexport function sharpenSceneText(scene: Phaser.Scene): void {\n  I18n.localizeScene(scene);\n  for (const child of scene.children.list) {\n    if (child instanceof Phaser.GameObjects.Text) child.setResolution(RENDER_SCALE);\n  }\n}\n\nexport function pointerToDesign(scene: Phaser.Scene, pointer: Phaser.Input.Pointer): Phaser.Math.Vector2 {\n  return scene.cameras.main.getWorldPoint(pointer.x, pointer.y);\n}\n''')
+
+          replace('src/main.ts',
+            'import { DESIGN_HEIGHT, DESIGN_WIDTH, RENDER_SCALE } from "./config/display";',
+            'import { DESIGN_HEIGHT, RENDER_SCALE, VIEW_WIDTH } from "./config/display";')
+          replace('src/main.ts',
+            'const renderWidth=Math.round(DESIGN_WIDTH*RENDER_SCALE);',
+            'const renderWidth=Math.round(VIEW_WIDTH*RENDER_SCALE);')
+
+          # One authoritative clock for moving visuals and collision state.
+          replace('src/systems/GolfSimulation.ts',
+            '    if(!s.moving||s.sunk||s.voided)return events;\n\n    s.time+=dt;',
+            '    if(s.sunk||s.voided)return events;\n\n    // World time advances even while the ball is resting so moving mechanics have one\n    // authoritative phase for both rendering and collision.\n    s.time+=dt;\n    if(!s.moving)return events;')
+
+          replace('src/scenes/GameplayScene.ts',
+            '    if(this.tutorialCard||this.voidAnimating){this.updateHudOcclusion();drawDynamicCourse(this.dynamic,this.level,time/1000);return;}\n    const dt=Math.min(deltaMs/1000,.033);\n    if(this.sim.state.moving){\n      this.consume(this.sim.step(dt));\n      if(!this.sim.state.moving&&this.pendingShot&&!this.voidAnimating&&!this.sinking)this.finishShotTelemetry("rest");\n    }\n    this.updateTrail(dt);this.updateBallView();this.updateHudOcclusion();drawCourse(this.course,this.level,this.sim.state);drawDynamicCourse(this.dynamic,this.level,time/1000);',
+            '    if(this.tutorialCard||this.voidAnimating){this.updateHudOcclusion();drawDynamicCourse(this.dynamic,this.level,this.sim.state.time);return;}\n    const dt=Math.min(deltaMs/1000,.033),wasMoving=this.sim.state.moving;\n    this.consume(this.sim.step(dt));\n    if(wasMoving&&!this.sim.state.moving&&this.pendingShot&&!this.voidAnimating&&!this.sinking)this.finishShotTelemetry("rest");\n    this.updateTrail(dt);this.updateBallView();this.updateHudOcclusion();drawCourse(this.course,this.level,this.sim.state);drawDynamicCourse(this.dynamic,this.level,this.sim.state.time);')
+
+          replace('src/scenes/GameplayScene.ts',
+            '    if(Phaser.Math.Distance.Between(p.x,p.y,b.x,b.y)<=SHOT_GRAB_RADIUS){this.dragPointer=pointer;this.setControlHintDragging(true);this.drawAim(p.x,p.y);}',
+            '    if(Phaser.Math.Distance.Between(p.x,p.y,b.x,b.y)<=SHOT_GRAB_RADIUS){this.captureAimPointer(pointer);this.dragPointer=pointer;this.setControlHintDragging(true);this.drawAim(p.x,p.y);}')
+          replace('src/scenes/GameplayScene.ts',
+            '    const p=pointerToDesign(this,pointer),b=this.sim.state.ball,pull=resolveShotPull(b,p);this.dragPointer=null;this.aim.clear();',
+            '    const p=pointerToDesign(this,pointer),b=this.sim.state.ball,pull=resolveShotPull(b,p);this.dragPointer=null;this.releaseAimPointer(pointer);this.aim.clear();')
+          marker='  private pointerInputKind(pointer:Phaser.Input.Pointer):BetaInputKind{'
+          p=Path('src/scenes/GameplayScene.ts'); s=p.read_text()
+          helpers='''  private captureAimPointer(pointer:Phaser.Input.Pointer):void{\n    const event=pointer.event as PointerEvent|undefined;if(!event)return;\n    try{this.game.canvas.setPointerCapture(event.pointerId);}catch{/* browser may reject stale capture */}\n  }\n  private releaseAimPointer(pointer:Phaser.Input.Pointer):void{\n    const event=pointer.event as PointerEvent|undefined;if(!event)return;\n    try{if(this.game.canvas.hasPointerCapture(event.pointerId))this.game.canvas.releasePointerCapture(event.pointerId);}catch{/* optional */}\n  }\n'''
+          if marker not in s: raise SystemExit('pointer helper marker missing')
+          p.write_text(s.replace(marker,helpers+marker))
+
+          # Rebalance 3-star goals to the current human-route baseline; 2-star remains +1 stroke.
+          replacements={
+            'src/data/authored/classic.ts':[
+              ('const c3=base("classic",3,pt(270,836),pt(270,166),2,3,"wall");','const c3=base("classic",3,pt(270,836),pt(270,166),1,2,"wall");'),
+              ('const c7=base("classic",7,pt(104,840),pt(430,150),2,3,"wall");','const c7=base("classic",7,pt(104,840),pt(430,150),3,4,"wall");'),
+              ('const c9=base("classic",9,pt(424,840),pt(106,154),3,4,"sand");','const c9=base("classic",9,pt(424,840),pt(106,154),2,3,"sand");')],
+            'src/data/authored/classicBlock2.ts':[
+              ('const c13=base("classic",13,pt(100,842),pt(420,160),2,3,"booster");','const c13=base("classic",13,pt(100,842),pt(420,160),3,4,"booster");')],
+            'src/data/authored/hard.ts':[
+              ('const h4=base("troll",4,pt(270,848),pt(270,144),3,4,"wall");','const h4=base("troll",4,pt(270,848),pt(270,144),2,3,"wall");'),
+              ('const h5=base("troll",5,pt(96,848),pt(430,140),3,4,"moving");','const h5=base("troll",5,pt(96,848),pt(430,140),4,5,"moving");'),
+              ('h5.movingWalls=[{x:210,y:520,w:110,h:24,axis:"x",amplitude:45,speed:1.2,phase:.4}];','h5.movingWalls=[{x:224,y:520,w:92,h:24,axis:"x",amplitude:62,speed:1.2,phase:.4}];')]
+          }
+          for path,repls in replacements.items():
+              for old,new in repls: replace(path,old,new)
+
+          # Keep all geometry/human audits aligned with the post-HUD physical field.
+          for path in ['scripts/audit2.ts']:
+              replace(path,'const FIELD={x:28,y:28,w:484,h:904},TAU=Math.PI*2;','const FIELD={x:28,y:96,w:484,h:836},TAU=Math.PI*2;')
+          for path in ['scripts/audit2Design.ts','scripts/courseOriginalityAudit.ts']:
+              replace(path,'const FIELD={left:28,right:512,top:28,bottom:932};','const FIELD={left:28,right:512,top:96,bottom:932};')
+
+          # Make unrealistic star goals a first-class audit warning going forward.
+          replace('scripts/audit2.ts',
+            'if(edge!==null&&edge<18)flags.push(`EDGE_REST_RISK:${Math.round(edge)}px`);const target=level.threeStar.maxStrokes??0,bestAny=Math.min(learned?.strokes??99,naive?.strokes??99,explorer?.strokes??99);if(target>=3&&bestAny===1)flags.push("CHEESE_HIO");',
+            'if(edge!==null&&edge<18)flags.push(`EDGE_REST_RISK:${Math.round(edge)}px`);const target=level.threeStar.maxStrokes??0,twoTarget=level.twoStar.maxStrokes??0,bestAny=Math.min(learned?.strokes??99,naive?.strokes??99,explorer?.strokes??99);if(human&&!level.onboarding&&target<human.strokes)flags.push(`OBJECTIVE_TOO_STRICT:${target}<${human.strokes}`);if(human&&!level.onboarding&&target>human.strokes)flags.push(`OBJECTIVE_TOO_LOOSE:${target}>${human.strokes}`);if(twoTarget!==target+1)flags.push(`OBJECTIVE_SPACING:${target}/${twoTarget}`);if(target>=3&&bestAny===1)flags.push("CHEESE_HIO");')
+          replace('scripts/audit2Design.ts',
+            '  if(row.status==="BLOCKER")out.push("Corregir primero el blocker técnico/de jugabilidad antes de balancear el nivel.");',
+            '  if(row.status==="BLOCKER")out.push("Corregir primero el blocker técnico/de jugabilidad antes de balancear el nivel.");\n  if(row.flags.some(x=>x.startsWith("OBJECTIVE_")))out.push("Ajustar el objetivo de golpes al recorrido humano modelado; no cambiar geometría solo para hacer cuadrar una cifra de estrellas.");')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name papimatcoding
+          git config user.email matalsan9@gmail.com
+          rm .github/workflows/_patch_rc7_layout_objectives.yml
+          git add -A
+          git commit -m "Improve desktop layout, objectives and H05 moving wall"
+          git push origin HEAD:feature/rc7-layout-objectives-h05
