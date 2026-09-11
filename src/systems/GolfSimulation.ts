@@ -9,7 +9,7 @@ import type {
 } from "../types";
 
 export const GOLF_PHYSICS = {
-  field: { x: 28, y: 28, w: 484, h: 904 },
+  field: { x: 28, y: 96, w: 484, h: 836 },
   ballRadius: 13,
   holeRadius: 17,
   maxPull: 172,

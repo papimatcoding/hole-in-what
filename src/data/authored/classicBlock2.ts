@@ -32,16 +32,16 @@ c12.walls=[
 ];
 path(c12,pt(126,722),pt(126,586),pt(420,500),pt(420,378),pt(110,154));
 
-// 13 — Booster application. The pad points naturally toward the first exit, then the upper gate
-// demands a follow-up placement. Keep the stronger launch because Audit 2.1 shows it is markedly
-// more tolerant on touch; the remaining recovery/edge warning is preferable to turning the
-// intended booster line into a narrow precision shot.
+// 13 — Booster application. The new reserved HUD boundary reduced the execution window without
+// changing the actual idea of the hole. Open both dogleg corridors by roughly one ball diameter
+// instead of weakening the booster: the pad still creates the first placement, but recovery and
+// the follow-up shot are no longer a narrow mobile-only precision check.
 const c13=base("classic",13,pt(100,842),pt(420,160),2,3,"booster");
 c13.boosters=[{x:76,y:620,w:312,h:138,dx:.62,dy:-1,power:.86}];
 c13.walls=[
-  r(28,520,360,24),r(364,400,24,120),
-  r(150,292,362,24),r(150,316,24,88)
+  r(28,520,340,24),r(344,400,24,120),
+  r(170,292,342,24),r(170,316,24,88)
 ];
-path(c13,pt(224,700),pt(426,574),pt(426,454),pt(126,370),pt(126,248),pt(420,160));
+path(c13,pt(224,700),pt(408,574),pt(408,454),pt(146,370),pt(146,248),pt(420,160));
 
 export const CLASSIC_BLOCK_2:LevelDefinition[]=[c11,c12,c13];

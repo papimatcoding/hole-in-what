@@ -205,10 +205,8 @@ export class GameplayScene extends Phaser.Scene {
 
   private updateHudOcclusion():void{
     this.objectiveHud.setAlpha(1);
-    const b=this.sim.state.ball,visualY=b.y-Math.max(0,b.z)*AIR_VISUAL_SCALE;
-    // Airborne balls can visually enter the reserved chrome. Raise the ball only for readability;
-    // the playfield itself remains behind the opaque HUD and cannot steal input from its controls.
-    this.ballView.setDepth(visualY<HUD_BOTTOM+4?45:this.sim.isAirborne()?12:10);
+    // HUD chrome is outside the playfield. Game objects always remain below its depth.
+    this.ballView.setDepth(this.sim.isAirborne()?12:10);
   }
 
   private recoverStoppedState():void{
@@ -294,7 +292,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private updateBallView():void{
-    const b=this.sim.state.ball,height=Math.max(0,b.z),lift=height*AIR_VISUAL_SCALE,scale=1+Math.min(.13,height/1700);this.ballView.setPosition(b.x,b.y-lift).setScale(scale).setDepth(height>1?12:10);
+    const b=this.sim.state.ball,height=Math.max(0,b.z),lift=height*AIR_VISUAL_SCALE,visualY=Math.max(GOLF_PHYSICS.field.y+BALL_R,b.y-lift),scale=1+Math.min(.13,height/1700);this.ballView.setPosition(b.x,visualY).setScale(scale).setDepth(height>1?12:10);
     this.shadowView.clear();const s=Phaser.Math.Clamp(1-height/900,.52,1),a=Phaser.Math.Clamp(.24-height/2600,.07,.24);this.shadowView.fillStyle(0x07100b,a);this.shadowView.fillEllipse(b.x+2,b.y+5,28*s,12*s);
   }
   private updateTrail(dt:number):void{
@@ -306,7 +304,7 @@ export class GameplayScene extends Phaser.Scene {
         this.trailClock-=interval;
         const b=this.sim.state.ball;
         const maxLife=this.trailCosmetic.id==="trail-petals" ? 0.58 : 0.42;
-        this.trail.push({x:b.x,y:b.y-b.z*AIR_VISUAL_SCALE,life:maxLife,maxLife,size:Phaser.Math.FloatBetween(2.5,5)});
+        this.trail.push({x:b.x,y:Math.max(GOLF_PHYSICS.field.y+2,b.y-b.z*AIR_VISUAL_SCALE),life:maxLife,maxLife,size:Phaser.Math.FloatBetween(2.5,5)});
         if(this.trail.length>70)this.trail.shift();
       }
     }else this.trailClock=0;
