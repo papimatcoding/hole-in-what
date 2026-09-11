@@ -30,10 +30,10 @@ path(c4,pt(428,690),pt(428,520),pt(150,468),pt(150,274),pt(430,156));
 
 // First bumper lesson. Audit 2.1 found the old RC7 mastery line technically valid but far too
 // brittle on touch (8% success / 12% shot tolerance). The lesson should reward hitting a large,
-// obvious bumper, not guessing a password angle. We enlarge the target and open every recovery
-// lane while keeping the lower shelf and right guard so the bumper remains the competitive route.
+// obvious bumper, not guessing a password angle. The short lower fin removes the new bottom-bank
+// cheese created by the reserved HUD boundary without touching the broad direct line to the bumper.
 const c5=base("classic",5,pt(116,836),pt(422,166),2,3,"bumper");
-c5.walls=[r(210,548,24,150),r(326,320,24,160),r(88,300,130,24),r(28,714,220,24),r(482,500,18,200)];
+c5.walls=[r(210,548,24,150),r(326,320,24,160),r(88,300,130,24),r(28,714,220,24),r(482,500,18,200),r(250,810,24,122)];
 c5.bumpers=[{x:390,y:626,r:48}];
 path(c5,pt(390,626),pt(426,510),pt(270,420),pt(238,258),pt(422,166));
 
