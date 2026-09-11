@@ -65,11 +65,10 @@ path(c15,pt(430,620),pt(120,360),pt(80,160));
 
 // 16 — Portal angle application. Two broad shelves create an S-shaped grass fallback, while a
 // lower guard prevents a single bank from shortcutting that route. The competitive line is two
-// strokes: first place left of portal A, then enter A up-right. Portal B preserves that vector and
-// sends the ball through the wide right opening of the upper shelf toward the cup. A direct shot
-// from spawn into A exits in the wrong direction, so the lesson is angle planning rather than aim
-// precision; both portal and fallback corridors remain deliberately wide for touch play.
-const c16=base("classic",16,pt(420,842),pt(420,160),2,3,"portal");
+// strokes for an expert solver, but the full human model settles at three with strong touch and
+// recovery scores. Three stars therefore reward the realistic human route rather than the solver
+// record. Portal B preserves the entry vector and sends the ball through the wide upper opening.
+const c16=base("classic",16,pt(420,842),pt(420,160),3,4,"portal");
 c16.walls=[r(138,500,374,24),r(138,650,24,160),r(28,300,320,24)];
 c16.portals=[{a:{x:350,y:650,r:30},b:{x:200,y:400,r:30}}];
 path(c16,pt(190,760),pt(350,650),pt(200,400),pt(380,260),pt(420,160));
