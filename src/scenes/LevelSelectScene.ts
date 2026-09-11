@@ -31,7 +31,9 @@ export class LevelSelectScene extends Phaser.Scene {
     const modeLabel=this.mode==="troll"?"HARD":"CLASSIC",group=this.page+1,accent=this.mode==="troll"?0xd0a266:0x719ab2,accentText=this.mode==="troll"?"#d9ad73":"#83aec6";
     this.add.text(270,51,modeLabel,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(29,3),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
     this.add.rectangle(270,80,80,3,accent,.9);
-    this.add.text(270,99,`GRUPO ${group}  ·  ${pageStart+1}–${Math.min(pageStart+10,levels.length)}`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(12,2),fontStyle:"bold",color:accentText}).setOrigin(.5);
+    const sectionLabel=this.mode==="classic"?`CAPÍTULO ${group}`:`GRUPO ${group}`;
+    const chapterFlavor=this.mode==="classic"&&group===2?"  ·  HIELO Y VELOCIDAD":"";
+    this.add.text(270,99,`${sectionLabel}${chapterFlavor}  ·  ${pageStart+1}–${Math.min(pageStart+10,levels.length)}`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(12,2),fontStyle:"bold",color:accentText}).setOrigin(.5);
     const totalStars=SaveSystem.totalStars(levels.map(level=>level.id)),unlocked=BETA_TESTING?levels.length:SaveSystem.unlockedLevelCount(this.mode);
     this.add.text(270,126,BETA_TESTING?`BETA · TODOS ABIERTOS   ·   ★ ${totalStars} / ${levels.length*3}`:`★ ${totalStars} / ${levels.length*3}   ·   ${unlocked}/${levels.length} desbloqueados`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,2),fontStyle:BETA_TESTING?"bold":"normal",color:BETA_TESTING?"#9ebdce":"#a7b3bf"}).setOrigin(.5);
 

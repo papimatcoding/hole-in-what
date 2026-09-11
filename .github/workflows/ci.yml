@@ -34,5 +34,9 @@ jobs:
         run: npm run test:clearance
       - name: Simulate authored campaign
         run: npm run audit:courses
+      - name: Audit human playability
+        run: npm run audit:human
+      - name: Audit difficulty and design pacing
+        run: npm run audit:design
       - name: Check course originality
         run: npm run audit:originality

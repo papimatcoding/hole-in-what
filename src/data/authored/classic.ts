@@ -11,7 +11,7 @@ delete c1.primaryMechanic;
 path(c1);
 
 // Alternating shelves create a broad S-route. The gaps are generous enough for touch,
- // but the player must now read the course instead of firing directly at the cup.
+// but the player must now read the course instead of firing directly at the cup.
 const c2=base("classic",2,pt(420,836),pt(110,166),2,3,"wall");
 c2.walls=[r(28,620,330,24),r(182,380,330,24)];
 path(c2,pt(430,548),pt(132,500),pt(132,318),pt(110,166));
@@ -22,22 +22,27 @@ const c3=base("classic",3,pt(270,836),pt(270,166),2,3,"wall");
 c3.walls=[r(205,405,130,220)];
 path(c3,pt(132,670),pt(132,322),pt(270,166));
 
+// First proper geometry step. Keep the known two-shot layout: the audit already showed this
+// jump is readable and solvable, and the following bumper lesson acts as a small breather.
 const c4=base("classic",4,pt(92,836),pt(430,156),2,3,"wall");
 c4.walls=[r(28,588,324,26),r(188,346,324,26),r(330,462,26,126)];
 path(c4,pt(428,690),pt(428,520),pt(150,468),pt(150,274),pt(430,156));
 
-// First bumper lesson: the lower shelf blocks the direct diagonal and the right guard kills the outer double-bank HIO, while the intended bumper setup stays open.
+// First bumper lesson. Audit 2.1 found the old RC7 mastery line technically valid but far too
+// brittle on touch (8% success / 12% shot tolerance). The lesson should reward hitting a large,
+// obvious bumper, not guessing a password angle. We enlarge the target and open every recovery
+// lane while keeping the lower shelf and right guard so the bumper remains the competitive route.
 const c5=base("classic",5,pt(116,836),pt(422,166),2,3,"bumper");
-c5.walls=[r(210,548,24,164),r(326,320,24,174),r(88,300,144,24),r(28,714,248,24),r(470,500,24,220)];
-c5.bumpers=[{x:390,y:626,r:32}];
+c5.walls=[r(210,548,24,150),r(326,320,24,160),r(88,300,130,24),r(28,714,220,24),r(482,500,18,200)];
+c5.bumpers=[{x:390,y:626,r:48}];
 path(c5,pt(390,626),pt(426,510),pt(270,420),pt(238,258),pt(422,166));
 
-// Audit-calibrated bumper application. Restore the proven alternating-gate skeleton,
-// but keep the bumpers substantially larger than the old RC6 version so the intended
-// pinball route is mechanically relevant without becoming a precision tax.
+// Bumper application. RC7's route was mechanically sound but over-sensitive (17% robustness in
+// the fast audit). Broader gates and larger targets preserve the two-shot pinball idea while
+// making misses cost strokes instead of making the intended line feel like a password.
 const c6=base("classic",6,pt(420,836),pt(108,166),2,3,"bumper");
-c6.walls=[r(220,568,292,24),r(28,332,250,24),r(28,220,190,24)];
-c6.bumpers=[{x:142,y:650,r:48},{x:398,y:432,r:42}];
+c6.walls=[r(250,568,262,24),r(28,332,224,24),r(28,220,164,24)];
+c6.bumpers=[{x:142,y:650,r:54},{x:398,y:432,r:50}];
 path(c6,pt(142,650),pt(398,432),pt(304,280),pt(108,166));
 
 // Geometry exam. Solver mastery is genuinely two strokes, so the stars say two.
@@ -57,7 +62,8 @@ c9.sand=[r(318,530,160,100)];
 c9.walls=[r(28,642,344,24),r(468,650,24,132),r(180,490,260,24),r(278,300,234,24)];
 path(c9,pt(420,580),pt(468,450),pt(220,390),pt(220,250),pt(106,154));
 
-// Chapter exam: the lower gate removes the full-power bypass so the bumper shortcut is part of mastery, followed by sand placement and the reverse finish.
+// Chapter exam: retain the proven three-stroke skeleton and original bumper footprint. The audit
+// confirms this keeps the intended mechanic on the mastery route while preserving C10 as the peak.
 const c10=base("classic",10,pt(104,850),pt(430,136),3,4,"bumper");
 c10.walls=[r(28,672,286,24),r(250,474,262,24),r(28,268,286,24),r(350,204,162,24),r(326,650,24,104)];
 c10.sand=[r(54,350,164,124)];

@@ -2,35 +2,46 @@ import type { LevelDefinition } from "../../types";
 import { base, path, pt, r } from "./authoring";
 
 /**
- * Block 2 authoring lab.
+ * Classic chapter 2.
  *
- * These holes are candidates until Full Audit 2.1 plus manual beta touch/desktop playtesting
- * accept them. Block 1 lives in classic.ts.
+ * Chapter 1 ends on C10 as an exam. C11 intentionally resets the mental load to teach a new
+ * surface, but it must not reset all the way back to tutorial difficulty. Chapter-2 geometry uses
+ * broad doglegs rather than narrow gaps: the goal is to require placement without taxing touch
+ * precision, and specifically to stop wall-bank HIOs from bypassing the new mechanics.
  */
 
-// 11 — First ice lesson. A single crossable ice band teaches that the same power carries much
-// farther on ice, while grass on every side guarantees a natural braking zone. The surface is
-// deliberately a band rather than a lake so a bad horizontal/random shot cannot roll on ice for
-// most of the field and hit the simulation timeout.
+// 11 — First ice lesson. Alternating L-gates require a real setup before the cup while leaving
+// large, readable corridors. Ice occupies the transfer between both gates without touching their
+// collision geometry, so the player learns extra carry and then gets grass for the final approach.
 const c11=base("classic",11,pt(110,840),pt(420,160),2,3,"ice");
-c11.ice=[r(224,596,244,84)];
-c11.walls=[r(28,390,360,24)];
-path(c11,pt(400,640),pt(420,470),pt(420,340),pt(420,160));
+c11.ice=[r(92,474,356,52)];
+c11.walls=[
+  r(28,650,338,24),r(342,530,24,120),
+  r(176,350,336,24),r(176,374,24,94)
+];
+path(c11,pt(426,716),pt(426,586),pt(126,506),pt(126,300),pt(420,160));
 
-// 12 — Ice application. Two short staggered bands turn stopping distance into a repeated setup
-// decision without creating one giant low-friction lake. The grass gap between them gives imperfect
-// shots somewhere to settle and makes the second ice contact a deliberate application of C11.
+// 12 — Ice application. The lower ice strip now occupies the only broad approach through the
+// first dogleg, so the mastery route cannot simply route around the mechanic. A second patch on
+// the opposite side reinforces stopping-distance planning without turning the whole field to ice.
 const c12=base("classic",12,pt(420,842),pt(110,154),2,3,"ice");
-c12.walls=[r(220,330,292,24),r(196,330,24,180)];
-c12.ice=[r(258,642,196,78),r(92,506,188,76)];
-path(c12,pt(140,620),pt(150,470),pt(160,300),pt(110,154));
+c12.ice=[r(48,554,110,96),r(382,444,108,72)];
+c12.walls=[
+  r(174,666,338,24),r(174,548,24,118),
+  r(28,322,338,24),r(342,346,24,94)
+];
+path(c12,pt(126,722),pt(126,586),pt(420,500),pt(420,378),pt(110,154));
 
-// 13 — First booster lesson. Entering the pad on a useful line turns acceleration into a
-// shortcut through the right-side opening. The second pass deliberately widens the pad/opening
-// and softens boost power so touch players get more usable lines instead of one narrow angle.
+// 13 — Booster application. The pad points naturally toward the first exit, then the upper gate
+// demands a follow-up placement. Keep the stronger launch because Audit 2.1 shows it is markedly
+// more tolerant on touch; the remaining recovery/edge warning is preferable to turning the
+// intended booster line into a narrow precision shot.
 const c13=base("classic",13,pt(100,842),pt(420,160),2,3,"booster");
-c13.boosters=[{x:82,y:610,w:300,h:140,dx:.55,dy:-1,power:.72}];
-c13.walls=[r(28,472,286,24),r(406,286,106,24)];
-path(c13,pt(220,700),pt(392,530),pt(410,390),pt(350,240),pt(420,160));
+c13.boosters=[{x:76,y:620,w:312,h:138,dx:.62,dy:-1,power:.86}];
+c13.walls=[
+  r(28,520,360,24),r(364,400,24,120),
+  r(150,292,362,24),r(150,316,24,88)
+];
+path(c13,pt(224,700),pt(426,574),pt(426,454),pt(126,370),pt(126,248),pt(420,160));
 
 export const CLASSIC_BLOCK_2:LevelDefinition[]=[c11,c12,c13];
