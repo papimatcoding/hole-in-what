@@ -63,14 +63,14 @@ c15.walls=[r(244,300,42,410)];
 c15.portals=[{a:{x:430,y:620,r:30},b:{x:120,y:360,r:30}}];
 path(c15,pt(430,620),pt(120,360),pt(80,160));
 
-// 16 — Portal angle application. Two broad shelves create an S-shaped grass fallback, while a
-// lower guard prevents a single bank from shortcutting that route. The competitive line is two
-// strokes for an expert solver, but the full human model settles at three with strong touch and
-// recovery scores. Three stars therefore reward the realistic human route rather than the solver
-// record. Portal B preserves the entry vector and sends the ball through the wide upper opening.
+// 16 — Portal angle application. Two broad shelves create an S-shaped grass fallback. The lower
+// right shelf now seals the direct spawn→portal line all the way to the boundary, forcing one broad
+// placement into the left pocket before the player can attack portal A diagonally. That makes the
+// portal-angle lesson genuinely two-step for an expert while the full human route remains a fair
+// three strokes. Portal B preserves the entry vector and sends the ball through the upper opening.
 const c16=base("classic",16,pt(420,842),pt(420,160),3,4,"portal");
-c16.walls=[r(138,500,374,24),r(138,650,24,160),r(28,300,320,24)];
+c16.walls=[r(138,500,374,24),r(138,650,24,160),r(28,300,320,24),r(320,730,192,24)];
 c16.portals=[{a:{x:350,y:650,r:30},b:{x:200,y:400,r:30}}];
-path(c16,pt(190,760),pt(350,650),pt(200,400),pt(380,260),pt(420,160));
+path(c16,pt(250,790),pt(350,650),pt(200,400),pt(380,260),pt(420,160));
 
 export const CLASSIC_BLOCK_2:LevelDefinition[]=[c11,c12,c13,c14,c15,c16];
