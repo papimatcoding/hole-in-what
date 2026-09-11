@@ -5,33 +5,42 @@ import { base, path, pt, r } from "./authoring";
  * Classic chapter 2.
  *
  * Chapter 1 ends on C10 as an exam. C11 intentionally resets the mental load to teach a new
- * surface, but it must not reset all the way back to tutorial difficulty. Every chapter-2 hole
- * therefore keeps a forgiving learned route while removing the broad one-shot solutions that
- * made the old C11-C13 collapse the campaign curve.
+ * surface, but it must not reset all the way back to tutorial difficulty. Chapter-2 geometry uses
+ * broad doglegs rather than narrow gaps: the goal is to require placement without taxing touch
+ * precision, and specifically to stop wall-bank HIOs from bypassing the new mechanics.
  */
 
-// 11 — First ice lesson. Two generous alternating gates make this a real two-step hole instead
-// of a broad HIO. The wide ice band sits between both decisions: players learn the longer carry,
-// then get a large grass landing area before the final approach. This is a chapter reset, not C02.
+// 11 — First ice lesson. Alternating L-gates require a real setup before the cup while leaving
+// large, readable corridors. Ice occupies the middle transfer so the player learns extra carry,
+// then lands on grass before making the final approach.
 const c11=base("classic",11,pt(110,840),pt(420,160),2,3,"ice");
-c11.ice=[r(118,520,318,104)];
-c11.walls=[r(220,676,292,24),r(28,360,354,24)];
-path(c11,pt(154,650),pt(170,548),pt(414,458),pt(420,160));
+c11.ice=[r(92,470,356,92)];
+c11.walls=[
+  r(28,650,338,24),r(342,530,24,120),
+  r(176,350,336,24),r(176,350,24,118)
+];
+path(c11,pt(426,716),pt(426,586),pt(126,506),pt(126,300),pt(420,160));
 
-// 12 — Ice application. The player repeats the stopping-distance lesson through two separated
-// bands and opposite exits. Both gaps are intentionally broad: difficulty comes from planning
-// where the ball stops, not from threading a tiny mobile-input corridor.
+// 12 — Ice application. The same visual grammar returns with two separated ice contacts and the
+// doglegs swapped. The route is longer, but every gate remains wider than the old precision-heavy
+// chapter-1 passages; difficulty comes from choosing a useful stopping point.
 const c12=base("classic",12,pt(420,842),pt(110,154),2,3,"ice");
-c12.walls=[r(28,646,330,24),r(184,350,328,24)];
-c12.ice=[r(300,532,172,86),r(76,404,190,82)];
-path(c12,pt(420,566),pt(132,500),pt(132,302),pt(110,154));
+c12.ice=[r(286,570,176,82),r(74,390,184,82)];
+c12.walls=[
+  r(174,666,338,24),r(174,548,24,118),
+  r(28,322,338,24),r(342,322,24,118)
+];
+path(c12,pt(126,722),pt(126,586),pt(420,500),pt(420,378),pt(110,154));
 
-// 13 — First booster application. The pad gives a strong, readable launch toward the right lane,
-// but the upper reverse gate prevents a free HIO. The mastery question is now "use the speed,
-// then place the follow-up" instead of "touch the booster and win".
+// 13 — Booster application. The pad points naturally toward the first wide exit, but a mirrored
+// upper L-gate forces one placement decision after the speed burst. That keeps the booster useful
+// without letting a full-power bank solve the whole level automatically.
 const c13=base("classic",13,pt(100,842),pt(420,160),2,3,"booster");
 c13.boosters=[{x:76,y:620,w:312,h:138,dx:.62,dy:-1,power:.86}];
-c13.walls=[r(28,494,328,24),r(238,302,274,24)];
-path(c13,pt(220,694),pt(414,556),pt(414,446),pt(166,386),pt(160,250),pt(420,160));
+c13.walls=[
+  r(28,520,352,24),r(356,400,24,120),
+  r(166,292,346,24),r(166,292,24,112)
+];
+path(c13,pt(224,700),pt(426,574),pt(426,454),pt(126,370),pt(126,248),pt(420,160));
 
 export const CLASSIC_BLOCK_2:LevelDefinition[]=[c11,c12,c13];
