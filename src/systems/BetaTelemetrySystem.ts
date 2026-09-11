@@ -1,7 +1,7 @@
 import type { GameMode } from "../types";
 
 const ENDPOINT="https://xtekdrkqgfjnnwawyoim.supabase.co/functions/v1/beta-feedback";
-export const BETA_BUILD_ID="hole-in-what-beta-rc6";
+export const BETA_BUILD_ID="hole-in-what-beta-rc7";
 // Keep legacy storage keys so the rename never resets anonymous identity, survey state or attempts.
 const TESTER_KEY="troll-golf-beta-tester-id-v1";
 const ALIAS_KEY="troll-golf-beta-tester-alias-v1";
