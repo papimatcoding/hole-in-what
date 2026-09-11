@@ -30,7 +30,8 @@ function openPulse(scene:Phaser.Scene,context:{levelId:string;mode:GameMode}):vo
   let keepPlaying:boolean|null=null,purchase:PurchaseIntent|null=null,submitting=false;
   const root=scene.add.container(0,0).setDepth(500);
   const blocker=scene.add.rectangle(DESIGN_WIDTH/2,DESIGN_HEIGHT/2,DESIGN_WIDTH,DESIGN_HEIGHT,0x05080b,.78).setInteractive();
-  const card=scene.add.rectangle(270,476,458,470,0x111a22,.995).setStrokeStyle(2,0x496579);
+  // Keep every action inside one clear surface on both mobile and desktop design cameras.
+  const card=scene.add.rectangle(270,480,458,560,0x111a22,.995).setStrokeStyle(2,0x496579);
   const title=scene.add.text(270,292,es?"DOS PREGUNTAS Y YA":"TWO QUICK QUESTIONS",{fontFamily:"system-ui",fontSize:uiFontSize(18,2),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
   const subtitle=scene.add.text(270,326,es?"Esto nos ayuda más que una encuesta larga.":"This helps us more than a long survey.",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),color:"#8fa3b0"}).setOrigin(.5);
   const q1=scene.add.text(270,382,es?"¿SEGUIRÍAS JUGANDO?":"WOULD YOU KEEP PLAYING?",{fontFamily:"system-ui",fontSize:uiFontSize(11,2),fontStyle:"bold",color:"#d8e4eb"}).setOrigin(.5);
@@ -46,7 +47,7 @@ function openPulse(scene:Phaser.Scene,context:{levelId:string;mode:GameMode}):vo
     choice(270,592,112,es?"QUIZÁS":"MAYBE",purchase==="maybe",()=>{purchase="maybe";redraw();},"buy-maybe");
     choice(408,592,112,"NO",purchase==="no",()=>{purchase="no";redraw();},"buy-no");
     const canSend=keepPlaying!==null&&purchase!==null&&!submitting;
-    action(270,680,300,submitting?(es?"ENVIANDO…":"SENDING…"):(es?"ENVIAR":"SEND"),canSend,async()=>{
+    action(270,670,300,submitting?(es?"ENVIANDO…":"SENDING…"):(es?"ENVIAR":"SEND"),canSend,async()=>{
       if(!canSend||keepPlaying===null||purchase===null)return;
       submitting=true;redraw();
       const ok=await ProductTelemetry.submitPulse({wouldKeepPlaying:keepPlaying,purchaseIntent:purchase,contextLevelId:context.levelId,mode:context.mode});
@@ -55,7 +56,7 @@ function openPulse(scene:Phaser.Scene,context:{levelId:string;mode:GameMode}):vo
       const thanks=scene.add.text(270,476,es?"✓ GRACIAS":"✓ THANK YOU",{fontFamily:"system-ui",fontSize:uiFontSize(18,2),fontStyle:"bold",color:"#a7ddb9",backgroundColor:"#111a22",padding:{x:28,y:18}}).setOrigin(.5).setDepth(501);
       scene.time.delayedCall(700,()=>thanks.destroy());
     },"send");
-    action(270,738,180,es?"AHORA NO":"NOT NOW",true,()=>{ProductTelemetry.snoozePulse();root.destroy(true);},"skip",false);
+    action(270,726,180,es?"AHORA NO":"NOT NOW",true,()=>{ProductTelemetry.snoozePulse();root.destroy(true);},"skip",false);
   };
 
   const choice=(x:number,y:number,w:number,label:string,selected:boolean,fn:()=>void,id:string):void=>{
