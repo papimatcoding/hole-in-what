@@ -70,8 +70,9 @@ path(c9,pt(420,580),pt(468,450),pt(220,390),pt(220,250),pt(106,154));
 
 // Chapter exam. Remove the fake micro-passages without moving the proven bumper target. The lower
 // shelf now meets a fin shifted 14px left, which creates a genuine ball-width lane to the bumper;
-// the anti-cheese floor guard closes cleanly against the bottom boundary.
-const c10=base("classic",10,pt(104,850),pt(430,136),3,4,"bumper");
+// the anti-cheese floor guard closes cleanly against the bottom boundary. Full human audit finds
+// four strokes as the reliable mastery route, so stars follow that route instead of the expert solver line.
+const c10=base("classic",10,pt(104,850),pt(430,136),4,5,"bumper");
 c10.walls=[r(28,672,284,24),r(250,474,262,24),r(28,268,286,24),r(350,204,162,24),r(312,650,24,104),r(160,884,160,48)];
 c10.sand=[r(54,350,164,124)];
 c10.bumpers=[{x:404,y:736,r:34}];
