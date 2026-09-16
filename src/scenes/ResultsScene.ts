@@ -115,10 +115,10 @@ export class ResultsScene extends Phaser.Scene{
   private closeSurvey():void{this.surveyPanel?.destroy(true);this.surveyPanel=null;this.surveySubmitting=false;this.maybeOpenCommercialPulse();}
   private maybeOpenCommercialPulse():void{
     if(!BETA_TESTING)return;
-    // The final global survey has priority over a commercial pulse. Everywhere else, ask after
-    // the level survey closes so the two overlays can never compete for the same interaction.
+    // The final global survey has priority over a commercial pulse. Everywhere else, ask right
+    // after level feedback so fast next-hole navigation cannot silently skip product validation.
     if(this.allCurrentLevelsCompleted()&&!BetaTelemetry.gameSurveyDone())return;
-    this.time.delayedCall(420,()=>maybeOpenProductPulse(this));
+    maybeOpenProductPulse(this,120);
   }
 
   private openFeedback():void{
