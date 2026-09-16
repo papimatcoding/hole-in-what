@@ -82,7 +82,7 @@ export const ProductTelemetry={
   trackOnce,
   pulseDone():boolean{return safeGet(PULSE_KEY)===BETA_BUILD_ID;},
   pulseSnoozed():boolean{const value=Number(safeGet(PULSE_SNOOZE_KEY)??0);return Number.isFinite(value)&&Date.now()-value<PULSE_SNOOZE_MS;},
-  snoozePulse():void{safeSet(PULSE_SNOOZE_KEY,String(Date.now()));this.track({eventName:"pulse_skip",scene:"menu"});},
+  snoozePulse(scene="menu"):void{safeSet(PULSE_SNOOZE_KEY,String(Date.now()));this.track({eventName:"pulse_skip",scene});},
   async submitPulse(input:{wouldKeepPlaying:boolean;purchaseIntent:PurchaseIntent;contextLevelId?:string;mode?:GameMode;}):Promise<boolean>{
     if(!BETA_TESTING)return false;
     await ensureSession();

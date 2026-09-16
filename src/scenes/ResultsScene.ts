@@ -6,6 +6,7 @@ import { levelsForMode } from "../data/campaign";
 import { AudioFeedback } from "../systems/AudioFeedback";
 import { BetaFeedbackSystem, type BetaFeedbackCategory } from "../systems/BetaFeedbackSystem";
 import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
+import { maybeOpenProductPulse } from "../systems/ProductPulseOverlay";
 import { SaveSystem } from "../systems/SaveSystem";
 import { formatRequirement, requirementMet } from "../systems/StarScoring";
 import type { ResultsSceneData } from "../types";
@@ -63,7 +64,9 @@ export class ResultsScene extends Phaser.Scene{
     this.smallAction(270,814,"NIVELES",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(this.resultData.levelIndex/10)}),160,0x172129,"#c8d3dc");
     if(BETA_TESTING){this.smallAction(175,870,"🏆 RANKING",()=>{void this.openLeaderboard();},174,0x211f1a,"#e5d293");this.smallAction(365,870,"⚑ REPORTAR",()=>this.openFeedback(),174,0x17242d,"#a9d1e5");}
     sharpenSceneText(this);
-    if(BETA_TESTING&&!BetaTelemetry.levelSurveyDone(this.resultData.levelId))this.time.delayedCall(180,()=>this.openSurvey());
+    const needsLevelSurvey=BETA_TESTING&&!BetaTelemetry.levelSurveyDone(this.resultData.levelId);
+    if(needsLevelSurvey)this.time.delayedCall(180,()=>this.openSurvey());
+    else if(BETA_TESTING)this.maybeOpenCommercialPulse();
   }
 
   private makeButton(label:string,y:number,action:()=>void,primary:boolean):void{
@@ -109,7 +112,14 @@ export class ResultsScene extends Phaser.Scene{
     const ok=await BetaTelemetry.submitLevelFeedback({levelId:this.resultData.levelId,mode:this.resultData.mode,fun:this.quick.fun,originality:this.quick.originality,difficulty:this.quick.difficulty,surprise:this.resultData.mode==="troll"?(this.surveySurprise?5:3):null,tags:this.surveyBug?["bug"]:[],comment:""});
     this.closeSurvey();this.toast(ok?"✓ FEEDBACK ENVIADO":"NO SE PUDO ENVIAR",ok);if(ok&&this.allCurrentLevelsCompleted()&&!BetaTelemetry.gameSurveyDone())this.time.delayedCall(350,()=>this.openGameSurvey());
   }
-  private closeSurvey():void{this.surveyPanel?.destroy(true);this.surveyPanel=null;this.surveySubmitting=false;}
+  private closeSurvey():void{this.surveyPanel?.destroy(true);this.surveyPanel=null;this.surveySubmitting=false;this.maybeOpenCommercialPulse();}
+  private maybeOpenCommercialPulse():void{
+    if(!BETA_TESTING)return;
+    // The final global survey has priority over a commercial pulse. Everywhere else, ask right
+    // after level feedback so fast next-hole navigation cannot silently skip product validation.
+    if(this.allCurrentLevelsCompleted()&&!BetaTelemetry.gameSurveyDone())return;
+    maybeOpenProductPulse(this,120);
+  }
 
   private openFeedback():void{
     if(this.feedbackPanel)return;const children:Phaser.GameObjects.GameObject[]=[];children.push(this.add.rectangle(270,480,540,960,0x05080b,.82).setInteractive(),this.add.rectangle(270,480,430,450,0x111a22,.99).setStrokeStyle(2,0x405668),this.add.text(270,292,"REPORTE RÁPIDO",{fontFamily:"system-ui",fontSize:uiFontSize(17,2),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5),this.add.text(270,324,"1 toque. Nota sólo si eliges OTRO.",{fontFamily:"system-ui",fontSize:uiFontSize(10,2),color:"#8da0ad"}).setOrigin(.5));
