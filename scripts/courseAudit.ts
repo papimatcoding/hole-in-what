@@ -19,10 +19,10 @@ interface AuditRow{
 }
 
 const FAST_CI = process.env.FULL_AUDIT !== "1";
-// Below this local success rate, a one-shot route is treated as an expert shortcut rather than
-// evidence that a human-calibrated par is wrong — but only when it actually uses the authored
-// primary mechanic. This deliberately matches the existing BROAD_HIO boundary.
-const ELITE_HIO_MAX_ROBUSTNESS=.22;
+// A narrow solver-only route that uses the authored mechanic is an expert shortcut, not proof
+// that a human-calibrated star target is wrong. Multi-shot shortcuts are accepted more strictly
+// than HIOs: exactly two strokes under target, low robustness, and worse blind route required.
+const ELITE_SHORTCUT_MAX_ROBUSTNESS=.22;
 const dist=(a:{x:number;y:number},b:{x:number;y:number}):number=>Math.hypot(a.x-b.x,a.y-b.y);
 const rad=(d:number):number=>d*Math.PI/180;
 const deg=(a:number):number=>a*180/Math.PI;
@@ -117,24 +117,27 @@ function naiveTrapProbe(level:LevelDefinition):boolean|null{
 }
 function rawComplexity(level:LevelDefinition):number{return Math.min(9,(level.walls?.length??0)*.35)+(level.bumpers?.length??0)*1.5+(level.sand?.length??0)*1.1+(level.ice?.length??0)*1.3+(level.fans?.length??0)*1.8+(level.boosters?.length??0)*1.6+(level.curves?.length??0)*2+(level.portals?.length??0)*2.4+(level.movingWalls?.length??0)*2.5+(level.movingBumpers?.length??0)*2.5+(level.voids?.length??0)*2+(level.ramps?.length??0)*2.4+(level.trampolines?.length??0)*2.2+(level.popWalls?.length??0)*2.6+(level.popBumpers?.length??0)*2.6+(level.popVoids?.length??0)*2.8;}
 function difficultyScore(level:LevelDefinition,best:SolvedRun|null,robust:number|null):number|null{if(!best)return null;const precision=robust===null?5:(1-robust)*10,mode=level.mode==="troll"?6:0;return Number((best.strokes*12+precision+rawComplexity(level)+mode).toFixed(1));}
-function eliteMechanicHio(level:LevelDefinition,best:SolvedRun|null,naiveTrap:boolean|null,robust:number|null,target:number):boolean{
-  return Boolean(best?.strokes===1&&target>=3&&robust!==null&&robust<=ELITE_HIO_MAX_ROBUSTNESS&&mechanicWasUsed(level,best,naiveTrap)===true);
+function eliteMechanicShortcut(level:LevelDefinition,best:SolvedRun|null,blind:SolvedRun|null,naiveTrap:boolean|null,robust:number|null,target:number):boolean{
+  if(!best||robust===null||robust>ELITE_SHORTCUT_MAX_ROBUSTNESS||mechanicWasUsed(level,best,naiveTrap)!==true)return false;
+  if(best.strokes===1)return target>=3;
+  return target-best.strokes===2&&blind!==null&&blind.strokes>best.strokes;
 }
-function classify(level:LevelDefinition,best:SolvedRun|null,naiveTrap:boolean|null,clearanceBlockingStates:string[],robust:number|null):AuditStatus{
+function classify(level:LevelDefinition,best:SolvedRun|null,blind:SolvedRun|null,naiveTrap:boolean|null,clearanceBlockingStates:string[],robust:number|null):AuditStatus{
   if(!best||clearanceBlockingStates.length>0)return"NO_ROUTE_FOUND";
   const target=level.threeStar.maxStrokes??best.strokes;
   if(level.mode==="troll"&&naiveTrap===false)return"MECHANIC_BYPASSED";
   if(level.primaryMechanic&&level.primaryMechanic!=="wall"&&mechanicWasUsed(level,best,naiveTrap)===false)return"MECHANIC_BYPASSED";
-  if(best.strokes<=target-2&&!eliteMechanicHio(level,best,naiveTrap,robust,target))return"TOO_EASY_FOR_TARGET";
+  if(best.strokes<=target-2&&!eliteMechanicShortcut(level,best,blind,naiveTrap,robust,target))return"TOO_EASY_FOR_TARGET";
   return"OK";
 }
 function warningsFor(level:LevelDefinition,best:SolvedRun|null,blind:SolvedRun|null,robust:number|null,clearanceBlockingStates:string[],naiveTrap:boolean|null):string[]{
-  const warnings:string[]=[];const target=level.threeStar.maxStrokes??best?.strokes??0;
+  const warnings:string[]=[];const target=level.threeStar.maxStrokes??best?.strokes??0,elite=eliteMechanicShortcut(level,best,blind,naiveTrap,robust,target);
   if(clearanceBlockingStates.length)warnings.push(`CLEARANCE_BLOCKED:${clearanceBlockingStates.join("+")}`);
   if(best&&blind&&blind.strokes>best.strokes+1)warnings.push(`GUIDED_ROUTE_ONLY:${best.strokes}->${blind.strokes}`);
   if(best&&!blind&&best.strokes>1)warnings.push("GUIDED_ROUTE_ONLY:no-blind-route");
-  if(best?.strokes===1&&target>1&&(robust??0)>ELITE_HIO_MAX_ROBUSTNESS)warnings.push(`BROAD_HIO:${Math.round((robust??0)*100)}%`);
-  if(eliteMechanicHio(level,best,naiveTrap,robust,target))warnings.push(`ELITE_HIO:${Math.round((robust??0)*100)}%`);
+  if(best?.strokes===1&&target>1&&(robust??0)>ELITE_SHORTCUT_MAX_ROBUSTNESS)warnings.push(`BROAD_HIO:${Math.round((robust??0)*100)}%`);
+  if(elite&&best?.strokes===1)warnings.push(`ELITE_HIO:${Math.round((robust??0)*100)}%`);
+  if(elite&&best&&best.strokes>1)warnings.push(`ELITE_SHORTCUT:${best.strokes}->${target}:${Math.round((robust??0)*100)}%`);
   if(level.mode==="troll"&&best&&best.state.triggeredTraps.length===0&&!learnedRouteCanAvoidTrap(level,naiveTrap))warnings.push("TROLL_SOLVES_WITHOUT_TRAP");
   return warnings;
 }
@@ -142,7 +145,7 @@ function shotLabel(s:SimulationShot):string{return`${Math.round(deg(s.angle))}°
 function audit(level:LevelDefinition):AuditRow{
   const clearance=analyzeCourseClearance(level),clearanceBlockingStates=clearance.blockingStates.filter(x=>!x.startsWith("moving@"));
   const maxGuidedDepth=Math.max(5,(level.twoStar.maxStrokes??4)+1);const hio=denseHoleInOne(level),guided=hio??solve(level,maxGuidedDepth,"guided"),blind=hio??solve(level,Math.min(3,maxGuidedDepth),"blind"),best=guided,naive=naiveTrapProbe(level),robust=solutionRobustness(level,best),difficulty=difficultyScore(level,best,robust),warnings=warningsFor(level,best,blind,robust,clearanceBlockingStates,naive);
-  return{id:level.id,target:level.threeStar.maxStrokes??0,twoStar:level.twoStar.maxStrokes??0,bestKnownStrokes:best?.strokes??null,blindKnownStrokes:blind?.strokes??null,bestKnownTime:best?Number(best.time.toFixed(2)):null,holeInOne:Boolean(hio)||best?.strokes===1,primaryMechanic:level.primaryMechanic??null,mechanicUsed:mechanicWasUsed(level,best,naive),naiveTrapTriggered:naive,trapsTriggered:best?.state.triggeredTraps??[],solvable:Boolean(best)&&clearanceBlockingStates.length===0,bestShots:best?.shots.map(shotLabel)??[],blindShots:blind?.shots.map(shotLabel)??[],robustness:robust===null?null:Number(robust.toFixed(2)),difficultyScore:difficulty,clearanceBlockingStates,warnings,status:classify(level,best,naive,clearanceBlockingStates,robust)};
+  return{id:level.id,target:level.threeStar.maxStrokes??0,twoStar:level.twoStar.maxStrokes??0,bestKnownStrokes:best?.strokes??null,blindKnownStrokes:blind?.strokes??null,bestKnownTime:best?Number(best.time.toFixed(2)):null,holeInOne:Boolean(hio)||best?.strokes===1,primaryMechanic:level.primaryMechanic??null,mechanicUsed:mechanicWasUsed(level,best,naive),naiveTrapTriggered:naive,trapsTriggered:best?.state.triggeredTraps??[],solvable:Boolean(best)&&clearanceBlockingStates.length===0,bestShots:best?.shots.map(shotLabel)??[],blindShots:blind?.shots.map(shotLabel)??[],robustness:robust===null?null:Number(robust.toFixed(2)),difficultyScore:difficulty,clearanceBlockingStates,warnings,status:classify(level,best,blind,naive,clearanceBlockingStates,robust)};
 }
 
 const rows:AuditRow[]=[];
