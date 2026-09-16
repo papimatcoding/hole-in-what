@@ -2,6 +2,7 @@ import {
   GolfSimulation,
   type SimulationEvent
 } from "../src/systems/GolfSimulation";
+import { routeTraversesMovingSweep } from "../src/systems/MovingMechanicSemantics";
 import type { LevelDefinition } from "../src/types";
 
 type FixtureOverrides = Partial<Omit<LevelDefinition,"id"|"mode"|"group"|"ball"|"hole"|"threeStar"|"twoStar">> & {
@@ -77,4 +78,15 @@ function assert(condition:boolean,label:string,detail:string):void{
   assert(result.sim.state.ball.vx>0,"portal direction","portal did not preserve forward travel direction");
 }
 
-console.log("PASS block 2 mechanic behavior contracts: ice · booster · portal");
+// MOVING GATE — a clean traversal through the space swept by a moving obstacle is interaction,
+// even if the player times the opening and never collides. A route wholly outside that sweep is a bypass.
+{
+  const movingWalls=[{x:240,y:500,w:60,h:24,axis:"x" as const,amplitude:90,speed:1.2,phase:.4}];
+  const through=fixture("fixture-moving-through",{ball:{x:270,y:700},movingWalls});
+  const around=fixture("fixture-moving-around",{ball:{x:80,y:700},movingWalls});
+  const shot={angle:-Math.PI/2,power:.55};
+  assert(routeTraversesMovingSweep(through,[shot]),"moving gate traversal","route crossed the gate but was not recognised as interacting with its sweep");
+  assert(!routeTraversesMovingSweep(around,[shot]),"moving gate bypass","route outside the sweep was incorrectly counted as moving-mechanic use");
+}
+
+console.log("PASS block 2 mechanic behavior contracts: ice · booster · portal · moving gate semantics");
