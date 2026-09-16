@@ -18,11 +18,11 @@ function eligibleContext():{levelId:string;mode:GameMode}|null{
   return{levelId:classic[classic.length-1]!.id,mode:"classic"};
 }
 
-export function maybeOpenProductPulse(scene:Phaser.Scene):void{
+export function maybeOpenProductPulse(scene:Phaser.Scene,delayMs=520):void{
   if(!BETA_TESTING||ProductTelemetry.pulseDone()||ProductTelemetry.pulseSnoozed())return;
   if((BetaTelemetry.alias()??"").trim().toUpperCase().startsWith("DEV"))return;
   const context=eligibleContext();if(!context)return;
-  scene.time.delayedCall(520,()=>openPulse(scene,context));
+  scene.time.delayedCall(Math.max(0,delayMs),()=>openPulse(scene,context));
 }
 
 function openPulse(scene:Phaser.Scene,context:{levelId:string;mode:GameMode}):void{
