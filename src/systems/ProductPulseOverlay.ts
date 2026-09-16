@@ -8,12 +8,14 @@ import { ProductTelemetry, type PurchaseIntent } from "./ProductTelemetrySystem"
 import { SaveSystem } from "./SaveSystem";
 import type { GameMode } from "../types";
 
+const MIN_CLASSIC_COMPLETIONS_FOR_PULSE=5;
+
 function eligibleContext():{levelId:string;mode:GameMode}|null{
-  const hard=levelsForMode("troll").find(level=>SaveSystem.record(level.id).completed);
-  if(hard)return{levelId:hard.id,mode:"troll"};
+  const hard=levelsForMode("troll").filter(level=>SaveSystem.record(level.id).completed);
+  if(hard.length)return{levelId:hard[hard.length-1]!.id,mode:"troll"};
   const classic=levelsForMode("classic").filter(level=>SaveSystem.record(level.id).completed);
-  if(classic.length<3)return null;
-  return{levelId:classic[Math.min(2,classic.length-1)]!.id,mode:"classic"};
+  if(classic.length<MIN_CLASSIC_COMPLETIONS_FOR_PULSE)return null;
+  return{levelId:classic[classic.length-1]!.id,mode:"classic"};
 }
 
 export function maybeOpenProductPulse(scene:Phaser.Scene):void{
@@ -25,7 +27,8 @@ export function maybeOpenProductPulse(scene:Phaser.Scene):void{
 
 function openPulse(scene:Phaser.Scene,context:{levelId:string;mode:GameMode}):void{
   if(ProductTelemetry.pulseDone()||ProductTelemetry.pulseSnoozed())return;
-  ProductTelemetry.track({eventName:"pulse_view",scene:"menu",levelId:context.levelId,mode:context.mode});
+  const sourceScene=scene.scene.key||"unknown";
+  ProductTelemetry.track({eventName:"pulse_view",scene:sourceScene,levelId:context.levelId,mode:context.mode});
   const es=I18n.language()==="es";
   let keepPlaying:boolean|null=null,purchase:PurchaseIntent|null=null,submitting=false;
   const root=scene.add.container(0,0).setDepth(500);
@@ -56,7 +59,7 @@ function openPulse(scene:Phaser.Scene,context:{levelId:string;mode:GameMode}):vo
       const thanks=scene.add.text(270,476,es?"✓ GRACIAS":"✓ THANK YOU",{fontFamily:"system-ui",fontSize:uiFontSize(18,2),fontStyle:"bold",color:"#a7ddb9",backgroundColor:"#111a22",padding:{x:28,y:18}}).setOrigin(.5).setDepth(501);
       scene.time.delayedCall(700,()=>thanks.destroy());
     },"send");
-    action(270,726,180,es?"AHORA NO":"NOT NOW",true,()=>{ProductTelemetry.snoozePulse();root.destroy(true);},"skip",false);
+    action(270,726,180,es?"AHORA NO":"NOT NOW",true,()=>{ProductTelemetry.snoozePulse(sourceScene);root.destroy(true);},"skip",false);
   };
 
   const choice=(x:number,y:number,w:number,label:string,selected:boolean,fn:()=>void,id:string):void=>{
