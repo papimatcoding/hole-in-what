@@ -1,14 +1,13 @@
 import Phaser from "phaser";
 import { BETA_TESTING } from "../config/beta";
 import { DESIGN_HEIGHT, DESIGN_WIDTH, isDesktopUI, setupDesignCamera, sharpenSceneText, uiFontSize } from "../config/display";
-import { PRODUCT_FEATURES, PRODUCT_STAGE_LABEL, TROLL_MENU_ENABLED } from "../config/product";
-import { CAMPAIGN_ENTRIES, levelsForMode } from "../data/campaign";
+import { PRODUCT_FEATURES, TROLL_MENU_ENABLED } from "../config/product";
+import { levelsForMode } from "../data/campaign";
 import { BetaFeedbackSystem } from "../systems/BetaFeedbackSystem";
 import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
 import { I18n, type GameLanguage } from "../systems/I18nSystem";
 import { LiveOps } from "../systems/LiveOpsSystem";
 import { PatchNotes } from "../systems/PatchNotesSystem";
-import { maybeOpenProductPulse } from "../systems/ProductPulseOverlay";
 import { ProductTelemetry } from "../systems/ProductTelemetrySystem";
 import { SaveSystem } from "../systems/SaveSystem";
 import type { GameMode } from "../types";
@@ -30,27 +29,24 @@ export class MenuScene extends Phaser.Scene {
     const stopOnline=LiveOps.onOnline(count=>online.setText(`● ${count==null?"—":count} ONLINE`));
     this.events.once("shutdown",stopOnline);
 
-    this.add.text(DESIGN_WIDTH-42,54,PRODUCT_STAGE_LABEL,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:"#8298a6"}).setOrigin(1,.5);
     this.languageSelector();
-    this.add.text(DESIGN_WIDTH/2,106,"HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(39,2),fontStyle:"bold",color:TROLL_MENU_ENABLED?"#c2ef63":"#f5f7fa"}).setOrigin(.5).setAngle(TROLL_MENU_ENABLED?-3:0);
-    this.add.rectangle(270,139,72,3,TROLL_MENU_ENABLED?0xb68cff:0x6f98ae,.95);
-    this.add.text(DESIGN_WIDTH/2,160,TROLL_MENU_ENABLED?"CONFÍA EN TU PUNTERÍA. NO EN EL CAMPO.":"MINIGOLF · 3 ESTRELLAS",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,2),fontStyle:"bold",color:TROLL_MENU_ENABLED?"#cab7e9":"#8194a3"}).setOrigin(.5);
+    this.add.text(DESIGN_WIDTH/2,108,"HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(39,2),fontStyle:"bold",color:TROLL_MENU_ENABLED?"#c2ef63":"#f5f7fa"}).setOrigin(.5);
+    this.add.rectangle(270,145,84,3,TROLL_MENU_ENABLED?0xb68cff:0x6f98ae,.95);
+    const logoBall=this.add.graphics();
+    logoBall.fillStyle(0xf5f7fa,1);logoBall.fillCircle(228,145,7);
+    logoBall.lineStyle(2,TROLL_MENU_ENABLED?0xb68cff:0x6f98ae,.9);logoBall.strokeCircle(228,145,7);
+    logoBall.fillStyle(0x9aa7b0,.55);logoBall.fillCircle(225,142,1.1);logoBall.fillCircle(231,143,1.1);logoBall.fillCircle(228,148,1.1);
 
     const alias=BetaTelemetry.alias();
-    const identityBg=this.add.rectangle(270,194,this.desktop?300:280,36,alias?0x121d24:0x251f15).setStrokeStyle(1,alias?0x314856:0x6b562b).setInteractive({useHandCursor:true});
-    const identity=this.add.text(DESIGN_WIDTH/2,194,alias?`JUGADOR · ${alias}   ✎`:"ELIGE TU NOMBRE   ✎",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:alias?"#c9d9e3":"#e7c477"}).setOrigin(.5);
+    const identityBg=this.add.rectangle(270,190,this.desktop?300:280,36,alias?0x121d24:0x251f15).setStrokeStyle(1,alias?0x314856:0x6b562b).setInteractive({useHandCursor:true});
+    const identity=this.add.text(DESIGN_WIDTH/2,190,alias?`JUGADOR · ${alias}   ✎`:"ELIGE TU NOMBRE   ✎",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:alias?"#c9d9e3":"#e7c477"}).setOrigin(.5);
     const editIdentity=()=>this.scene.start("player-profile");identityBg.on("pointerover",()=>identityBg.setFillStyle(alias?0x1c2b34:0x332918)).on("pointerout",()=>identityBg.setFillStyle(alias?0x121d24:0x251f15)).on("pointerup",editIdentity);identity.setInteractive({useHandCursor:true}).on("pointerup",editIdentity);
-    if(BETA_TESTING)this.add.text(DESIGN_WIDTH/2,224,"BETA · TODOS LOS HOYOS ABIERTOS",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#769eb5"}).setOrigin(.5);
 
-    const next=CAMPAIGN_ENTRIES.find(entry=>!SaveSystem.record(entry.level.id).completed)??CAMPAIGN_ENTRIES[0]!;
-    this.makeWideButton("ENTRAR AL CAMPO",this.desktop?288:282,()=>this.scene.start("game",{mode:next.mode,levelIndex:next.levelIndex}),true);
-    this.add.text(270,334,"PARECE GOLF. NO TE FÍES.",{fontFamily:"system-ui",fontSize:uiFontSize(12,2),fontStyle:"bold",color:TROLL_MENU_ENABLED?"#c2ef63":"#a9bdc9"}).setOrigin(.5);
-    this.makeWideButton("CAMPAÑA",390,()=>this.scene.start("level-select",{mode:"classic"}));
+    this.makeWideButton("JUGAR",266,()=>this.scene.start("level-select",{mode:"classic",page:0}),true);
 
     if(this.desktop)this.createDesktopActions();else this.createMobileActions();
 
     sharpenSceneText(this);
-    maybeOpenProductPulse(this);
   }
 
   private languageSelector():void{
@@ -79,32 +75,32 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private createDesktopActions():void{
-    this.add.text(270,452,"PRODUCTO",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#667a89"}).setOrigin(.5);
-    if(PRODUCT_FEATURES.cosmetics)this.makeCompactButton(125,492,118,"PERSONALIZAR",()=>this.scene.start("cosmetics"));else this.makeLockedCompactButton(125,492,118,"PERSONALIZAR");
-    if(PRODUCT_FEATURES.shop)this.makeCompactButton(270,492,118,"TIENDA",()=>this.scene.start("shop"));else this.makeLockedCompactButton(270,492,118,"TIENDA");
-    this.makeCompactButton(415,492,118,"PRESTIGIO",()=>this.scene.start("rewards"));
+    this.add.text(270,382,"COLECCIÓN",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#667a89"}).setOrigin(.5);
+    if(PRODUCT_FEATURES.cosmetics)this.makeCompactButton(125,422,118,"PERSONALIZAR",()=>this.scene.start("cosmetics"));else this.makeLockedCompactButton(125,422,118,"PERSONALIZAR");
+    if(PRODUCT_FEATURES.shop)this.makeCompactButton(270,422,118,"TIENDA",()=>this.scene.start("shop"));else this.makeLockedCompactButton(270,422,118,"TIENDA");
+    this.makeCompactButton(415,422,118,"PRESTIGIO",()=>this.scene.start("rewards"));
 
-    this.add.text(270,550,"COMUNIDAD Y SOPORTE",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#667a89"}).setOrigin(.5);
-    this.makeCompactButton(165,592,196,"COMMUNITY MAPS",()=>{void this.openCommunity();},true);
-    this.makeCompactButton(375,592,196,"ASISTENCIA",()=>this.scene.start("assistance"),true);
-    this.makeWideButton(PatchNotes.hasUnread()?"PATCH NOTES   ·   ● NUEVO":"PATCH NOTES",654,()=>this.scene.start("patch-notes"),PatchNotes.hasUnread());
+    this.add.text(270,484,"MÁS",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#667a89"}).setOrigin(.5);
+    if(PRODUCT_FEATURES.communityMaps)this.makeCompactButton(165,526,196,"COMMUNITY MAPS",()=>{void this.openCommunity();},true);else this.makeLockedCompactButton(165,526,196,"COMMUNITY MAPS");
+    this.makeCompactButton(375,526,196,"ASISTENCIA",()=>this.scene.start("assistance"),true);
+    this.makeWideButton(PatchNotes.hasUnread()?"PATCH NOTES   ·   ● NUEVO":"PATCH NOTES",592,()=>this.scene.start("patch-notes"),PatchNotes.hasUnread());
 
-    const beta=this.add.rectangle(270,728,390,50,0x101820).setStrokeStyle(1,0x334956);
-    const betaText=this.add.text(270,728,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:"#a9bdc9"}).setOrigin(.5);
-    this.wirePress(beta,betaText,270,728,410,58,()=>this.scene.start("editor"),0x101820,0x1d2c36);
+    const beta=this.add.rectangle(270,666,390,50,0x101820).setStrokeStyle(1,0x334956);
+    const betaText=this.add.text(270,666,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:"#a9bdc9"}).setOrigin(.5);
+    this.wirePress(beta,betaText,270,666,410,58,()=>this.scene.start("editor"),0x101820,0x1d2c36);
     this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-48,BETA_TESTING?"RC7 · PRODUCT VALIDATION · DESKTOP":"CAMPAÑA · DESKTOP",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(9,2),color:"#5e707e"}).setOrigin(.5);
   }
 
   private createMobileActions():void{
-    if(PRODUCT_FEATURES.cosmetics)this.makeWideButton("PERSONALIZAR",472,()=>this.scene.start("cosmetics"));else this.makeLockedWideButton("PERSONALIZAR",472);
-    if(PRODUCT_FEATURES.shop)this.makeWideButton("TIENDA",528,()=>this.scene.start("shop"));else this.makeLockedWideButton("TIENDA",528);
-    this.makeWideButton("PRESTIGIO",584,()=>this.scene.start("rewards"));
-    this.makeWideButton("COMMUNITY MAPS",648,()=>{void this.openCommunity();},true);
-    this.makeWideButton("ASISTENCIA AL JUGADOR",708,()=>this.scene.start("assistance"),true);
-    this.makeWideButton(PatchNotes.hasUnread()?"PATCH NOTES   ·   ● NUEVO":"PATCH NOTES",768,()=>this.scene.start("patch-notes"),PatchNotes.hasUnread());
-    const beta=this.add.rectangle(270,842,390,48,0x111922).setStrokeStyle(2,0x405666);
-    const betaText=this.add.text(270,842,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,1),fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5);
-    this.wirePress(beta,betaText,270,842,410,58,()=>this.scene.start("editor"),0x111922,0x1d2b36);
+    if(PRODUCT_FEATURES.cosmetics)this.makeWideButton("PERSONALIZAR",390,()=>this.scene.start("cosmetics"));else this.makeLockedWideButton("PERSONALIZAR",390);
+    if(PRODUCT_FEATURES.shop)this.makeWideButton("TIENDA",446,()=>this.scene.start("shop"));else this.makeLockedWideButton("TIENDA",446);
+    this.makeWideButton("PRESTIGIO",502,()=>this.scene.start("rewards"));
+    if(PRODUCT_FEATURES.communityMaps)this.makeWideButton("COMMUNITY MAPS",566,()=>{void this.openCommunity();},true);else this.makeLockedWideButton("COMMUNITY MAPS",566);
+    this.makeWideButton("ASISTENCIA AL JUGADOR",626,()=>this.scene.start("assistance"),true);
+    this.makeWideButton(PatchNotes.hasUnread()?"PATCH NOTES   ·   ● NUEVO":"PATCH NOTES",686,()=>this.scene.start("patch-notes"),PatchNotes.hasUnread());
+    const beta=this.add.rectangle(270,762,390,48,0x111922).setStrokeStyle(2,0x405666);
+    const betaText=this.add.text(270,762,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,1),fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5);
+    this.wirePress(beta,betaText,270,762,410,58,()=>this.scene.start("editor"),0x111922,0x1d2b36);
     this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-25,BETA_TESTING?"RC7 · PRODUCT VALIDATION":"CAMPAÑA · CORE SLICE",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,1),color:"#657282"}).setOrigin(.5);
   }
 
