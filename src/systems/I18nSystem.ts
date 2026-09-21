@@ -21,7 +21,13 @@ let language:GameLanguage=detectDefault();
 function translateDynamic(value:string):string{
   const identity:Record<string,string>={
     "RUTA DE PRESTIGIO":"PRESTIGE TRACK",
+    "PASE DE PRESTIGIO":"PRESTIGE PASS",
     "PRESTIGIO":"PRESTIGE",
+    "PROGRESO":"PROGRESS",
+    "MENÚ":"MENU",
+    "CONSEGUIDO":"CLAIMED",
+    "BLOQUEADO":"LOCKED",
+    "PERMANENTE · SIN REINICIOS":"PERMANENT · NO RESETS",
     "RUTA DE PRESTIGIO COMPLETADA":"PRESTIGE TRACK COMPLETED",
     "TUS ESTRELLAS DESBLOQUEAN COSMÉTICOS":"YOUR STARS UNLOCK COSMETICS",
     "PERMANENTE · SIN REINICIOS · SIN CADUCIDAD":"PERMANENT · NO RESETS · NO EXPIRY",
@@ -44,6 +50,9 @@ function translateDynamic(value:string):string{
   if(identity[value])return identity[value]!;
   let match:RegExpMatchArray|null;
   if((match=value.match(/^PRESTIGIO · (.+)$/)))return `PRESTIGE · ${match[1]}`;
+  if((match=value.match(/^SIGUIENTE RECOMPENSA · (.+)$/)))return `NEXT REWARD · ${match[1]}`;
+  if((match=value.match(/^(\d+)★ PARA DESBLOQUEAR$/)))return `${match[1]}★ TO UNLOCK`;
+  if((match=value.match(/^★ (\d+) · COMPLETADO$/)))return `★ ${match[1]} · COMPLETE`;
   if((match=value.match(/^CAPÍTULO (\d+)\s+·\s+(.+)$/)))return `CHAPTER ${match[1]} · ${match[2]}`;
   const surface=translateSurfaceDynamic(value);if(surface!==undefined)return surface;
   if(value==="TOCA")return "TAP";
