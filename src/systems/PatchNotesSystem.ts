@@ -11,6 +11,19 @@ const READ_KEY="troll-golf-last-read-patch-v1";
 
 export const PATCH_NOTES:PatchNote[]=[
   {
+    id:"beta-rc7-flow",
+    title:"RC7 · FLOW",
+    date:"21 SEP 2026",
+    summary:"Menos interrupciones y un flujo de campaña más claro.",
+    bullets:[
+      "JUGAR abre siempre el selector de niveles antes de entrar al campo.",
+      "La valoración post-nivel ahora es voluntaria mediante un botón visible en Resultados.",
+      "Community Maps queda cerrada temporalmente mientras se rehace la feature.",
+      "El menú se ha simplificado y el logotipo vuelve a ser recto.",
+      "Patch Notes y el modo mantenimiento siguen formando parte del flujo oficial de la beta."
+    ]
+  },
+  {
     id:"beta-rc6",
     title:"BETA RC6",
     date:"28 AGO 2026",
