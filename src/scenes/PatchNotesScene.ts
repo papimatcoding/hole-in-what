@@ -12,7 +12,7 @@ export class PatchNotesScene extends Phaser.Scene{
     this.add.text(48,50,"‹",{fontFamily:"system-ui",fontSize:uiFontSize(32,3),fontStyle:"bold",color:"#eef4f8"}).setOrigin(.5);back.on("pointerover",()=>back.setFillStyle(0x1e2b35)).on("pointerout",()=>back.setFillStyle(0x141e26)).on("pointerup",()=>this.scene.start("menu"));
     this.add.text(270,58,"PATCH NOTES",{fontFamily:"system-ui",fontSize:uiFontSize(25,3),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
     this.add.rectangle(270,86,64,3,0x6f98ae,.9);
-    this.add.text(270,108,tr("Cambios recientes de la beta"),{fontFamily:"system-ui",fontSize:uiFontSize(10,2),color:"#8495a3"}).setOrigin(.5);
+    this.add.text(270,108,tr("Cambios recientes del juego"),{fontFamily:"system-ui",fontSize:uiFontSize(10,2),color:"#8495a3"}).setOrigin(.5);
 
     let y=148;
     for(const note of PATCH_NOTES.slice(0,desktop?3:3)){
