@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { CAMPAIGN_ENTRIES, campaignIndex, levelFor } from "../src/data/campaign";
+import { requiredStarsForCampaignChapter } from "../src/data/progression";
 import { GolfSimulation, simulateShotToRest } from "../src/systems/GolfSimulation";
 import { SaveSystem } from "../src/systems/SaveSystem";
 
@@ -15,7 +16,10 @@ assert.equal(SaveSystem.isCampaignLevelUnlocked(1),false);
 assert.equal(SaveSystem.isCampaignLevelUnlocked(-1),false);
 assert.equal(SaveSystem.isCampaignLevelUnlocked(21),false);
 SaveSystem.submit(levelFor("classic",15).id,2,4,10000);
-assert.equal(SaveSystem.isCampaignLevelUnlocked(16),true,"C16 completion opens former H01");
+assert.equal(SaveSystem.isCampaignLevelUnlocked(16),false,"C16 completion alone cannot bypass the chapter star gate");
+const chapterTwoRequirement=requiredStarsForCampaignChapter(1);
+for(let i=0;i<16&&SaveSystem.totalStarsAll()<chapterTwoRequirement;i+=1)SaveSystem.submit(levelFor("classic",i).id,3,2,1000);
+assert.equal(SaveSystem.isCampaignLevelUnlocked(16),true,"chapter star requirement opens former H01");
 assert.equal(SaveSystem.isCampaignLevelUnlocked(17),false,"future holes remain locked");
 SaveSystem.submit(levelFor("troll",0).id,3,2,5000);
 assert.equal(SaveSystem.isCampaignLevelUnlocked(17),true,"H01 completion advances in the same campaign");
@@ -23,6 +27,9 @@ assert.equal(SaveSystem.record("troll-01").stars,3,"legacy record remains intact
 const wallet=SaveSystem.wallet();
 SaveSystem.isCampaignLevelUnlocked(16);
 assert.deepEqual(SaveSystem.wallet(),wallet,"reading campaign access never grants rewards");
+
+// Reward idempotency uses a fresh save so chapter-gate setup cannot pre-unlock milestones.
+memory.clear();
 SaveSystem.submit("classic-01",3,2,1000);
 assert.equal(SaveSystem.isOwned("trail-stardust"),false,"reward stays locked below 10 stars");
 const milestone=SaveSystem.submit("classic-02",3,2,1000);
