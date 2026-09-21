@@ -31,12 +31,15 @@ assert.deepEqual(SaveSystem.wallet(),wallet,"reading campaign access never grant
 // Reward idempotency uses a fresh save so chapter-gate setup cannot pre-unlock milestones.
 memory.clear();
 SaveSystem.submit("classic-01",3,2,1000);
+SaveSystem.submit("classic-02",3,2,1000);
+SaveSystem.submit("classic-03",3,2,1000);
+assert.equal(SaveSystem.totalStarsAll(),9,"reward setup stays one star below the first milestone");
 assert.equal(SaveSystem.isOwned("trail-stardust"),false,"reward stays locked below 10 stars");
-const milestone=SaveSystem.submit("classic-02",3,2,1000);
+const milestone=SaveSystem.submit("classic-04",3,2,1000);
 assert(milestone.newlyUnlockedCosmetics.includes("trail-stardust"),"crossing 10 stars grants the reward");
 assert.equal(SaveSystem.equip("trail","trail-stardust").trail,"trail-stardust","earned reward can be equipped");
 const starsBeforeReplay=SaveSystem.totalStarsAll(),walletBeforeReplay=SaveSystem.wallet();
-const replayReward=SaveSystem.submit("classic-02",2,3,1500);
+const replayReward=SaveSystem.submit("classic-04",2,3,1500);
 assert.equal(SaveSystem.totalStarsAll(),starsBeforeReplay,"replay does not farm total stars");
 assert.deepEqual(SaveSystem.wallet(),walletBeforeReplay,"worse replay does not farm currency");
 assert.deepEqual(replayReward.newlyUnlockedCosmetics,[],"milestone is not awarded twice");
