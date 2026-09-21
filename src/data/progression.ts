@@ -10,6 +10,16 @@ export interface StarRewardDefinition {
 export const TROLL_UNLOCK_STARS = 12;
 export const TROLL_UNLOCK_CLASSIC_COMPLETIONS = 5;
 
+// Campaign chapters are presentation-sized blocks. A new chapter asks for a modest replay
+// investment instead of opening from one linear clear alone. Keep this balance in one place so
+// future chapters can tune it without touching scenes or save data.
+export const CAMPAIGN_CHAPTER_SIZE = 10;
+export const CAMPAIGN_CHAPTER_STAR_STEP = 18;
+
+export function requiredStarsForCampaignChapter(chapterIndex: number): number {
+  return Math.max(0, Math.floor(chapterIndex)) * CAMPAIGN_CHAPTER_STAR_STEP;
+}
+
 export const STAR_REWARDS: StarRewardDefinition[] = [
   { stars: 10, cosmeticId: "trail-stardust" },
   { stars: 20, cosmeticId: "ball-ace" },

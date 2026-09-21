@@ -6,6 +6,7 @@ import {
   type GolfSimulationState,
   type SimulationShot
 } from "../src/systems/GolfSimulation";
+import { routeTraversesMovingSweep } from "../src/systems/MovingMechanicSemantics";
 import type { CourseMechanic, LevelDefinition, Vec2 } from "../src/types";
 
 interface SolvedRun{strokes:number;time:number;shots:SimulationShot[];state:GolfSimulationState;}
@@ -27,6 +28,7 @@ const rad=(d:number):number=>d*Math.PI/180;
 const deg=(a:number):number=>a*180/Math.PI;
 const wrap=(a:number):number=>{const t=Math.PI*2;return((a%t)+t)%t;};
 const clamp=(v:number,a:number,b:number):number=>Math.max(a,Math.min(b,v));
+const movingUseCache=new WeakMap<SolvedRun,boolean>();
 
 function routePoints(level:LevelDefinition):Vec2[]{return level.designPath?.length?[level.ball,...level.designPath.filter(p=>dist(p,level.ball)>4),level.hole]:[level.ball,level.hole];}
 function nextRoutePoint(level:LevelDefinition,state:GolfSimulationState):Vec2{
@@ -93,7 +95,15 @@ function trapRepresentsMechanic(level:LevelDefinition,best:SolvedRun|null):boole
   return false;
 }
 function learnedRouteCanAvoidTrap(level:LevelDefinition,naiveTrap:boolean|null):boolean{return level.mode==="troll"&&level.primaryMechanic==="void"&&naiveTrap===true;}
-function mechanicWasUsed(level:LevelDefinition,best:SolvedRun|null,naiveTrap:boolean|null):boolean|null{if(!best||!level.primaryMechanic||level.primaryMechanic==="wall")return null;return learnedRouteCanAvoidTrap(level,naiveTrap)||best.state.touchedMechanics.includes(level.primaryMechanic)||trapRepresentsMechanic(level,best);}
+function movingRouteUsesMechanic(level:LevelDefinition,best:SolvedRun|null):boolean{
+  if(!best||level.primaryMechanic!=="moving")return false;
+  const cached=movingUseCache.get(best);if(cached!==undefined)return cached;
+  const used=routeTraversesMovingSweep(level,best.shots);movingUseCache.set(best,used);return used;
+}
+function mechanicWasUsed(level:LevelDefinition,best:SolvedRun|null,naiveTrap:boolean|null):boolean|null{
+  if(!best||!level.primaryMechanic||level.primaryMechanic==="wall")return null;
+  return learnedRouteCanAvoidTrap(level,naiveTrap)||best.state.touchedMechanics.includes(level.primaryMechanic)||trapRepresentsMechanic(level,best)||movingRouteUsesMechanic(level,best);
+}
 function naiveTrapProbe(level:LevelDefinition):boolean|null{
   if(level.mode!=="troll")return null;
   const targets=[level.hole,routePoints(level)[1]??level.hole];
@@ -114,7 +124,7 @@ function classify(level:LevelDefinition,best:SolvedRun|null,naiveTrap:boolean|nu
   if(!best||clearanceBlockingStates.length>0)return"NO_ROUTE_FOUND";
   const target=level.threeStar.maxStrokes??best.strokes;
   if(level.mode==="troll"&&naiveTrap===false)return"MECHANIC_BYPASSED";
-  if(level.primaryMechanic&&level.primaryMechanic!=="wall"&&!learnedRouteCanAvoidTrap(level,naiveTrap)&&!best.state.touchedMechanics.includes(level.primaryMechanic)&&!trapRepresentsMechanic(level,best))return"MECHANIC_BYPASSED";
+  if(level.primaryMechanic&&level.primaryMechanic!=="wall"&&mechanicWasUsed(level,best,naiveTrap)===false)return"MECHANIC_BYPASSED";
   if(best.strokes<=target-2&&!eliteMechanicHio(level,best,naiveTrap,robust,target))return"TOO_EASY_FOR_TARGET";
   return"OK";
 }

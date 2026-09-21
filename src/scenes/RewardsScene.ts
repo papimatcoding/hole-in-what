@@ -42,7 +42,7 @@ export class RewardsScene extends Phaser.Scene {
 
     SaveSystem.claimEligibleStarRewards();
 
-    this.add.text(270, 78, "RECOMPENSAS", {
+    this.add.text(270, 78, "RUTA DE PRESTIGIO", {
       fontFamily: "system-ui, sans-serif",
       fontSize: "26px",
       fontStyle: "bold",
@@ -57,7 +57,7 @@ export class RewardsScene extends Phaser.Scene {
       color: "#f1d07a"
     }).setOrigin(0.5);
 
-    this.add.text(270, 153, "HITOS DE ESTRELLAS", {
+    this.add.text(270, 153, "TUS ESTRELLAS DESBLOQUEAN COSMÉTICOS", {
       fontFamily: "system-ui, sans-serif",
       fontSize: "11px",
       color: "#768493"
@@ -120,6 +120,14 @@ export class RewardsScene extends Phaser.Scene {
       fontSize: "10px",
       color: "#657282"
     }).setOrigin(0.5);
+
+    this.add.text(270, 852, "PERMANENTE · SIN REINICIOS · SIN CADUCIDAD", {
+      fontFamily:"system-ui, sans-serif",fontSize:"10px",color:"#c2ef63"
+    }).setOrigin(.5);
+    this.add.text(270, 900, "PERSONALIZAR", {
+      fontFamily:"system-ui, sans-serif",fontSize:"16px",fontStyle:"bold",color:"#f5f7fa",
+      backgroundColor:"#352846",padding:{x:24,y:12}
+    }).setOrigin(.5).setInteractive({useHandCursor:true}).on("pointerup",()=>this.scene.start("cosmetics"));
 
     sharpenSceneText(this);
   }

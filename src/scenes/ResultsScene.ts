@@ -2,10 +2,12 @@ import Phaser from "phaser";
 import { BETA_TESTING } from "../config/beta";
 import { isDesktopUI, setupDesignCamera, sharpenSceneText, uiFontSize } from "../config/display";
 import { cosmeticById } from "../data/cosmetics";
-import { levelsForMode } from "../data/campaign";
+import { CAMPAIGN_ENTRIES, campaignIndex, levelsForMode } from "../data/campaign";
+import { STAR_REWARDS } from "../data/progression";
 import { AudioFeedback } from "../systems/AudioFeedback";
 import { BetaFeedbackSystem, type BetaFeedbackCategory } from "../systems/BetaFeedbackSystem";
 import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
+import { maybeOpenProductPulse } from "../systems/ProductPulseOverlay";
 import { SaveSystem } from "../systems/SaveSystem";
 import { formatRequirement, requirementMet } from "../systems/StarScoring";
 import type { ResultsSceneData } from "../types";
@@ -54,14 +56,24 @@ export class ResultsScene extends Phaser.Scene{
     let infoY=530;if(reward.coinsEarned>0){this.add.text(270,infoY,`+${reward.coinsEarned} ◈`,{fontFamily:"system-ui",fontSize:uiFontSize(13,1),fontStyle:"bold",color:"#e4d29d"}).setOrigin(.5);infoY+=25;}
     if(reward.newlyUnlockedCosmetics.length){const names=reward.newlyUnlockedCosmetics.map(id=>cosmeticById(id)?.name).filter((x):x is string=>Boolean(x));this.add.text(270,infoY,`DESBLOQUEADO · ${names.join(" · ")}`,{fontFamily:"system-ui",fontSize:uiFontSize(11),fontStyle:"bold",color:"#f1d07a",wordWrap:{width:430},align:"center"}).setOrigin(.5);}
 
-    const canPrev=this.resultData.levelIndex>0,canNext=this.resultData.levelIndex<levels.length-1&&(BETA_TESTING||SaveSystem.isLevelUnlocked(this.resultData.mode,this.resultData.levelIndex+1));
-    const retry=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex}),prev=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex-1}),next=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex+1});
+    const totalStars=SaveSystem.totalStarsAll(),nextReward=STAR_REWARDS.find(item=>item.stars>totalStars);
+    this.add.text(270,568,nextReward?`PRESTIGIO · ★ ${totalStars} / ${nextReward.stars}`:"RUTA DE PRESTIGIO COMPLETADA",{fontFamily:"system-ui",fontSize:uiFontSize(11),fontStyle:"bold",color:"#c2ef63"}).setOrigin(.5);
+    const position=campaignIndex(this.resultData.mode,this.resultData.levelIndex);
+    const canPrev=position>0,nextExists=position<CAMPAIGN_ENTRIES.length-1,canNext=nextExists&&(BETA_TESTING||SaveSystem.isCampaignLevelUnlocked(position+1));
+    if(nextExists&&!canNext){const gate=SaveSystem.campaignChapterProgress(position+1);this.add.text(270,594,`SIGUIENTE CAPÍTULO · ★ ${gate.totalStars} / ${gate.requiredStars}`,{fontFamily:"system-ui",fontSize:uiFontSize(10),fontStyle:"bold",color:"#e6ce80"}).setOrigin(.5);}
+    const open=(index:number)=>{const entry=CAMPAIGN_ENTRIES[index];if(entry)this.scene.start("game",{mode:entry.mode,levelIndex:entry.levelIndex});};
+    const retry=()=>open(position),prev=()=>open(position-1),next=()=>open(position+1);
     if(this.resultData.stars<3){this.makeButton("REINTENTAR",620,retry,true);if(canNext)this.makeButton("SIGUIENTE",696,next,false);}else{if(canNext)this.makeButton("SIGUIENTE",620,next,true);this.makeButton("REINTENTAR",696,retry,false);}
-    if(BETA_TESTING){this.nav(126,768,"‹ ANTERIOR",canPrev,prev);this.add.text(270,768,`${this.resultData.mode==="troll"?"H":"C"} ${String(this.resultData.levelIndex+1).padStart(2,"0")} / ${String(levels.length).padStart(2,"0")}`,{fontFamily:"system-ui",fontSize:uiFontSize(11),fontStyle:"bold",color:"#8193a1"}).setOrigin(.5);this.nav(414,768,"SIGUIENTE ›",canNext,next);}
-    this.smallAction(270,812,"NIVELES",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(this.resultData.levelIndex/10)}),160,0x172129,"#c8d3dc");
-    if(BETA_TESTING){this.smallAction(175,858,"🏆 RANKING",()=>{void this.openLeaderboard();},174,0x211f1a,"#e5d293");this.smallAction(365,858,"⚑ REPORTAR",()=>this.openFeedback(),174,0x17242d,"#a9d1e5");}
+    // Three independent rows with explicit breathing room. Previous centres (768/812/858)
+    // made their 48px hitboxes overlap by 4px and 2px respectively.
+    if(BETA_TESTING){this.nav(126,758,"‹ ANTERIOR",canPrev,prev);this.add.text(270,758,`${String(position+1).padStart(2,"0")} / ${CAMPAIGN_ENTRIES.length}`,{fontFamily:"system-ui",fontSize:uiFontSize(11),fontStyle:"bold",color:"#8193a1"}).setOrigin(.5);this.nav(414,758,"SIGUIENTE ›",canNext,next);}
+    this.smallAction(175,814,"NIVELES",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(position/10)}),174,0x172129,"#c8d3dc");
+    this.smallAction(365,814,"PRESTIGIO",()=>this.scene.start("rewards"),174,0x211b30,"#c2ef63");
+    if(BETA_TESTING){this.smallAction(175,870,"🏆 RANKING",()=>{void this.openLeaderboard();},174,0x211f1a,"#e5d293");this.smallAction(365,870,"⚑ REPORTAR",()=>this.openFeedback(),174,0x17242d,"#a9d1e5");}
     sharpenSceneText(this);
-    if(BETA_TESTING&&!BetaTelemetry.levelSurveyDone(this.resultData.levelId))this.time.delayedCall(180,()=>this.openSurvey());
+    const needsLevelSurvey=BETA_TESTING&&!BetaTelemetry.levelSurveyDone(this.resultData.levelId);
+    if(needsLevelSurvey)this.time.delayedCall(180,()=>this.openSurvey());
+    else if(BETA_TESTING)this.maybeOpenCommercialPulse();
   }
 
   private makeButton(label:string,y:number,action:()=>void,primary:boolean):void{
@@ -107,7 +119,14 @@ export class ResultsScene extends Phaser.Scene{
     const ok=await BetaTelemetry.submitLevelFeedback({levelId:this.resultData.levelId,mode:this.resultData.mode,fun:this.quick.fun,originality:this.quick.originality,difficulty:this.quick.difficulty,surprise:this.resultData.mode==="troll"?(this.surveySurprise?5:3):null,tags:this.surveyBug?["bug"]:[],comment:""});
     this.closeSurvey();this.toast(ok?"✓ FEEDBACK ENVIADO":"NO SE PUDO ENVIAR",ok);if(ok&&this.allCurrentLevelsCompleted()&&!BetaTelemetry.gameSurveyDone())this.time.delayedCall(350,()=>this.openGameSurvey());
   }
-  private closeSurvey():void{this.surveyPanel?.destroy(true);this.surveyPanel=null;this.surveySubmitting=false;}
+  private closeSurvey():void{this.surveyPanel?.destroy(true);this.surveyPanel=null;this.surveySubmitting=false;this.maybeOpenCommercialPulse();}
+  private maybeOpenCommercialPulse():void{
+    if(!BETA_TESTING)return;
+    // The final global survey has priority over a commercial pulse. Everywhere else, ask right
+    // after level feedback so fast next-hole navigation cannot silently skip product validation.
+    if(this.allCurrentLevelsCompleted()&&!BetaTelemetry.gameSurveyDone())return;
+    maybeOpenProductPulse(this,120);
+  }
 
   private openFeedback():void{
     if(this.feedbackPanel)return;const children:Phaser.GameObjects.GameObject[]=[];children.push(this.add.rectangle(270,480,540,960,0x05080b,.82).setInteractive(),this.add.rectangle(270,480,430,450,0x111a22,.99).setStrokeStyle(2,0x405668),this.add.text(270,292,"REPORTE RÁPIDO",{fontFamily:"system-ui",fontSize:uiFontSize(17,2),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5),this.add.text(270,324,"1 toque. Nota sólo si eliges OTRO.",{fontFamily:"system-ui",fontSize:uiFontSize(10,2),color:"#8da0ad"}).setOrigin(.5));

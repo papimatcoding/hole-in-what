@@ -1,5 +1,5 @@
-import { levelsForMode } from "../data/campaign";
-import { STAR_REWARDS, TROLL_UNLOCK_CLASSIC_COMPLETIONS, TROLL_UNLOCK_STARS, totalStarsFromRecords } from "../data/progression";
+import { CAMPAIGN_ENTRIES, levelsForMode } from "../data/campaign";
+import { CAMPAIGN_CHAPTER_SIZE, STAR_REWARDS, TROLL_UNLOCK_CLASSIC_COMPLETIONS, TROLL_UNLOCK_STARS, requiredStarsForCampaignChapter, totalStarsFromRecords } from "../data/progression";
 import type {
   CosmeticsSave,
   EquippedCosmetics,
@@ -66,6 +66,19 @@ function trollUnlockedForSave(save:SaveData):boolean{
 }
 
 export const SaveSystem={
+  isCampaignLevelUnlocked(index:number):boolean{
+    const entry=CAMPAIGN_ENTRIES[index];if(!entry)return false;
+    const save=load();
+    // Never take a previously completed level away from an existing save.
+    if(save.levels[entry.level.id]?.completed===true)return true;
+    const chapter=Math.floor(index/CAMPAIGN_CHAPTER_SIZE);
+    if(totalStarsFromRecords(save.levels)<requiredStarsForCampaignChapter(chapter))return false;
+    return index===0||save.levels[CAMPAIGN_ENTRIES[index-1]!.level.id]?.completed===true;
+  },
+  campaignChapterProgress(index:number):{chapter:number;totalStars:number;requiredStars:number;unlocked:boolean}{
+    const chapter=Math.max(0,Math.floor(index/CAMPAIGN_CHAPTER_SIZE)),save=load(),totalStars=totalStarsFromRecords(save.levels),requiredStars=requiredStarsForCampaignChapter(chapter);
+    return{chapter,totalStars,requiredStars,unlocked:totalStars>=requiredStars};
+  },
   record(levelId:string):LevelRecord{return load().levels[levelId]??emptyRecord();},
   submit(levelId:string,stars:number,strokes:number,timeMs:number):SubmitResult{
     const save=load(),current=save.levels[levelId]??emptyRecord(),nextStars=Math.max(current.stars,stars),gainedStars=Math.max(0,nextStars-current.stars),coinsEarned=(current.completed?0:10)+gainedStars*20;

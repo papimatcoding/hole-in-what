@@ -37,6 +37,9 @@ jobs:
       - name: Check hole physics
         run: npm run test:hole
 
+      - name: Check tutorial and campaign saves
+        run: npm run test:tutorial
+
       - name: Check authored mechanics
         run: npm run test:mechanics
 

@@ -135,7 +135,7 @@ export class CosmeticsScene extends Phaser.Scene {
       const name = this.add.text(130, y - 9, item.name, {
         fontFamily: "system-ui, sans-serif", fontSize: "14px", fontStyle: "bold", color: isOwned ? "#f4f7fa" : "#778492"
       }).setOrigin(0, 0.5);
-      const desc = this.add.text(130, y + 10, item.description, {
+      const desc = this.add.text(130, y + 10, `${RARITY_LABEL[item.rarity]} · ${item.description}`, {
         fontFamily: "system-ui, sans-serif", fontSize: "8px", color: "#7f8d9b"
       }).setOrigin(0, 0.5);
 
