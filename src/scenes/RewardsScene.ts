@@ -58,10 +58,10 @@ export class RewardsScene extends Phaser.Scene {
       const icon=this.add.graphics();
       if(item.category==="ball")drawBall(icon,item,190,y,24);
       else if(item.category==="trail"){
-        icon.fillStyle(item.primary,unlocked||isNext?.95:.32);
+        icon.fillStyle(item.primary,(unlocked||isNext)?.95:.32);
         for(let i=0;i<5;i+=1)icon.fillCircle(172+i*10,y+Math.sin(i)*4,2.5+i*.45);
       }else{
-        icon.lineStyle(3,item.primary,unlocked||isNext?.9:.32);icon.strokeCircle(190,y,21);
+        icon.lineStyle(3,item.primary,(unlocked||isNext)?.9:.32);icon.strokeCircle(190,y,21);
       }
 
       this.add.text(228,y-24,item.name,{fontFamily:"system-ui",fontSize:uiFontSize(14,2),fontStyle:"bold",color:unlocked?"#f5f7fa":isNext?"#eadcff":"#9d98a4"}).setOrigin(0,.5);
