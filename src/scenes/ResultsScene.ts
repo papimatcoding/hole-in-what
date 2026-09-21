@@ -59,7 +59,8 @@ export class ResultsScene extends Phaser.Scene{
     const totalStars=SaveSystem.totalStarsAll(),nextReward=STAR_REWARDS.find(item=>item.stars>totalStars);
     this.add.text(270,568,nextReward?`PRESTIGIO · ★ ${totalStars} / ${nextReward.stars}`:"RUTA DE PRESTIGIO COMPLETADA",{fontFamily:"system-ui",fontSize:uiFontSize(11),fontStyle:"bold",color:"#c2ef63"}).setOrigin(.5);
     const position=campaignIndex(this.resultData.mode,this.resultData.levelIndex);
-    const canPrev=position>0,canNext=position<CAMPAIGN_ENTRIES.length-1;
+    const canPrev=position>0,nextExists=position<CAMPAIGN_ENTRIES.length-1,canNext=nextExists&&(BETA_TESTING||SaveSystem.isCampaignLevelUnlocked(position+1));
+    if(nextExists&&!canNext){const gate=SaveSystem.campaignChapterProgress(position+1);this.add.text(270,594,`SIGUIENTE CAPÍTULO · ★ ${gate.totalStars} / ${gate.requiredStars}`,{fontFamily:"system-ui",fontSize:uiFontSize(10),fontStyle:"bold",color:"#e6ce80"}).setOrigin(.5);}
     const open=(index:number)=>{const entry=CAMPAIGN_ENTRIES[index];if(entry)this.scene.start("game",{mode:entry.mode,levelIndex:entry.levelIndex});};
     const retry=()=>open(position),prev=()=>open(position-1),next=()=>open(position+1);
     if(this.resultData.stars<3){this.makeButton("REINTENTAR",620,retry,true);if(canNext)this.makeButton("SIGUIENTE",696,next,false);}else{if(canNext)this.makeButton("SIGUIENTE",620,next,true);this.makeButton("REINTENTAR",696,retry,false);}
