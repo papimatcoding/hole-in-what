@@ -3,7 +3,7 @@ import { BETA_TESTING } from "../config/beta";
 import { pointerToDesign, setupDesignCamera, sharpenSceneText } from "../config/display";
 import { PRODUCT_FEATURES } from "../config/product";
 import { cosmeticById, type CosmeticDefinition } from "../data/cosmetics";
-import { levelFor, levelsForMode } from "../data/campaign";
+import { CAMPAIGN_ENTRIES, campaignIndex, levelFor } from "../data/campaign";
 import { AudioFeedback, type FeedbackSound } from "../systems/AudioFeedback";
 import { openBetaReport } from "../systems/BetaReportOverlay";
 import { BetaTelemetry, type BetaInputKind, type BetaShotOutcome } from "../systems/BetaTelemetrySystem";
@@ -43,6 +43,7 @@ export class GameplayScene extends Phaser.Scene {
   private levelIndex=0;
   private level!:LevelDefinition;
   private sim!:GolfSimulation;
+  private trollWelcome:Phaser.GameObjects.Container|null=null;
   private course!:Phaser.GameObjects.Graphics;
   private dynamic!:Phaser.GameObjects.Graphics;
   private aim!:Phaser.GameObjects.Graphics;
@@ -84,6 +85,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   create():void{
+    this.trollWelcome=null;
     setupDesignCamera(this);
     this.cameras.main.setBackgroundColor("#0b0f14");
     this.strokes=0;this.voids=0;this.startedAt=performance.now();this.sinking=false;this.voidAnimating=false;this.reportOpen=false;this.trail=[];this.trailClock=0;this.soundCooldown.clear();
@@ -149,16 +151,16 @@ export class GameplayScene extends Phaser.Scene {
 
     const back=this.add.rectangle(34,25,40,38,0x111920,.98).setStrokeStyle(1,0x405563).setDepth(43).setInteractive({useHandCursor:true});
     const backText=this.add.text(34,22,"‹",{fontFamily:"system-ui, sans-serif",fontSize:"28px",color:"#f5f7fa"}).setOrigin(.5).setDepth(44);
-    this.bindHudButton(back,backText,.96,()=>this.scene.start("level-select",{mode:this.mode,page:Math.floor(this.levelIndex/10)}));
+    this.bindHudButton(back,backText,.96,()=>this.scene.start("level-select",{mode:this.mode,page:Math.floor(campaignIndex(this.mode,this.levelIndex)/10)}));
 
     if(BETA_TESTING){
-      const levels=levelsForMode(this.mode);
-      this.betaLevelButton(442,25,"‹",this.levelIndex>0,()=>this.goRelative(-1));
-      this.betaLevelButton(498,25,"›",this.levelIndex<levels.length-1,()=>this.goRelative(1));
+      const position=campaignIndex(this.mode,this.levelIndex);
+      this.betaLevelButton(442,25,"‹",position>0,()=>this.goRelative(-1));
+      this.betaLevelButton(498,25,"›",position<CAMPAIGN_ENTRIES.length-1,()=>this.goRelative(1));
       const report=this.add.rectangle(270,66,88,24,0x17242d,.98).setStrokeStyle(1,0x557184).setDepth(43).setInteractive({useHandCursor:true});
       const reportText=this.add.text(270,66,"⚑ REPORT",{fontFamily:"system-ui, sans-serif",fontSize:"8px",fontStyle:"bold",color:"#afd2e4"}).setOrigin(.5).setDepth(44);
       this.bindHudButton(report,reportText,.97,()=>this.openReport());
-      this.add.text(424,66,`${this.mode==="troll"?"H":"C"}${String(this.levelIndex+1).padStart(2,"0")}`,{fontFamily:"system-ui, sans-serif",fontSize:"8px",fontStyle:"bold",color:"#7d91a0"}).setOrigin(.5).setDepth(43);
+      this.add.text(424,66,String(position+1).padStart(2,"0"),{fontFamily:"system-ui, sans-serif",fontSize:"8px",fontStyle:"bold",color:"#7d91a0"}).setOrigin(.5).setDepth(43);
     }
   }
 
@@ -196,13 +198,15 @@ export class GameplayScene extends Phaser.Scene {
 
   private goRelative(delta:number):void{
     if(!BETA_TESTING)return;
-    const levels=levelsForMode(this.mode),next=this.levelIndex+delta;
-    if(next<0||next>=levels.length)return;
-    this.scene.start("game",{mode:this.mode,levelIndex:next});
+    const next=CAMPAIGN_ENTRIES[campaignIndex(this.mode,this.levelIndex)+delta];
+    if(!next)return;
+    this.scene.start("game",{mode:next.mode,levelIndex:next.levelIndex});
   }
 
   private updateHudOcclusion():void{
     this.objectiveHud.setAlpha(1);
+    // The welcome is never allowed to hide a ball travelling behind it.
+    if(this.trollWelcome){const b=this.sim.state.ball;this.trollWelcome.setVisible(!(b.x>35&&b.x<505&&b.y>252&&b.y<407));}
     // HUD chrome is outside the playfield. Game objects always remain below its depth.
     this.ballView.setDepth(this.sim.isAirborne()?12:10);
   }
@@ -264,7 +268,10 @@ export class GameplayScene extends Phaser.Scene {
       else if(e.kind==="ramp"||e.kind==="trampoline")this.feedback(e,"jump",0xd9f5ff,25,.00065);
       else if(e.kind==="landing")this.feedback(e,"land",0xeaf8ff,22,.0004);
       else if(e.kind==="void"){this.voids+=1;this.finishShotTelemetry("void");this.feedback(e,"void",0x5a7182,34,.00145);this.startVoidReset();}
-      else if(e.kind==="trap-wall"||e.kind==="trap-bumper"||e.kind==="trap-void")this.feedback(e,"trap",0xf0b869,36,.00165);
+      else if(e.kind==="trap-wall"||e.kind==="trap-bumper"||e.kind==="trap-void"){
+        this.feedback(e,"trap",0xf0b869,36,.00165);
+        if(this.level.onboarding&&e.kind==="trap-wall")this.showTrollWelcome();
+      }
       else if(e.kind==="hole-lip")this.feedback(e,"lip",0xf1e7b7,22,.0005);
       else if(e.kind==="hole"){this.finishShotTelemetry("hole");this.playFeedbackSound("hole",0);this.finishHole();}
     }
@@ -315,6 +322,17 @@ export class GameplayScene extends Phaser.Scene {
       }
     }else this.trailClock=0;
     this.trailView.clear();const secondary=this.trailCosmetic.secondary??this.trailCosmetic.primary;for(let i=0;i<this.trail.length;i+=1){const p=this.trail[i]!,life=p.life/p.maxLife,color=i%2?secondary:this.trailCosmetic.primary;this.trailView.fillStyle(color,life*.46);this.trailView.fillCircle(p.x,p.y,p.size*(.5+life*.5));}
+  }
+
+  private showTrollWelcome():void{
+    // Non-modal and away from the launch area: the ball keeps moving and controls stay live.
+    const panel=this.add.rectangle(270,330,442,126,0x171227,.97).setStrokeStyle(2,0xc2ef63);
+    const title=this.add.text(270,293,"Eso no te lo esperabas, ¿eh?",{fontFamily:"system-ui, sans-serif",fontSize:"18px",fontStyle:"bold",color:"#c2ef63",align:"center",wordWrap:{width:412}}).setOrigin(.5);
+    const body=this.add.text(270,338,"Bienvenido a Hole in What?, donde los hoyos no son lo que parecen.",{fontFamily:"system-ui, sans-serif",fontSize:"15px",color:"#f5f7fa",align:"center",wordWrap:{width:400}}).setOrigin(.5);
+    const hint=this.add.text(270,379,"Ahora ya lo sabes. Busca otro camino.",{fontFamily:"system-ui, sans-serif",fontSize:"12px",color:"#c6b9df"}).setOrigin(.5);
+    const welcome=this.add.container(0,0,[panel,title,body,hint]).setDepth(31);
+    this.trollWelcome=welcome;
+    this.time.delayedCall(4800,()=>this.tweens.add({targets:welcome,alpha:0,duration:300,onComplete:()=>{welcome.destroy(true);if(this.trollWelcome===welcome)this.trollWelcome=null;}}));
   }
 
   private showControlHintIfNeeded():void{

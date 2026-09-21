@@ -16,6 +16,8 @@ concurrency:
 
 jobs:
   build:
+    # Manual dispatch must never publish a feature branch to the player-facing beta.
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

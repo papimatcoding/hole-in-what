@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { BETA_TESTING } from "../config/beta";
 import { isDesktopUI, setupDesignCamera, sharpenSceneText, uiFontSize } from "../config/display";
-import { levelsForMode } from "../data/campaign";
+import { CAMPAIGN_ENTRIES } from "../data/campaign";
 import { SaveSystem } from "../systems/SaveSystem";
 import { formatRequirement } from "../systems/StarScoring";
 import type { GameMode } from "../types";
@@ -18,8 +18,7 @@ export class LevelSelectScene extends Phaser.Scene {
 
   create():void{
     setupDesignCamera(this);this.desktop=isDesktopUI();
-    if(this.mode==="troll"&&!BETA_TESTING&&!SaveSystem.isTrollUnlocked()){this.scene.start("menu");return;}
-    const levels=levelsForMode(this.mode),pageCount=Math.max(1,Math.ceil(levels.length/PAGE_SIZE));
+    const levels=CAMPAIGN_ENTRIES.map(entry=>entry.level),pageCount=Math.max(1,Math.ceil(levels.length/PAGE_SIZE));
     this.page=Phaser.Math.Clamp(this.page,0,pageCount-1);
     const pageStart=this.page*PAGE_SIZE,visible=levels.slice(pageStart,pageStart+PAGE_SIZE);
     this.cameras.main.setBackgroundColor("#0b0f14");
@@ -28,21 +27,21 @@ export class LevelSelectScene extends Phaser.Scene {
     const backText=this.add.text(48,49,"‹",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(32,3),fontStyle:"bold",color:"#eef4f8"}).setOrigin(.5);
     back.on("pointerover",()=>back.setFillStyle(0x1d2a34)).on("pointerout",()=>back.setFillStyle(0x131d25)).on("pointerup",()=>this.scene.start("menu"));
 
-    const modeLabel=this.mode==="troll"?"HARD":"CLASSIC",group=this.page+1,accent=this.mode==="troll"?0xd0a266:0x719ab2,accentText=this.mode==="troll"?"#d9ad73":"#83aec6";
+    const modeLabel="CAMPAÑA",group=this.page+1,accent=0xc2ef63,accentText="#c2ef63";
     this.add.text(270,51,modeLabel,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(29,3),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
     this.add.rectangle(270,80,80,3,accent,.9);
-    const sectionLabel=this.mode==="classic"?`CAPÍTULO ${group}`:`GRUPO ${group}`;
-    const chapterFlavor=this.mode==="classic"&&group===2?"  ·  HIELO Y VELOCIDAD":"";
+    const sectionLabel=`CAPÍTULO ${group}`;
+    const chapterFlavor="";
     this.add.text(270,99,`${sectionLabel}${chapterFlavor}  ·  ${pageStart+1}–${Math.min(pageStart+10,levels.length)}`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(12,2),fontStyle:"bold",color:accentText}).setOrigin(.5);
-    const totalStars=SaveSystem.totalStars(levels.map(level=>level.id)),unlocked=BETA_TESTING?levels.length:SaveSystem.unlockedLevelCount(this.mode);
+    const isOpen=(index:number):boolean=>SaveSystem.isCampaignLevelUnlocked(index);
+    const totalStars=SaveSystem.totalStars(levels.map(level=>level.id)),unlocked=BETA_TESTING?levels.length:levels.filter((_,index)=>isOpen(index)).length;
     this.add.text(270,126,BETA_TESTING?`BETA · TODOS ABIERTOS   ·   ★ ${totalStars} / ${levels.length*3}`:`★ ${totalStars} / ${levels.length*3}   ·   ${unlocked}/${levels.length} desbloqueados`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,2),fontStyle:BETA_TESTING?"bold":"normal",color:BETA_TESTING?"#9ebdce":"#a7b3bf"}).setOrigin(.5);
 
-    this.modeButton(182,164,"CLASSIC","classic");
-    this.modeButton(358,164,"HARD","troll");
+    this.add.text(270,164,"PARECE GOLF. NO TE FÍES.",{fontFamily:"system-ui",fontSize:uiFontSize(11,2),color:"#c6b9df"}).setOrigin(.5);
 
     const cols=2,cardW=212,cardH=112,gapX=18,gapY=15,startX=270-(cardW+gapX)/2,startY=240;
     visible.forEach((level,localIndex)=>{
-      const index=pageStart+localIndex,col=localIndex%cols,row=Math.floor(localIndex/cols),x=startX+col*(cardW+gapX),y=startY+row*(cardH+gapY),record=SaveSystem.record(level.id),isUnlocked=BETA_TESTING||SaveSystem.isLevelUnlocked(this.mode,index);
+      const index=pageStart+localIndex,col=localIndex%cols,row=Math.floor(localIndex/cols),x=startX+col*(cardW+gapX),y=startY+row*(cardH+gapY),record=SaveSystem.record(level.id),isUnlocked=BETA_TESTING||isOpen(index);
       const fill=isUnlocked?0x151f27:0x10161c,hover=0x202f3a,stroke=record.completed?0x58758a:isUnlocked?0x2f424f:0x222b33;
       const card=this.add.rectangle(x,y,cardW,cardH,fill).setStrokeStyle(record.completed?2:1,stroke);
       const stripe=this.add.rectangle(x-cardW/2+4,y,4,cardH-8,record.completed?accent:0x2b3a45,.95).setOrigin(.5);
@@ -59,7 +58,7 @@ export class LevelSelectScene extends Phaser.Scene {
 
       if(isUnlocked){
         card.setInteractive({useHandCursor:true});
-        card.on("pointerover",()=>{card.setFillStyle(hover);card.setScale(1.015);stripe.setScale(1,1.015);}).on("pointerout",()=>{card.setFillStyle(fill);card.setScale(1);stripe.setScale(1);}).on("pointerdown",()=>card.setScale(.995)).on("pointerup",()=>{card.setScale(1);this.scene.start("game",{mode:this.mode,levelIndex:index});});
+        card.on("pointerover",()=>{card.setFillStyle(hover);card.setScale(1.015);stripe.setScale(1,1.015);}).on("pointerout",()=>{card.setFillStyle(fill);card.setScale(1);stripe.setScale(1);}).on("pointerdown",()=>card.setScale(.995)).on("pointerup",()=>{card.setScale(1);const entry=CAMPAIGN_ENTRIES[index]!;this.scene.start("game",{mode:entry.mode,levelIndex:entry.levelIndex});});
       }
     });
 

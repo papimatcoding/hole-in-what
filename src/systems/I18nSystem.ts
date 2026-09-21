@@ -19,7 +19,21 @@ function detectDefault():GameLanguage{
 let language:GameLanguage=detectDefault();
 
 function translateDynamic(value:string):string{
+  const identity:Record<string,string>={
+    "Eso no te lo esperabas, ¿eh?":"Didn't see that coming, did you?",
+    "Bienvenido a Hole in What?, donde los hoyos no son lo que parecen.":"Welcome to Hole in What?, where holes aren't what they seem.",
+    "Ahora ya lo sabes. Busca otro camino.":"Now you know. Find another way.",
+    "CONFÍA EN TU PUNTERÍA. NO EN EL CAMPO.":"TRUST YOUR AIM. NOT THE COURSE.",
+    "PARECE GOLF.":"LOOKS LIKE GOLF.",
+    "NO TE FÍES.":"DON'T TRUST IT.",
+    "UN GOLPE. MIL SOSPECHAS.":"ONE SHOT. TRUST ISSUES.",
+    "ENTRAR AL CAMPO":"ENTER THE COURSE",
+    "CAMPAÑA":"CAMPAIGN",
+    "PARECE GOLF. NO TE FÍES.":"LOOKS LIKE GOLF. DON'T TRUST IT."
+  };
+  if(identity[value])return identity[value]!;
   let match:RegExpMatchArray|null;
+  if((match=value.match(/^CAPÍTULO (\d+)\s+·\s+(.+)$/)))return `CHAPTER ${match[1]} · ${match[2]}`;
   const surface=translateSurfaceDynamic(value);if(surface!==undefined)return surface;
   if(value==="TOCA")return "TAP";
   if(value==="BIENVENIDO A HOLE IN WHAT?")return "WELCOME TO HOLE IN WHAT?";

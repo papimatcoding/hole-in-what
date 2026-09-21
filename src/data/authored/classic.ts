@@ -3,12 +3,13 @@ import { base, path, pt, r, tri } from "./authoring";
 
 /** Beta block 1: each hole asks a different question and the mastery curve rises deliberately. */
 
-// C01 is deliberate onboarding, not a normal puzzle. Keep the shot obvious and forgiving;
-// the first real course-design question starts at C02.
-const c1=base("classic",1,pt(270,800),pt(270,176),1,2,"wall");
+// Teach the gesture, then reveal the game's identity on the first shot.
+// A persistent central wall leaves two generous escape lanes; no random punishment.
+const c1=base("classic",1,pt(270,800),pt(270,176),2,3,"wall");
 c1.onboarding=true;
 delete c1.primaryMechanic;
-path(c1);
+c1.popWalls=[{...r(180,650,180,24),triggerX:270,triggerY:800,triggerRadius:100}];
+path(c1,pt(112,724),pt(112,500),pt(270,176));
 
 // Alternating shelves create a broad S-route. The gaps are generous enough for touch,
 // but the player must now read the course instead of firing directly at the cup.

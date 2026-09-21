@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { BETA_TESTING } from "../config/beta";
 import { isDesktopUI, setupDesignCamera, sharpenSceneText, uiFontSize } from "../config/display";
 import { cosmeticById } from "../data/cosmetics";
-import { levelsForMode } from "../data/campaign";
+import { CAMPAIGN_ENTRIES, campaignIndex, levelsForMode } from "../data/campaign";
 import { AudioFeedback } from "../systems/AudioFeedback";
 import { BetaFeedbackSystem, type BetaFeedbackCategory } from "../systems/BetaFeedbackSystem";
 import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
@@ -55,13 +55,15 @@ export class ResultsScene extends Phaser.Scene{
     let infoY=530;if(reward.coinsEarned>0){this.add.text(270,infoY,`+${reward.coinsEarned} ◈`,{fontFamily:"system-ui",fontSize:uiFontSize(13,1),fontStyle:"bold",color:"#e4d29d"}).setOrigin(.5);infoY+=25;}
     if(reward.newlyUnlockedCosmetics.length){const names=reward.newlyUnlockedCosmetics.map(id=>cosmeticById(id)?.name).filter((x):x is string=>Boolean(x));this.add.text(270,infoY,`DESBLOQUEADO · ${names.join(" · ")}`,{fontFamily:"system-ui",fontSize:uiFontSize(11),fontStyle:"bold",color:"#f1d07a",wordWrap:{width:430},align:"center"}).setOrigin(.5);}
 
-    const canPrev=this.resultData.levelIndex>0,canNext=this.resultData.levelIndex<levels.length-1&&(BETA_TESTING||SaveSystem.isLevelUnlocked(this.resultData.mode,this.resultData.levelIndex+1));
-    const retry=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex}),prev=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex-1}),next=()=>this.scene.start("game",{mode:this.resultData.mode,levelIndex:this.resultData.levelIndex+1});
+    const position=campaignIndex(this.resultData.mode,this.resultData.levelIndex);
+    const canPrev=position>0,canNext=position<CAMPAIGN_ENTRIES.length-1;
+    const open=(index:number)=>{const entry=CAMPAIGN_ENTRIES[index];if(entry)this.scene.start("game",{mode:entry.mode,levelIndex:entry.levelIndex});};
+    const retry=()=>open(position),prev=()=>open(position-1),next=()=>open(position+1);
     if(this.resultData.stars<3){this.makeButton("REINTENTAR",620,retry,true);if(canNext)this.makeButton("SIGUIENTE",696,next,false);}else{if(canNext)this.makeButton("SIGUIENTE",620,next,true);this.makeButton("REINTENTAR",696,retry,false);}
     // Three independent rows with explicit breathing room. Previous centres (768/812/858)
     // made their 48px hitboxes overlap by 4px and 2px respectively.
-    if(BETA_TESTING){this.nav(126,758,"‹ ANTERIOR",canPrev,prev);this.add.text(270,758,`${this.resultData.mode==="troll"?"H":"C"} ${String(this.resultData.levelIndex+1).padStart(2,"0")} / ${String(levels.length).padStart(2,"0")}`,{fontFamily:"system-ui",fontSize:uiFontSize(11),fontStyle:"bold",color:"#8193a1"}).setOrigin(.5);this.nav(414,758,"SIGUIENTE ›",canNext,next);}
-    this.smallAction(270,814,"NIVELES",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(this.resultData.levelIndex/10)}),160,0x172129,"#c8d3dc");
+    if(BETA_TESTING){this.nav(126,758,"‹ ANTERIOR",canPrev,prev);this.add.text(270,758,`${String(position+1).padStart(2,"0")} / ${CAMPAIGN_ENTRIES.length}`,{fontFamily:"system-ui",fontSize:uiFontSize(11),fontStyle:"bold",color:"#8193a1"}).setOrigin(.5);this.nav(414,758,"SIGUIENTE ›",canNext,next);}
+    this.smallAction(270,814,"NIVELES",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(position/10)}),160,0x172129,"#c8d3dc");
     if(BETA_TESTING){this.smallAction(175,870,"🏆 RANKING",()=>{void this.openLeaderboard();},174,0x211f1a,"#e5d293");this.smallAction(365,870,"⚑ REPORTAR",()=>this.openFeedback(),174,0x17242d,"#a9d1e5");}
     sharpenSceneText(this);
     const needsLevelSurvey=BETA_TESTING&&!BetaTelemetry.levelSurveyDone(this.resultData.levelId);

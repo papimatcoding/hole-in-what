@@ -1,8 +1,8 @@
 import Phaser from "phaser";
 import { BETA_TESTING } from "../config/beta";
 import { DESIGN_HEIGHT, DESIGN_WIDTH, isDesktopUI, setupDesignCamera, sharpenSceneText, uiFontSize } from "../config/display";
-import { PRODUCT_FEATURES, PRODUCT_STAGE_LABEL } from "../config/product";
-import { levelsForMode } from "../data/campaign";
+import { PRODUCT_FEATURES, PRODUCT_STAGE_LABEL, TROLL_MENU_ENABLED } from "../config/product";
+import { CAMPAIGN_ENTRIES, levelsForMode } from "../data/campaign";
 import { BetaFeedbackSystem } from "../systems/BetaFeedbackSystem";
 import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
 import { I18n, type GameLanguage } from "../systems/I18nSystem";
@@ -20,6 +20,7 @@ export class MenuScene extends Phaser.Scene {
   create():void{
     setupDesignCamera(this);this.desktop=isDesktopUI();
     this.cameras.main.setBackgroundColor("#0b0f14");
+    if(TROLL_MENU_ENABLED)this.drawTrollIdentity();
     if(PRODUCT_FEATURES.cosmetics)SaveSystem.claimEligibleStarRewards();
     void BetaTelemetry.ensureTester(false);
     void ProductTelemetry.ensureSession();
@@ -31,9 +32,9 @@ export class MenuScene extends Phaser.Scene {
 
     this.add.text(DESIGN_WIDTH-42,54,PRODUCT_STAGE_LABEL,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:"#8298a6"}).setOrigin(1,.5);
     this.languageSelector();
-    this.add.text(DESIGN_WIDTH/2,106,"HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(39,2),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
-    this.add.rectangle(270,139,72,3,0x6f98ae,.95);
-    this.add.text(DESIGN_WIDTH/2,160,"MINIGOLF · 3 ESTRELLAS",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,2),fontStyle:"bold",color:"#8194a3"}).setOrigin(.5);
+    this.add.text(DESIGN_WIDTH/2,106,"HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(39,2),fontStyle:"bold",color:TROLL_MENU_ENABLED?"#c2ef63":"#f5f7fa"}).setOrigin(.5).setAngle(TROLL_MENU_ENABLED?-3:0);
+    this.add.rectangle(270,139,72,3,TROLL_MENU_ENABLED?0xb68cff:0x6f98ae,.95);
+    this.add.text(DESIGN_WIDTH/2,160,TROLL_MENU_ENABLED?"CONFÍA EN TU PUNTERÍA. NO EN EL CAMPO.":"MINIGOLF · 3 ESTRELLAS",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,2),fontStyle:"bold",color:TROLL_MENU_ENABLED?"#cab7e9":"#8194a3"}).setOrigin(.5);
 
     const alias=BetaTelemetry.alias();
     const identityBg=this.add.rectangle(270,194,this.desktop?300:280,36,alias?0x121d24:0x251f15).setStrokeStyle(1,alias?0x314856:0x6b562b).setInteractive({useHandCursor:true});
@@ -41,9 +42,10 @@ export class MenuScene extends Phaser.Scene {
     const editIdentity=()=>this.scene.start("player-profile");identityBg.on("pointerover",()=>identityBg.setFillStyle(alias?0x1c2b34:0x332918)).on("pointerout",()=>identityBg.setFillStyle(alias?0x121d24:0x251f15)).on("pointerup",editIdentity);identity.setInteractive({useHandCursor:true}).on("pointerup",editIdentity);
     if(BETA_TESTING)this.add.text(DESIGN_WIDTH/2,224,"BETA · TODOS LOS HOYOS ABIERTOS",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#769eb5"}).setOrigin(.5);
 
-    const classicY=this.desktop?292:282,hardY=this.desktop?388:376;
-    this.makeModeButton("CLASSIC","classic",classicY);
-    this.makeModeButton("HARD","troll",hardY);
+    const next=CAMPAIGN_ENTRIES.find(entry=>!SaveSystem.record(entry.level.id).completed)??CAMPAIGN_ENTRIES[0]!;
+    this.makeWideButton("ENTRAR AL CAMPO",this.desktop?288:282,()=>this.scene.start("game",{mode:next.mode,levelIndex:next.levelIndex}),true);
+    this.add.text(270,334,"PARECE GOLF. NO TE FÍES.",{fontFamily:"system-ui",fontSize:uiFontSize(12,2),fontStyle:"bold",color:TROLL_MENU_ENABLED?"#c2ef63":"#a9bdc9"}).setOrigin(.5);
+    this.makeWideButton("CAMPAÑA",390,()=>this.scene.start("level-select",{mode:"classic"}));
 
     if(this.desktop)this.createDesktopActions();else this.createMobileActions();
 
@@ -59,6 +61,21 @@ export class MenuScene extends Phaser.Scene {
     const es=this.add.text(248,54,"ES",{fontFamily:"system-ui",fontSize:uiFontSize(9,1),fontStyle:"bold",color:current==="es"?"#eef7fb":"#718491"}).setOrigin(.5).setInteractive({useHandCursor:true});
     const en=this.add.text(292,54,"EN",{fontFamily:"system-ui",fontSize:uiFontSize(9,1),fontStyle:"bold",color:current==="en"?"#eef7fb":"#718491"}).setOrigin(.5).setInteractive({useHandCursor:true});
     left.on("pointerup",()=>select("es"));es.on("pointerup",()=>select("es"));right.on("pointerup",()=>select("en"));en.on("pointerup",()=>select("en"));
+  }
+
+  private drawTrollIdentity():void{
+    this.cameras.main.setBackgroundColor("#100e1c");
+    const g=this.add.graphics();
+    g.fillStyle(0x241b38,.75);g.fillRoundedRect(18,78,504,104,24);
+    g.lineStyle(2,0xb68cff,.16);
+    // Decorative ricochet route, deliberately outside all button hit areas.
+    g.beginPath();g.moveTo(26,890);g.lineTo(26,244);g.lineTo(510,244);g.lineTo(510,890);g.strokePath();
+    for(let y=270;y<890;y+=50){g.fillStyle(0xc2ef63,.35);g.fillCircle(26,y,3);}
+    g.fillStyle(0x05040a,1);g.fillEllipse(510,880,28,14);
+    g.lineStyle(2,0xb68cff,.7);g.strokeEllipse(510,880,28,14);
+    g.lineStyle(2,0xc2ef63,1);g.lineBetween(510,876,510,843);
+    g.fillStyle(0xc2ef63,1);g.fillTriangle(510,843,488,850,510,856);
+    this.add.circle(26,245,7,0xf5f7fa).setStrokeStyle(2,0xb68cff);
   }
 
   private createDesktopActions():void{
@@ -96,7 +113,7 @@ export class MenuScene extends Phaser.Scene {
   private makeModeButton(label:string,mode:GameMode,y:number):void{
     const levels=levelsForMode(mode),stars=SaveSystem.totalStars(levels.map(level=>level.id));
     const locked=mode==="troll"&&!BETA_TESTING&&!SaveSystem.isTrollUnlocked();
-    const accent=mode==="troll"?0xc99a61:0x6f98ae,rest=locked?0x11171d:0x162129,hover=mode==="troll"?0x2d2924:0x22323d;
+    const accent=TROLL_MENU_ENABLED?(mode==="troll"?0xb68cff:0xc2ef63):mode==="troll"?0xc99a61:0x6f98ae,rest=locked?0x11171d:TROLL_MENU_ENABLED?0x211b30:0x162129,hover=TROLL_MENU_ENABLED?0x352846:mode==="troll"?0x2d2924:0x22323d;
     const bg=this.add.rectangle(270,y,390,82,rest).setStrokeStyle(2,locked?0x27313b:mode==="troll"?0x705943:0x3d5666);
     this.add.rectangle(78,y,4,70,accent,locked?0.25:0.9);
     const title=this.add.text(105,y-10,label,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(22,1),fontStyle:"bold",color:locked?"#697480":"#f5f7fa"}).setOrigin(0,.5);
@@ -132,9 +149,9 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private makeWideButton(label:string,y:number,action:()=>void,accent=false):void{
-    const rest=accent?0x192831:0x151d25,hover=accent?0x294250:0x222f3b;
-    const bg=this.add.rectangle(270,y,390,50,rest).setStrokeStyle(accent?2:1,accent?0x52788c:0x364653);
-    const text=this.add.text(270,y,label,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(13,2),fontStyle:"bold",color:accent?"#d9eef8":"#d7e0e8"}).setOrigin(.5);
+    const rest=TROLL_MENU_ENABLED?(accent?0x2a3430:0x211b30):accent?0x192831:0x151d25,hover=TROLL_MENU_ENABLED?0x3d354e:accent?0x294250:0x222f3b;
+    const bg=this.add.rectangle(270,y,390,50,rest).setStrokeStyle(accent?2:1,TROLL_MENU_ENABLED?(accent?0xc2ef63:0x65517c):accent?0x52788c:0x364653);
+    const text=this.add.text(270,y,label,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(13,2),fontStyle:"bold",color:TROLL_MENU_ENABLED&&accent?"#c2ef63":accent?"#d9eef8":"#d7e0e8"}).setOrigin(.5);
     this.wirePress(bg,text,270,y,410,58,action,rest,hover);
   }
 

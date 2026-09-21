@@ -1,4 +1,4 @@
-import { levelsForMode } from "../data/campaign";
+import { CAMPAIGN_ENTRIES, levelsForMode } from "../data/campaign";
 import { STAR_REWARDS, TROLL_UNLOCK_CLASSIC_COMPLETIONS, TROLL_UNLOCK_STARS, totalStarsFromRecords } from "../data/progression";
 import type {
   CosmeticsSave,
@@ -66,6 +66,11 @@ function trollUnlockedForSave(save:SaveData):boolean{
 }
 
 export const SaveSystem={
+  isCampaignLevelUnlocked(index:number):boolean{
+    const entry=CAMPAIGN_ENTRIES[index];if(!entry)return false;
+    const save=load();
+    return index===0||save.levels[entry.level.id]?.completed===true||save.levels[CAMPAIGN_ENTRIES[index-1]!.level.id]?.completed===true;
+  },
   record(levelId:string):LevelRecord{return load().levels[levelId]??emptyRecord();},
   submit(levelId:string,stars:number,strokes:number,timeMs:number):SubmitResult{
     const save=load(),current=save.levels[levelId]??emptyRecord(),nextStars=Math.max(current.stars,stars),gainedStars=Math.max(0,nextStars-current.stars),coinsEarned=(current.completed?0:10)+gainedStars*20;

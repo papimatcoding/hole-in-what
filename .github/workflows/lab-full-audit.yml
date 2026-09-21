@@ -46,6 +46,9 @@ jobs:
       - name: Check authored mechanics
         run: npm run test:mechanics
 
+      - name: Check tutorial and campaign saves
+        run: npm run test:tutorial
+
       - name: Check mechanic behavior contracts
         run: npm run test:mechanic-behavior
 
