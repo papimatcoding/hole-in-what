@@ -17,9 +17,11 @@ cumulative progress toward the next milestone and links to Prestige. Stars are
 best-per-hole, never spent; rewards are permanent and automatically granted once.
 Tests cover milestone crossing, equipping, duplicate claims and replay farming.
 
-Chapter entry requirements are still pending campaign grouping/pacing decisions;
-this pass does not pretend they are implemented. Future ranked access may use
-progression, but ranked and its eligibility thresholds remain out of scope.
+Campaign pages now act as 10-hole chapters. Chapter entry uses cumulative stars:
+chapter 1 is open, chapter 2 requires 18 stars, and later chapter thresholds add 18
+stars per chapter. Beta tester access still bypasses locks without mutating saves.
+Future ranked access may use progression, but ranked and its eligibility thresholds
+remain out of scope.
 
 - One campaign; troll is the identity from the very first shot, not a difficulty.
 - First shot reveals a persistent wall and a bilingual, non-modal welcome.
