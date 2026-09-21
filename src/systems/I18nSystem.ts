@@ -34,6 +34,11 @@ function translateDynamic(value:string):string{
     "UN GOLPE. MIL SOSPECHAS.":"ONE SHOT. TRUST ISSUES.",
     "ENTRAR AL CAMPO":"ENTER THE COURSE",
     "CAMPAÑA":"CAMPAIGN",
+    "JUGAR":"PLAY",
+    "COLECCIÓN":"COLLECTION",
+    "MÁS":"MORE",
+    "★ VALORAR NIVEL":"★ RATE LEVEL",
+    "✓ VALORADO":"✓ RATED",
     "PARECE GOLF. NO TE FÍES.":"LOOKS LIKE GOLF. DON'T TRUST IT."
   };
   if(identity[value])return identity[value]!;
