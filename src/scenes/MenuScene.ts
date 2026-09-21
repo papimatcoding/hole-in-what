@@ -30,19 +30,16 @@ export class MenuScene extends Phaser.Scene {
     this.events.once("shutdown",stopOnline);
 
     this.languageSelector();
-    this.add.text(DESIGN_WIDTH/2,108,"HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(39,2),fontStyle:"bold",color:TROLL_MENU_ENABLED?"#c2ef63":"#f5f7fa"}).setOrigin(.5);
-    this.add.rectangle(270,145,84,3,TROLL_MENU_ENABLED?0xb68cff:0x6f98ae,.95);
-    const logoBall=this.add.graphics();
-    logoBall.fillStyle(0xf5f7fa,1);logoBall.fillCircle(228,145,7);
-    logoBall.lineStyle(2,TROLL_MENU_ENABLED?0xb68cff:0x6f98ae,.9);logoBall.strokeCircle(228,145,7);
-    logoBall.fillStyle(0x9aa7b0,.55);logoBall.fillCircle(225,142,1.1);logoBall.fillCircle(231,143,1.1);logoBall.fillCircle(228,148,1.1);
+    this.add.text(DESIGN_WIDTH/2,116,"HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(39,2),fontStyle:"bold",color:TROLL_MENU_ENABLED?"#c2ef63":"#f5f7fa"}).setOrigin(.5);
+    this.add.rectangle(244,154,52,3,TROLL_MENU_ENABLED?0xb68cff:0x6f98ae,.92);
+    this.add.rectangle(296,154,52,3,TROLL_MENU_ENABLED?0xc2ef63:0x6f98ae,.76);
 
     const alias=BetaTelemetry.alias();
-    const identityBg=this.add.rectangle(270,190,this.desktop?300:280,36,alias?0x121d24:0x251f15).setStrokeStyle(1,alias?0x314856:0x6b562b).setInteractive({useHandCursor:true});
-    const identity=this.add.text(DESIGN_WIDTH/2,190,alias?`JUGADOR · ${alias}   ✎`:"ELIGE TU NOMBRE   ✎",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:alias?"#c9d9e3":"#e7c477"}).setOrigin(.5);
-    const editIdentity=()=>this.scene.start("player-profile");identityBg.on("pointerover",()=>identityBg.setFillStyle(alias?0x1c2b34:0x332918)).on("pointerout",()=>identityBg.setFillStyle(alias?0x121d24:0x251f15)).on("pointerup",editIdentity);identity.setInteractive({useHandCursor:true}).on("pointerup",editIdentity);
+    const identityBg=this.add.rectangle(270,202,this.desktop?300:280,36,alias?0x151522:0x211b18).setStrokeStyle(1,alias?0x3a3349:0x65562f).setInteractive({useHandCursor:true});
+    const identity=this.add.text(DESIGN_WIDTH/2,202,alias?`JUGADOR · ${alias}   ✎`:"ELIGE TU NOMBRE   ✎",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:alias?"#cfd2dc":"#e7c477"}).setOrigin(.5);
+    const editIdentity=()=>this.scene.start("player-profile");identityBg.on("pointerover",()=>identityBg.setFillStyle(alias?0x201c2c:0x302718)).on("pointerout",()=>identityBg.setFillStyle(alias?0x151522:0x211b18)).on("pointerup",editIdentity);identity.setInteractive({useHandCursor:true}).on("pointerup",editIdentity);
 
-    this.makeWideButton("JUGAR",266,()=>this.scene.start("level-select",{mode:"classic",page:0}),true);
+    this.makeWideButton("JUGAR",282,()=>this.scene.start("level-select",{mode:"classic",page:0}),true);
 
     if(this.desktop)this.createDesktopActions();else this.createMobileActions();
 
@@ -60,48 +57,47 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private drawTrollIdentity():void{
-    this.cameras.main.setBackgroundColor("#100e1c");
+    this.cameras.main.setBackgroundColor("#0e0c17");
     const g=this.add.graphics();
-    g.fillStyle(0x241b38,.75);g.fillRoundedRect(18,78,504,104,24);
-    g.lineStyle(2,0xb68cff,.16);
-    // Decorative ricochet route, deliberately outside all button hit areas.
-    g.beginPath();g.moveTo(26,890);g.lineTo(26,244);g.lineTo(510,244);g.lineTo(510,890);g.strokePath();
-    for(let y=270;y<890;y+=50){g.fillStyle(0xc2ef63,.35);g.fillCircle(26,y,3);}
-    g.fillStyle(0x05040a,1);g.fillEllipse(510,880,28,14);
-    g.lineStyle(2,0xb68cff,.7);g.strokeEllipse(510,880,28,14);
-    g.lineStyle(2,0xc2ef63,1);g.lineBetween(510,876,510,843);
-    g.fillStyle(0xc2ef63,1);g.fillTriangle(510,843,488,850,510,856);
-    this.add.circle(26,245,7,0xf5f7fa).setStrokeStyle(2,0xb68cff);
+    g.fillStyle(0x6e4b92,.08);g.fillCircle(505,130,190);
+    g.fillStyle(0xc2ef63,.045);g.fillCircle(18,850,150);
+    g.lineStyle(1,0xb68cff,.09);g.lineBetween(46,342,494,342);
   }
 
   private createDesktopActions():void{
-    this.add.text(270,382,"COLECCIÓN",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#667a89"}).setOrigin(.5);
-    if(PRODUCT_FEATURES.cosmetics)this.makeCompactButton(125,422,118,"PERSONALIZAR",()=>this.scene.start("cosmetics"));else this.makeLockedCompactButton(125,422,118,"PERSONALIZAR");
-    if(PRODUCT_FEATURES.shop)this.makeCompactButton(270,422,118,"TIENDA",()=>this.scene.start("shop"));else this.makeLockedCompactButton(270,422,118,"TIENDA");
-    this.makeCompactButton(415,422,118,"PRESTIGIO",()=>this.scene.start("rewards"));
+    this.add.text(270,370,"PROGRESO",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#766c86"}).setOrigin(.5);
+    this.add.rectangle(270,424,454,92,0x12101b,.82).setStrokeStyle(1,0x30283d);
+    if(PRODUCT_FEATURES.cosmetics)this.makeCompactButton(125,424,118,"PERSONALIZAR",()=>this.scene.start("cosmetics"));else this.makeLockedCompactButton(125,424,118,"PERSONALIZAR");
+    this.makeCompactButton(270,424,118,"PRESTIGIO",()=>this.scene.start("rewards"),true);
+    if(PRODUCT_FEATURES.shop)this.makeCompactButton(415,424,118,"TIENDA",()=>this.scene.start("shop"));else this.makeLockedCompactButton(415,424,118,"TIENDA");
 
-    this.add.text(270,484,"MÁS",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#667a89"}).setOrigin(.5);
-    if(PRODUCT_FEATURES.communityMaps)this.makeCompactButton(165,526,196,"COMMUNITY MAPS",()=>{void this.openCommunity();},true);else this.makeLockedCompactButton(165,526,196,"COMMUNITY MAPS");
-    this.makeCompactButton(375,526,196,"ASISTENCIA",()=>this.scene.start("assistance"),true);
-    this.makeWideButton(PatchNotes.hasUnread()?"PATCH NOTES   ·   ● NUEVO":"PATCH NOTES",592,()=>this.scene.start("patch-notes"),PatchNotes.hasUnread());
+    this.add.text(270,500,"MENÚ",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#766c86"}).setOrigin(.5);
+    this.makeWideButton(PatchNotes.hasUnread()?"PATCH NOTES   ·   ● NUEVO":"PATCH NOTES",548,()=>this.scene.start("patch-notes"),PatchNotes.hasUnread());
+    this.makeCompactButton(165,614,196,"ASISTENCIA",()=>this.scene.start("assistance"));
+    if(PRODUCT_FEATURES.communityMaps)this.makeCompactButton(375,614,196,"COMMUNITY MAPS",()=>{void this.openCommunity();});else this.makeLockedCompactButton(375,614,196,"COMMUNITY MAPS");
 
-    const beta=this.add.rectangle(270,666,390,50,0x101820).setStrokeStyle(1,0x334956);
-    const betaText=this.add.text(270,666,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:"#a9bdc9"}).setOrigin(.5);
-    this.wirePress(beta,betaText,270,666,410,58,()=>this.scene.start("editor"),0x101820,0x1d2c36);
-    this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-48,BETA_TESTING?"RC7 · PRODUCT VALIDATION · DESKTOP":"CAMPAÑA · DESKTOP",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(9,2),color:"#5e707e"}).setOrigin(.5);
+    if(BETA_TESTING){
+      const beta=this.add.rectangle(270,704,250,38,0x0e141a).setStrokeStyle(1,0x293744);
+      const betaText=this.add.text(270,704,`BETA LAB · ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(8,2),fontStyle:"bold",color:"#718390"}).setOrigin(.5);
+      this.wirePress(beta,betaText,270,704,270,46,()=>this.scene.start("editor"),0x0e141a,0x17222a);
+    }
   }
 
   private createMobileActions():void{
-    if(PRODUCT_FEATURES.cosmetics)this.makeWideButton("PERSONALIZAR",390,()=>this.scene.start("cosmetics"));else this.makeLockedWideButton("PERSONALIZAR",390);
-    if(PRODUCT_FEATURES.shop)this.makeWideButton("TIENDA",446,()=>this.scene.start("shop"));else this.makeLockedWideButton("TIENDA",446);
-    this.makeWideButton("PRESTIGIO",502,()=>this.scene.start("rewards"));
-    if(PRODUCT_FEATURES.communityMaps)this.makeWideButton("COMMUNITY MAPS",566,()=>{void this.openCommunity();},true);else this.makeLockedWideButton("COMMUNITY MAPS",566);
-    this.makeWideButton("ASISTENCIA AL JUGADOR",626,()=>this.scene.start("assistance"),true);
-    this.makeWideButton(PatchNotes.hasUnread()?"PATCH NOTES   ·   ● NUEVO":"PATCH NOTES",686,()=>this.scene.start("patch-notes"),PatchNotes.hasUnread());
-    const beta=this.add.rectangle(270,762,390,48,0x111922).setStrokeStyle(2,0x405666);
-    const betaText=this.add.text(270,762,`BETA LAB · EDITOR   ·   ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,1),fontStyle:"bold",color:"#b9c9d4"}).setOrigin(.5);
-    this.wirePress(beta,betaText,270,762,410,58,()=>this.scene.start("editor"),0x111922,0x1d2b36);
-    this.add.text(DESIGN_WIDTH/2,DESIGN_HEIGHT-25,BETA_TESTING?"RC7 · PRODUCT VALIDATION":"CAMPAÑA · CORE SLICE",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,1),color:"#657282"}).setOrigin(.5);
+    this.add.text(270,364,"PROGRESO",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#766c86"}).setOrigin(.5);
+    if(PRODUCT_FEATURES.cosmetics)this.makeWideButton("PERSONALIZAR",408,()=>this.scene.start("cosmetics"));else this.makeLockedWideButton("PERSONALIZAR",408);
+    this.makeWideButton("PRESTIGIO",466,()=>this.scene.start("rewards"),true);
+    if(PRODUCT_FEATURES.shop)this.makeWideButton("TIENDA",524,()=>this.scene.start("shop"));else this.makeLockedWideButton("TIENDA",524);
+
+    this.add.text(270,590,"MENÚ",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#766c86"}).setOrigin(.5);
+    this.makeWideButton(PatchNotes.hasUnread()?"PATCH NOTES   ·   ● NUEVO":"PATCH NOTES",634,()=>this.scene.start("patch-notes"),PatchNotes.hasUnread());
+    this.makeWideButton("ASISTENCIA AL JUGADOR",692,()=>this.scene.start("assistance"));
+    if(PRODUCT_FEATURES.communityMaps)this.makeWideButton("COMMUNITY MAPS",750,()=>{void this.openCommunity();});else this.makeLockedWideButton("COMMUNITY MAPS",750);
+    if(BETA_TESTING){
+      const beta=this.add.rectangle(270,826,250,38,0x0e141a).setStrokeStyle(1,0x293744);
+      const betaText=this.add.text(270,826,`BETA LAB · ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(8,2),fontStyle:"bold",color:"#718390"}).setOrigin(.5);
+      this.wirePress(beta,betaText,270,826,270,46,()=>this.scene.start("editor"),0x0e141a,0x17222a);
+    }
   }
 
   private async openCommunity():Promise<void>{await BetaTelemetry.ensureTester(false);this.scene.start("community-maps");}

@@ -11,31 +11,43 @@ const READ_KEY="troll-golf-last-read-patch-v1";
 
 export const PATCH_NOTES:PatchNote[]=[
   {
+    id:"beta-rc7-prestige",
+    title:"RC7 · PRESTIGIO",
+    date:"21 SEP 2026",
+    summary:"Progreso más visual, menú más limpio y menos interrupciones.",
+    bullets:[
+      "Pase de Prestigio rediseñado para mostrar claramente hitos y progreso.",
+      "Las nuevas estrellas animan su avance hacia Prestigio al terminar un hoyo.",
+      "Patch Notes ahora respeta el idioma seleccionado.",
+      "Menú principal reorganizado con una jerarquía más limpia.",
+      "Otros ajustes."
+    ]
+  },
+  {
     id:"beta-rc7-flow",
     title:"RC7 · FLOW",
     date:"21 SEP 2026",
-    summary:"Menos interrupciones y un flujo de campaña más claro.",
+    summary:"Flujo de campaña más claro y menos interrupciones.",
     bullets:[
       "JUGAR abre siempre el selector de niveles antes de entrar al campo.",
-      "La valoración post-nivel ahora es voluntaria mediante un botón visible en Resultados.",
-      "Community Maps queda cerrada temporalmente mientras se rehace la feature.",
-      "El menú se ha simplificado y el logotipo vuelve a ser recto.",
-      "Patch Notes y el modo mantenimiento siguen formando parte del flujo oficial de la beta."
+      "La valoración post-nivel es voluntaria mediante un botón visible en Resultados.",
+      "Community Maps está temporalmente cerrada.",
+      "Se ha simplificado el menú principal.",
+      "Otros ajustes."
     ]
   },
   {
     id:"beta-rc6",
     title:"BETA RC6",
     date:"28 AGO 2026",
-    summary:"Nuevo nombre, nuevos hoyos y una beta más cómoda de probar.",
+    summary:"Nuevo nombre, nuevos hoyos y mejoras de juego.",
     bullets:[
       "Troll Golf ahora se llama Hole in What?.",
       "Añadidos Classic 11–13 con hielo y boosters.",
       "HARD 01 ahora tiene una solución aprendida mucho más cómoda en táctil.",
       "Arreglados los campos de nombre, comentarios y reportes con texto dentro del juego.",
       "La encuesta global ahora pregunta antes de abrirse y da una recompensa única de 5 gemas.",
-      "Mejoradas las métricas anónimas para detectar problemas de balance y abandono.",
-      "El modo mantenimiento comprueba cuándo vuelve el juego y recarga la nueva versión automáticamente."
+      "Otros ajustes."
     ]
   },
   {
@@ -46,61 +58,8 @@ export const PATCH_NOTES:PatchNote[]=[
     bullets:[
       "Mejorada la interfaz y legibilidad en PC.",
       "Las encuestas post-nivel ahora se envían manualmente.",
-      "Añadida la pantalla para editar el nombre de jugador."
-    ]
-  },
-  {
-    id:"beta-rc5-1",
-    title:"BETA RC5.1",
-    date:"27 AGO 2026",
-    summary:"Ajustes y correcciones.",
-    bullets:[
-      "Corregido un problema que hacía HARD 03 demasiado difícil de resolver.",
-      "Mejorado el balance del nivel en móvil."
-    ]
-  },
-  {
-    id:"beta-rc5",
-    title:"BETA RC5",
-    date:"27 AGO 2026",
-    summary:"Mejoras de perfil y Community Maps.",
-    bullets:[
-      "El nombre de jugador ya se puede ver desde el juego.",
-      "Añadida Asistencia al jugador.",
-      "Ya puedes eliminar tus propios Community Maps."
-    ]
-  },
-  {
-    id:"beta-rc4",
-    title:"BETA RC4",
-    date:"27 AGO 2026",
-    summary:"Mejoras generales de la beta.",
-    bullets:[
-      "La encuesta general ahora está integrada dentro del juego.",
-      "El juego avisa cuando hay una versión nueva disponible.",
-      "Corregidos varios problemas en niveles HARD."
-    ]
-  },
-  {
-    id:"beta-rc3",
-    title:"BETA RC3",
-    date:"27 AGO 2026",
-    summary:"Gran actualización de Community Maps.",
-    bullets:[
-      "Añadidos borradores, publicación, valoraciones y comentarios.",
-      "Community Maps ahora se juega con el mismo control que la campaña.",
-      "Mejorados los controles y botones en móvil."
-    ]
-  },
-  {
-    id:"beta-rc2",
-    title:"BETA RC2",
-    date:"27 AGO 2026",
-    summary:"Primeras mejoras de la beta.",
-    bullets:[
-      "Añadidos reportes dentro de los niveles.",
-      "Añadido contador aproximado de jugadores online.",
-      "Mejorados los controles táctiles."
+      "Añadida la pantalla para editar el nombre de jugador.",
+      "Otros ajustes."
     ]
   }
 ];
