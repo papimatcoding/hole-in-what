@@ -12,6 +12,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect campaign-affecting changes
+        id: campaign_changes
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+          fi
+          if git diff --quiet "$BASE_SHA" HEAD -- src/data src/systems/GolfSimulation.ts src/systems/CourseValidation.ts src/types.ts scripts; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -27,19 +43,25 @@ jobs:
       - name: Check first-shot tutorial identity
         run: npm run test:tutorial
       - name: Check authored mechanics
+        if: steps.campaign_changes.outputs.changed == 'true'
         run: npm run test:mechanics
       - name: Check mechanic behavior contracts
+        if: steps.campaign_changes.outputs.changed == 'true'
         run: npm run test:mechanic-behavior
       - name: Check authored geometry
+        if: steps.campaign_changes.outputs.changed == 'true'
         run: npm run test:geometry
       - name: Check authored clearance
+        if: steps.campaign_changes.outputs.changed == 'true'
         run: npm run test:clearance
       - name: Simulate authored campaign
+        if: steps.campaign_changes.outputs.changed == 'true'
         run: npm run audit:courses
       - name: Audit 3.0 map design
+        if: steps.campaign_changes.outputs.changed == 'true'
         run: npm run audit:3
       - name: Upload Audit 3.0 report
-        if: always()
+        if: always() && steps.campaign_changes.outputs.changed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: audit-3-fast-report
