@@ -2,12 +2,13 @@ import Phaser from "phaser";
 import { BETA_TESTING } from "../config/beta";
 import { isDesktopUI, setupDesignCamera, sharpenSceneText, uiFontSize } from "../config/display";
 import { CAMPAIGN_ENTRIES } from "../data/campaign";
+import { CAMPAIGN_CHAPTER_SIZE } from "../data/progression";
 import { SaveSystem } from "../systems/SaveSystem";
 import { formatRequirement } from "../systems/StarScoring";
 import type { GameMode } from "../types";
 
 interface LevelSelectData { mode:GameMode; page?:number; }
-const PAGE_SIZE=10;
+const PAGE_SIZE=CAMPAIGN_CHAPTER_SIZE;
 
 export class LevelSelectScene extends Phaser.Scene {
   private mode:GameMode="classic";
@@ -35,7 +36,14 @@ export class LevelSelectScene extends Phaser.Scene {
     this.add.text(270,99,`${sectionLabel}${chapterFlavor}  ·  ${pageStart+1}–${Math.min(pageStart+10,levels.length)}`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(12,2),fontStyle:"bold",color:accentText}).setOrigin(.5);
     const isOpen=(index:number):boolean=>SaveSystem.isCampaignLevelUnlocked(index);
     const totalStars=SaveSystem.totalStars(levels.map(level=>level.id)),unlocked=BETA_TESTING?levels.length:levels.filter((_,index)=>isOpen(index)).length;
-    this.add.text(270,126,BETA_TESTING?`BETA · TODOS ABIERTOS   ·   ★ ${totalStars} / ${levels.length*3}`:`★ ${totalStars} / ${levels.length*3}   ·   ${unlocked}/${levels.length} desbloqueados`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,2),fontStyle:BETA_TESTING?"bold":"normal",color:BETA_TESTING?"#9ebdce":"#a7b3bf"}).setOrigin(.5);
+    const chapterProgress=SaveSystem.campaignChapterProgress(pageStart);
+    const chapterGate=chapterProgress.requiredStars>0?` · GATE ★ ${chapterProgress.totalStars} / ${chapterProgress.requiredStars}`:"";
+    const status=BETA_TESTING
+      ?`BETA · TODOS ABIERTOS${chapterGate}   ·   ★ ${totalStars} / ${levels.length*3}`
+      :!chapterProgress.unlocked
+        ?`CAPÍTULO BLOQUEADO · ★ ${chapterProgress.totalStars} / ${chapterProgress.requiredStars}`
+        :`★ ${totalStars} / ${levels.length*3}   ·   ${unlocked}/${levels.length} desbloqueados`;
+    this.add.text(270,126,status,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,2),fontStyle:BETA_TESTING||!chapterProgress.unlocked?"bold":"normal",color:BETA_TESTING?"#9ebdce":chapterProgress.unlocked?"#a7b3bf":"#e6ce80"}).setOrigin(.5);
 
     this.add.text(270,164,"PARECE GOLF. NO TE FÍES.",{fontFamily:"system-ui",fontSize:uiFontSize(11,2),color:"#c6b9df"}).setOrigin(.5);
 
