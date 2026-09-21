@@ -32,7 +32,7 @@ export class ResultsScene extends Phaser.Scene{
     const levels=levelsForMode(this.resultData.mode),level=levels[this.resultData.levelIndex]!,previous=SaveSystem.record(this.resultData.levelId);
     const newStrokeRecord=previous.bestStrokes===null||this.resultData.strokes<previous.bestStrokes;
     const newTimeRecord=previous.bestTimeMs===null||this.resultData.timeMs<previous.bestTimeMs;
-    const newStars=this.resultData.stars>previous.stars;
+    const gainedStars=Math.max(0,this.resultData.stars-previous.stars),newStars=gainedStars>0;
     const reward=SaveSystem.submit(this.resultData.levelId,this.resultData.stars,this.resultData.strokes,this.resultData.timeMs);
     if(BETA_TESTING)this.runUpload=BetaTelemetry.submitRun({levelId:this.resultData.levelId,mode:this.resultData.mode,strokes:this.resultData.strokes,timeMs:this.resultData.timeMs,stars:this.resultData.stars,trapsTriggered:this.resultData.trapsTriggered??[],mechanicsUsed:this.resultData.mechanicsUsed??[],voids:this.resultData.voids??0});
 
@@ -56,7 +56,8 @@ export class ResultsScene extends Phaser.Scene{
     if(reward.newlyUnlockedCosmetics.length){const names=reward.newlyUnlockedCosmetics.map(id=>cosmeticById(id)?.name).filter((x):x is string=>Boolean(x));this.add.text(270,infoY,`DESBLOQUEADO · ${names.join(" · ")}`,{fontFamily:"system-ui",fontSize:uiFontSize(11),fontStyle:"bold",color:"#f1d07a",wordWrap:{width:430},align:"center"}).setOrigin(.5);}
 
     const totalStars=SaveSystem.totalStarsAll(),nextReward=STAR_REWARDS.find(item=>item.stars>totalStars);
-    this.add.text(270,568,nextReward?`PRESTIGIO · ★ ${totalStars} / ${nextReward.stars}`:"RUTA DE PRESTIGIO COMPLETADA",{fontFamily:"system-ui",fontSize:uiFontSize(11),fontStyle:"bold",color:"#c2ef63"}).setOrigin(.5);
+    const prestigeLabel=this.add.text(270,568,nextReward?`PRESTIGIO · ★ ${totalStars} / ${nextReward.stars}`:"RUTA DE PRESTIGIO COMPLETADA",{fontFamily:"system-ui",fontSize:uiFontSize(11),fontStyle:"bold",color:"#c2ef63"}).setOrigin(.5);
+    if(gainedStars>0)this.animateStarsToPrestige(gainedStars,prestigeLabel);
     const position=campaignIndex(this.resultData.mode,this.resultData.levelIndex);
     const canPrev=position>0,nextExists=position<CAMPAIGN_ENTRIES.length-1,canNext=nextExists&&(BETA_TESTING||SaveSystem.isCampaignLevelUnlocked(position+1));
     if(nextExists&&!canNext){const gate=SaveSystem.campaignChapterProgress(position+1);this.add.text(270,594,`SIGUIENTE CAPÍTULO · ★ ${gate.totalStars} / ${gate.requiredStars}`,{fontFamily:"system-ui",fontSize:uiFontSize(10),fontStyle:"bold",color:"#e6ce80"}).setOrigin(.5);}
@@ -74,6 +75,20 @@ export class ResultsScene extends Phaser.Scene{
       this.smallAction(365,870,"⚑ REPORTAR",()=>this.openFeedback(),174,0x17242d,"#a9d1e5");
     }
     sharpenSceneText(this);
+  }
+
+  private animateStarsToPrestige(count:number,target:Phaser.GameObjects.Text):void{
+    const amount=Math.min(3,count);
+    for(let i=0;i<amount;i+=1){
+      const star=this.add.text(230+i*40,176,"★",{fontFamily:"system-ui",fontSize:uiFontSize(22,1),fontStyle:"bold",color:"#f1d07a"}).setOrigin(.5).setDepth(40).setAlpha(0);
+      this.tweens.add({
+        targets:star,alpha:1,scale:{from:.75,to:1.08},duration:140,delay:220+i*110,
+        onComplete:()=>this.tweens.add({
+          targets:star,x:target.x,y:target.y,scale:.5,alpha:.15,duration:520,ease:"Cubic.easeIn",
+          onComplete:()=>{star.destroy();this.tweens.add({targets:target,scale:{from:1.08,to:1},duration:180});}
+        })
+      });
+    }
   }
 
   private makeButton(label:string,y:number,action:()=>void,primary:boolean):void{
