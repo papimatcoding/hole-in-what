@@ -5,6 +5,22 @@ unmerged geometry/funnel work; do not merge it as though it were based on dev.
 
 ## Product direction
 
+### Stars / prestige follow-up
+
+Stars remain central to replay and progression. Never reveal stroke targets during
+gameplay, including retries. The level selector reveals a target only after that
+hole has been completed; Results reveals both targets after every completion.
+
+The first prestige track uses existing 10/20/35/50-star cosmetic milestones.
+Cosmetics are enabled and equipable; the shop stays disabled. Results shows
+cumulative progress toward the next milestone and links to Prestige. Stars are
+best-per-hole, never spent; rewards are permanent and automatically granted once.
+Tests cover milestone crossing, equipping, duplicate claims and replay farming.
+
+Chapter entry requirements are still pending campaign grouping/pacing decisions;
+this pass does not pretend they are implemented. Future ranked access may use
+progression, but ranked and its eligibility thresholds remain out of scope.
+
 - One campaign; troll is the identity from the very first shot, not a difficulty.
 - First shot reveals a persistent wall and a bilingual, non-modal welcome.
 - A unified 21-hole selector and continuous Results navigation preserve legacy

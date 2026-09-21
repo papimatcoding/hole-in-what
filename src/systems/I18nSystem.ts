@@ -20,6 +20,11 @@ let language:GameLanguage=detectDefault();
 
 function translateDynamic(value:string):string{
   const identity:Record<string,string>={
+    "RUTA DE PRESTIGIO":"PRESTIGE TRACK",
+    "PRESTIGIO":"PRESTIGE",
+    "RUTA DE PRESTIGIO COMPLETADA":"PRESTIGE TRACK COMPLETED",
+    "TUS ESTRELLAS DESBLOQUEAN COSMÉTICOS":"YOUR STARS UNLOCK COSMETICS",
+    "PERMANENTE · SIN REINICIOS · SIN CADUCIDAD":"PERMANENT · NO RESETS · NO EXPIRY",
     "Eso no te lo esperabas, ¿eh?":"Didn't see that coming, did you?",
     "Bienvenido a Hole in What?, donde los hoyos no son lo que parecen.":"Welcome to Hole in What?, where holes aren't what they seem.",
     "Ahora ya lo sabes. Busca otro camino.":"Now you know. Find another way.",
@@ -33,6 +38,7 @@ function translateDynamic(value:string):string{
   };
   if(identity[value])return identity[value]!;
   let match:RegExpMatchArray|null;
+  if((match=value.match(/^PRESTIGIO · (.+)$/)))return `PRESTIGE · ${match[1]}`;
   if((match=value.match(/^CAPÍTULO (\d+)\s+·\s+(.+)$/)))return `CHAPTER ${match[1]} · ${match[2]}`;
   const surface=translateSurfaceDynamic(value);if(surface!==undefined)return surface;
   if(value==="TOCA")return "TAP";

@@ -82,7 +82,7 @@ export class MenuScene extends Phaser.Scene {
     this.add.text(270,452,"PRODUCTO",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#667a89"}).setOrigin(.5);
     if(PRODUCT_FEATURES.cosmetics)this.makeCompactButton(125,492,118,"PERSONALIZAR",()=>this.scene.start("cosmetics"));else this.makeLockedCompactButton(125,492,118,"PERSONALIZAR");
     if(PRODUCT_FEATURES.shop)this.makeCompactButton(270,492,118,"TIENDA",()=>this.scene.start("shop"));else this.makeLockedCompactButton(270,492,118,"TIENDA");
-    this.makeCompactButton(415,492,118,"RECOMPENSAS",()=>this.scene.start("rewards"));
+    this.makeCompactButton(415,492,118,"PRESTIGIO",()=>this.scene.start("rewards"));
 
     this.add.text(270,550,"COMUNIDAD Y SOPORTE",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#667a89"}).setOrigin(.5);
     this.makeCompactButton(165,592,196,"COMMUNITY MAPS",()=>{void this.openCommunity();},true);
@@ -98,7 +98,7 @@ export class MenuScene extends Phaser.Scene {
   private createMobileActions():void{
     if(PRODUCT_FEATURES.cosmetics)this.makeWideButton("PERSONALIZAR",472,()=>this.scene.start("cosmetics"));else this.makeLockedWideButton("PERSONALIZAR",472);
     if(PRODUCT_FEATURES.shop)this.makeWideButton("TIENDA",528,()=>this.scene.start("shop"));else this.makeLockedWideButton("TIENDA",528);
-    this.makeWideButton("RECOMPENSAS",584,()=>this.scene.start("rewards"));
+    this.makeWideButton("PRESTIGIO",584,()=>this.scene.start("rewards"));
     this.makeWideButton("COMMUNITY MAPS",648,()=>{void this.openCommunity();},true);
     this.makeWideButton("ASISTENCIA AL JUGADOR",708,()=>this.scene.start("assistance"),true);
     this.makeWideButton(PatchNotes.hasUnread()?"PATCH NOTES   ·   ● NUEVO":"PATCH NOTES",768,()=>this.scene.start("patch-notes"),PatchNotes.hasUnread());

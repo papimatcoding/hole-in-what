@@ -1,5 +1,5 @@
 export const PRODUCT_FEATURES={
-  cosmetics:false,
+  cosmetics:true,
   shop:false
 } as const;
 

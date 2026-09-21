@@ -17,7 +17,7 @@ import {
 import { MECHANIC_TUTORIALS, markMechanicSeen, unseenMechanics, type MechanicId } from "../systems/MechanicTutorialSystem";
 import { SaveSystem } from "../systems/SaveSystem";
 import { resolveShotPull, SHOT_GRAB_RADIUS } from "../systems/ShotInputSystem";
-import { formatRequirement, starsForRun } from "../systems/StarScoring";
+import { starsForRun } from "../systems/StarScoring";
 import type { GameSceneData, LevelDefinition } from "../types";
 
 interface TrailParticle { x:number;y:number;life:number;maxLife:number;size:number; }
@@ -93,8 +93,7 @@ export class GameplayScene extends Phaser.Scene {
     if(BETA_TESTING)this.attemptId=BetaTelemetry.beginAttempt(this.level.id,this.mode);
     this.events.once("shutdown",()=>this.closeAttempt("scene-exit",false));
 
-    // RC7 validates core game feel. Existing tester saves may contain cosmetics from older builds,
-    // but disabled product systems must not change the visual/game-feel cohort while they are frozen.
+    // Prestige rewards are presentation-only; equipped cosmetics never change simulation stats.
     const equipped=PRODUCT_FEATURES.cosmetics?SaveSystem.cosmetics().equipped:{ball:"ball-classic",trail:"trail-none",holeEffect:"hole-default"} as const;
     this.ballCosmetic=cosmeticById(equipped.ball)??cosmeticById("ball-classic")!;
     this.trailCosmetic=cosmeticById(equipped.trail)??cosmeticById("trail-none")!;
@@ -142,9 +141,8 @@ export class GameplayScene extends Phaser.Scene {
     this.add.rectangle(270,HUD_BOTTOM,500,1,0x50626f,.45).setDepth(41);
 
     const bg=this.add.rectangle(270,25,232,36,0x0d141a,.96).setStrokeStyle(1,0x2d3d48,.9);
-    const three=this.add.text(270,19,`★★★  ${formatRequirement(this.level.threeStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#f0d37e"}).setOrigin(.5);
-    const two=this.add.text(270,33,`★★  ${formatRequirement(this.level.twoStar)}`,{fontFamily:"system-ui, sans-serif",fontSize:"9px",color:"#bcc7d0"}).setOrigin(.5);
-    this.objectiveHud=this.add.container(0,0,[bg,three,two]).setDepth(42);
+    const title=this.add.text(270,25,"HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#c2ef63"}).setOrigin(.5);
+    this.objectiveHud=this.add.container(0,0,[bg,title]).setDepth(42);
 
     this.strokeText=this.add.text(78,66,"Golpes 0",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(0,.5).setDepth(43);
     this.timeText=this.add.text(505,66,"0.0 s",{fontFamily:"system-ui, sans-serif",fontSize:"11px",color:"#f5f7fa"}).setOrigin(1,.5).setDepth(43);

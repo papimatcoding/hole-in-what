@@ -54,7 +54,7 @@ export class LevelSelectScene extends Phaser.Scene {
       this.add.text(x,y+9,stars,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(18,1),color:record.stars>0?"#f1d07a":isUnlocked?"#566473":"#303941"}).setOrigin(.5);
       const best=record.bestStrokes===null?"RÉCORD —":`RÉCORD ${record.bestStrokes}`;
       this.add.text(x-82,y+39,best,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(9,2),fontStyle:"bold",color:isUnlocked?"#a6b4bf":"#45505a"}).setOrigin(0,.5);
-      this.add.text(x+82,y+39,`★★★ ${formatRequirement(level.threeStar,true)}`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(9,2),color:isUnlocked?"#a6b4bf":"#414b54"}).setOrigin(1,.5);
+      this.add.text(x+82,y+39,record.completed?`★★★ ${formatRequirement(level.threeStar,true)}`:"",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(9,2),color:isUnlocked?"#a6b4bf":"#414b54"}).setOrigin(1,.5);
 
       if(isUnlocked){
         card.setInteractive({useHandCursor:true});
