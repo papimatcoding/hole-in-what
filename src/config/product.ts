@@ -1,6 +1,7 @@
 export const PRODUCT_FEATURES={
   cosmetics:true,
-  shop:false
+  shop:false,
+  communityMaps:false
 } as const;
 
 export const PRODUCT_STAGE_LABEL="RC7 · VALIDACIÓN";
