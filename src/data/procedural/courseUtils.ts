@@ -165,7 +165,10 @@ export function sanitizeCourse(level:LevelDefinition):LevelDefinition {
     !(next.walls ?? []).some(w=>pointInRect(p.x,p.y,w,36)) && !(next.voids ?? []).some(v=>pointInRect(p.x,p.y,v,34))
   ));
 
-  if((next.voids?.length ?? 0)===0){ next.ramps=[]; next.trampolines=[]; }
+  // Authored ramps may be used to vault walls/geometry without a void. Procedural jump layouts
+  // still require a gap so generation cannot create decorative, purposeless ramps.
+  if((next.voids?.length ?? 0)===0&&!next.authored){ next.ramps=[]; next.trampolines=[]; }
+  if((next.voids?.length ?? 0)===0){ next.trampolines=[]; }
   // Purpose pruning is a generator heuristic. Authored courses are curated intentionally and
   // should not have their mechanics removed just because an approximate designPath misses them.
   if(!next.authored)keepPurposefulMechanics(next);
