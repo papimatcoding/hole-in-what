@@ -68,7 +68,7 @@ path(c7,pt(420,724),pt(420,548),pt(118,402),pt(118,218),pt(430,150));
 // 08 — Ramp introduction. Missing the jump is recoverable; trusting the centre line is the troll.
 const c8=base("classic",8,pt(270,842),pt(270,154),3,4,"ramp");
 c8.trollArchetype="bumper-ambush";
-c8.walls=[r(28,456,484,28),r(28,278,180,24),r(332,278,180,24)];
+c8.walls=[r(28,456,390,28),r(28,278,180,24),r(332,278,180,24)];
 c8.ramps=[{x:215,y:568,w:110,h:82,dx:0,dy:-1,lift:345,boost:34}];
 c8.popBumpers=[{x:270,y:346,r:36,triggerX:270,triggerY:520,triggerRadius:100}];
 path(c8,pt(270,610),pt(270,392),pt(270,230),pt(270,154));
