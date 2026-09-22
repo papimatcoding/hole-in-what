@@ -1,6 +1,7 @@
 import { levelsForMode } from "../src/data/campaign";
 import { analyzeCourseClearance } from "../src/systems/CourseValidation";
 import type { LevelDefinition, RectDef, Vec2 } from "../src/types";
+import { scopeLevels } from "./auditScope";
 
 const r = (x: number, y: number, w: number, h: number): RectDef => ({ x, y, w, h });
 const pt = (x: number, y: number): Vec2 => ({ x, y });
@@ -17,7 +18,7 @@ function fatalStatesFor(level: LevelDefinition): string[] {
 
 const errors: string[] = [];
 for (const mode of ["classic", "troll"] as const) {
-  for (const level of levelsForMode(mode)) {
+  for (const level of scopeLevels(levelsForMode(mode))) {
     const fatal = fatalStatesFor(level);
     if (fatal.length) errors.push(`${level.id}: unreachable clearance states -> ${fatal.join(", ")}`);
   }
