@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { levelsForMode } from "../src/data/campaign";
 import type { CurveDef, LevelDefinition, TriangleDef, Vec2 } from "../src/types";
+import { scopeLevels } from "./auditScope";
 
 type AuditStatus="PASS"|"REVIEW"|"BLOCKER";
 interface ProfileResult{name:string;successRate:number;voidRate:number;medianEndDistance:number;}
@@ -33,7 +34,7 @@ if(!existsSync(reportPath))throw new Error(`Audit 2.0 report not found: ${report
 const report=JSON.parse(readFileSync(reportPath,"utf8")) as AuditReport;
 const feedback:FeedbackSnapshot|null=existsSync(feedbackPath)?JSON.parse(readFileSync(feedbackPath,"utf8")) as FeedbackSnapshot:null;
 const feedbackById=new Map((feedback?.levels??[]).map(x=>[x.levelId,x]));
-const levels=[...levelsForMode("classic"),...levelsForMode("troll")];
+const levels=scopeLevels([...levelsForMode("classic"),...levelsForMode("troll")]);
 const levelById=new Map(levels.map((level,index)=>[level.id,{level,index}]));
 
 function complexity(level:LevelDefinition):number{
