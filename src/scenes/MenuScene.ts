@@ -20,7 +20,6 @@ export class MenuScene extends Phaser.Scene {
     setupDesignCamera(this);this.desktop=isDesktopUI();
     this.cameras.main.setBackgroundColor("#0b0f14");
     if(TROLL_MENU_ENABLED)this.drawTrollIdentity();
-    if(PRODUCT_FEATURES.cosmetics)SaveSystem.claimEligibleStarRewards();
     void BetaTelemetry.ensureTester(false);
     void ProductTelemetry.ensureSession();
     ProductTelemetry.track({eventName:"menu_view",scene:"menu"});
