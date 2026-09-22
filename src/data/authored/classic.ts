@@ -34,7 +34,7 @@ const c4=base("classic",4,pt(92,836),pt(430,156),3,4,"wall");
 c4.trollArchetype="bumper-ambush";
 c4.walls=[r(28,588,324,26),r(188,346,324,26)];
 c4.triangles=[tri(330,462,356,462,356,588)];
-c4.popBumpers=[{x:390,y:310,r:35,triggerX:396,triggerY:438,triggerRadius:96}];
+c4.popBumpers=[{x:390,y:306,r:35,triggerX:396,triggerY:438,triggerRadius:96}];
 path(c4,pt(428,690),pt(428,520),pt(150,468),pt(150,274),pt(430,156));
 
 // 05 — First bumper lesson. The bumper is useful; the troll wall makes its easiest rebound imperfect.
@@ -90,7 +90,7 @@ c10.triangles=[tri(278,690,326,714,278,714),tri(278,344,326,368,278,368)];
 c10.ramps=[{x:344,y:600,w:108,h:78,dx:-.35,dy:-1,lift:320,boost:34}];
 c10.bumpers=[{x:142,y:440,r:46}];
 c10.popWalls=[{...r(300,286,146,22),triggerX:142,triggerY:440,triggerRadius:92}];
-c10.popBumpers=[{x:400,y:190,r:30,triggerX:352,triggerY:258,triggerRadius:82}];
+c10.popBumpers=[{x:400,y:184,r:30,triggerX:352,triggerY:258,triggerRadius:82}];
 path(c10,pt(392,640),pt(270,500),pt(142,440),pt(150,300),pt(352,258),pt(430,136));
 
 export const CLASSIC_AUTHORED:LevelDefinition[]=[c1,c2,c3,c4,c5,c6,c7,c8,c9,c10];
