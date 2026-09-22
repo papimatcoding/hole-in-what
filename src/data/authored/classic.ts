@@ -26,7 +26,7 @@ path(c2,pt(430,548),pt(132,500),pt(132,318),pt(110,166));
 const c3=base("classic",3,pt(270,836),pt(270,166),2,3,"wall");
 c3.trollArchetype="safe-lane-collapse";
 c3.walls=[r(205,405,130,220)];
-c3.popWalls=[{...r(336,560,154,22),triggerX:348,triggerY:706,triggerRadius:112}];
+c3.popWalls=[{...r(342,560,148,22),triggerX:348,triggerY:706,triggerRadius:112}];
 path(c3,pt(132,670),pt(132,322),pt(270,166));
 
 // 04 — Angled geometry. A shortcut around the upper wedge grows a bumper after commitment.
