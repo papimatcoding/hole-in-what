@@ -6,6 +6,9 @@ export const DESIGN_HEIGHT = 960;
 export const RENDER_SCALE = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
 
 function desktopPresentation(): boolean {
+  const previewMode = new URLSearchParams(window.location.search).get("ui");
+  if (previewMode === "mobile") return false;
+  if (previewMode === "desktop") return true;
   const finePointer = window.matchMedia?.("(pointer: fine)").matches ?? false;
   const hover = window.matchMedia?.("(hover: hover)").matches ?? false;
   return finePointer && hover && window.innerWidth >= 760;
