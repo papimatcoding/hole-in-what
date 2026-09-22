@@ -1,5 +1,5 @@
 import { CAMPAIGN_ENTRIES, levelsForMode } from "../data/campaign";
-import { CAMPAIGN_CHAPTER_SIZE, STAR_REWARDS, TROLL_UNLOCK_CLASSIC_COMPLETIONS, TROLL_UNLOCK_STARS, requiredStarsForCampaignChapter, totalStarsFromRecords } from "../data/progression";
+import { CAMPAIGN_CHAPTER_SIZE, TROLL_UNLOCK_CLASSIC_COMPLETIONS, TROLL_UNLOCK_STARS, campaignChapterDefinition, prestigeRewardById, requiredStarsForCampaignChapter, totalStarsFromRecords } from "../data/progression";
 import type {
   CosmeticsSave,
   EquippedCosmetics,
@@ -54,11 +54,6 @@ function bonusClaims():Set<string>{
   try{const raw=localStorage.getItem(BONUS_CLAIMS_KEY);const parsed=raw?JSON.parse(raw):[];return new Set(Array.isArray(parsed)?parsed.filter(x=>typeof x==="string"):[]);}catch{return new Set();}
 }
 function persistBonusClaims(claims:Set<string>):void{try{localStorage.setItem(BONUS_CLAIMS_KEY,JSON.stringify([...claims]));}catch{/* optional reward state */}}
-function unlockEligibleStarRewards(save:SaveData):string[]{
-  const totalStars=totalStarsFromRecords(save.levels),unlocked:string[]=[];
-  for(const reward of STAR_REWARDS){if(totalStars<reward.stars||save.cosmetics.owned.includes(reward.cosmeticId))continue;save.cosmetics.owned.push(reward.cosmeticId);unlocked.push(reward.cosmeticId);}
-  return unlocked;
-}
 function trollUnlockedForSave(save:SaveData):boolean{
   const classic=levelsForMode("classic"),stars=classic.reduce((sum,level)=>sum+(save.levels[level.id]?.stars??0),0);
   const firstChapterComplete=classic.slice(0,TROLL_UNLOCK_CLASSIC_COMPLETIONS).every(level=>save.levels[level.id]?.completed===true);
@@ -71,20 +66,22 @@ export const SaveSystem={
     const save=load();
     // Never take a previously completed level away from an existing save.
     if(save.levels[entry.level.id]?.completed===true)return true;
-    const chapter=Math.floor(index/CAMPAIGN_CHAPTER_SIZE);
-    if(totalStarsFromRecords(save.levels)<requiredStarsForCampaignChapter(chapter))return false;
+    const chapter=Math.floor(index/CAMPAIGN_CHAPTER_SIZE),definition=campaignChapterDefinition(chapter),totalStars=totalStarsFromRecords(save.levels);
+    const claimed=chapter===0||!definition.claimRewardId||bonusClaims().has(definition.claimRewardId);
+    if(totalStars<definition.requiredStars||!claimed)return false;
     return index===0||save.levels[CAMPAIGN_ENTRIES[index-1]!.level.id]?.completed===true;
   },
-  campaignChapterProgress(index:number):{chapter:number;totalStars:number;requiredStars:number;unlocked:boolean}{
-    const chapter=Math.max(0,Math.floor(index/CAMPAIGN_CHAPTER_SIZE)),save=load(),totalStars=totalStarsFromRecords(save.levels),requiredStars=requiredStarsForCampaignChapter(chapter);
-    return{chapter,totalStars,requiredStars,unlocked:totalStars>=requiredStars};
+  campaignChapterProgress(index:number):{chapter:number;totalStars:number;requiredStars:number;eligible:boolean;claimed:boolean;unlocked:boolean}{
+    const chapter=Math.max(0,Math.floor(index/CAMPAIGN_CHAPTER_SIZE)),definition=campaignChapterDefinition(chapter),save=load(),totalStars=totalStarsFromRecords(save.levels),requiredStars=requiredStarsForCampaignChapter(chapter);
+    const eligible=totalStars>=requiredStars,claimed=chapter===0||!definition.claimRewardId||bonusClaims().has(definition.claimRewardId);
+    return{chapter,totalStars,requiredStars,eligible,claimed,unlocked:eligible&&claimed};
   },
   record(levelId:string):LevelRecord{return load().levels[levelId]??emptyRecord();},
   submit(levelId:string,stars:number,strokes:number,timeMs:number):SubmitResult{
     const save=load(),current=save.levels[levelId]??emptyRecord(),nextStars=Math.max(current.stars,stars),gainedStars=Math.max(0,nextStars-current.stars),coinsEarned=(current.completed?0:10)+gainedStars*20;
     const next:LevelRecord={completed:true,stars:nextStars,bestStrokes:current.bestStrokes===null?strokes:Math.min(current.bestStrokes,strokes),bestTimeMs:current.bestTimeMs===null?timeMs:Math.min(current.bestTimeMs,timeMs)};
-    save.levels[levelId]=next;save.wallet.coins+=coinsEarned;const newlyUnlockedCosmetics=unlockEligibleStarRewards(save);persist(save);
-    return{record:next,coinsEarned,totalCoins:save.wallet.coins,totalGems:save.wallet.gems,newlyUnlockedCosmetics};
+    save.levels[levelId]=next;save.wallet.coins+=coinsEarned;persist(save);
+    return{record:next,coinsEarned,totalCoins:save.wallet.coins,totalGems:save.wallet.gems,newlyUnlockedCosmetics:[]};
   },
   totalStars(levelIds:string[]):number{const save=load();return levelIds.reduce((sum,id)=>sum+(save.levels[id]?.stars??0),0);},
   totalStarsAll():number{return totalStarsFromRecords(load().levels);},
@@ -95,7 +92,28 @@ export const SaveSystem={
     const claims=bonusClaims();if(claims.has(rewardId))return 0;
     const save=load();save.wallet.gems+=safeAmount;persist(save);claims.add(rewardId);persistBonusClaims(claims);return safeAmount;
   },
-  claimEligibleStarRewards():string[]{const save=load(),unlocked=unlockEligibleStarRewards(save);if(unlocked.length>0)persist(save);return unlocked;},
+  prestigeRewardState(rewardId:string):{eligible:boolean;claimed:boolean}{
+    const reward=prestigeRewardById(rewardId),save=load();if(!reward)return{eligible:false,claimed:false};
+    const eligible=totalStarsFromRecords(save.levels)>=reward.stars;
+    const claimed=reward.kind==="cosmetic"?save.cosmetics.owned.includes(reward.cosmeticId):bonusClaims().has(reward.id);
+    return{eligible,claimed};
+  },
+  claimPrestigeReward(rewardId:string):{ok:boolean;cosmeticId?:string;chapterIndex?:number}{
+    const reward=prestigeRewardById(rewardId);if(!reward)return{ok:false};
+    const save=load();if(totalStarsFromRecords(save.levels)<reward.stars)return{ok:false};
+    const claims=bonusClaims();
+    if(reward.kind==="cosmetic"){
+      if(save.cosmetics.owned.includes(reward.cosmeticId))return{ok:false};
+      save.cosmetics.owned.push(reward.cosmeticId);persist(save);claims.add(reward.id);persistBonusClaims(claims);
+      return{ok:true,cosmeticId:reward.cosmeticId};
+    }
+    if(claims.has(reward.id))return{ok:false};
+    claims.add(reward.id);persistBonusClaims(claims);return{ok:true,chapterIndex:reward.chapterIndex};
+  },
+  isChapterClaimed(chapterIndex:number):boolean{
+    const definition=campaignChapterDefinition(chapterIndex);return chapterIndex===0||!definition.claimRewardId||bonusClaims().has(definition.claimRewardId);
+  },
+  claimEligibleStarRewards():string[]{return[];},
   classicProgress():{stars:number;completed:number;total:number;requiredStars:number;firstChapterCompleted:number;requiredCompletions:number}{
     const save=load(),levels=levelsForMode("classic"),stars=levels.reduce((sum,level)=>sum+(save.levels[level.id]?.stars??0),0),completed=levels.reduce((sum,level)=>sum+(save.levels[level.id]?.completed?1:0),0),firstChapterCompleted=levels.slice(0,TROLL_UNLOCK_CLASSIC_COMPLETIONS).reduce((sum,level)=>sum+(save.levels[level.id]?.completed?1:0),0);
     return{stars,completed,total:levels.length,requiredStars:TROLL_UNLOCK_STARS,firstChapterCompleted,requiredCompletions:TROLL_UNLOCK_CLASSIC_COMPLETIONS};
