@@ -45,12 +45,30 @@ function translateDynamic(value:string):string{
     "MÁS":"MORE",
     "★ VALORAR NIVEL":"★ RATE LEVEL",
     "✓ VALORADO":"✓ RATED",
+    "NUEVAS ESTRELLAS":"NEW STARS",
+    "NUEVA ESTRELLA":"NEW STAR",
+    "RÉCORD DE GOLPES":"STROKE RECORD",
+    "RÉCORD DE TIEMPO":"TIME RECORD",
+    "Ruta de maestría conseguida":"Mastery route achieved",
+    "REINTENTAR":"RETRY",
+    "NIVELES":"LEVELS",
+    "RECLAMAR":"CLAIM",
+    "RECLAMADO":"CLAIMED",
+    "NUEVO CAPÍTULO":"NEW CHAPTER",
+    "RECLAMAR EN PRESTIGIO":"CLAIM IN PRESTIGE",
+    "LAS RECOMPENSAS SE RECLAMAN MANUALMENTE":"REWARDS ARE CLAIMED MANUALLY",
+    "CAPÍTULO BLOQUEADO":"CHAPTER LOCKED",
     "PARECE GOLF. NO TE FÍES.":"LOOKS LIKE GOLF. DON'T TRUST IT."
   };
   if(identity[value])return identity[value]!;
   let match:RegExpMatchArray|null;
   if((match=value.match(/^PRESTIGIO · (.+)$/)))return `PRESTIGE · ${match[1]}`;
   if((match=value.match(/^SIGUIENTE RECOMPENSA · (.+)$/)))return `NEXT REWARD · ${match[1]}`;
+  if((match=value.match(/^RECOMPENSA LISTA · (.+)$/)))return `REWARD READY · ${match[1]}`;
+  if((match=value.match(/^LISTO PARA RECLAMAR · (.+)$/)))return `READY TO CLAIM · ${match[1]}`;
+  if((match=value.match(/^CAPÍTULO BLOQUEADO · (.+)$/)))return `CHAPTER LOCKED · ${match[1]}`;
+  if((match=value.match(/^SIGUIENTE CAPÍTULO · (.+)$/)))return `NEXT CHAPTER · ${match[1]}`;
+  if((match=value.match(/^DESBLOQUEADO · (.+)$/)))return `UNLOCKED · ${match[1]}`;
   if((match=value.match(/^(\d+)★ PARA DESBLOQUEAR$/)))return `${match[1]}★ TO UNLOCK`;
   if((match=value.match(/^★ (\d+) · COMPLETADO$/)))return `★ ${match[1]} · COMPLETE`;
   if((match=value.match(/^CAPÍTULO (\d+)\s+·\s+(.+)$/)))return `CHAPTER ${match[1]} · ${match[2]}`;
