@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { BETA_TESTING } from "../config/beta";
 import { DESIGN_WIDTH, VIEW_WIDTH, isDesktopUI, setupDesignCamera, sharpenSceneText, uiFontSize } from "../config/display";
-import { PRODUCT_FEATURES, TROLL_MENU_ENABLED } from "../config/product";
+import { PRODUCT_FEATURES } from "../config/product";
 import { CAMPAIGN_ENTRIES } from "../data/campaign";
 import { cosmeticById, cosmeticsByCategory, type CosmeticCategory, type CosmeticDefinition } from "../data/cosmetics";
 import { CAMPAIGN_CHAPTER_SIZE, PRESTIGE_REWARDS, campaignChapterDefinition } from "../data/progression";
@@ -45,6 +45,7 @@ export class MenuScene extends Phaser.Scene {
   private carouselOffset=0;
   private sectionLayer?:Phaser.GameObjects.Container;
   private sectionButtons=new Map<DesktopSection,{bg:Phaser.GameObjects.Rectangle;title:Phaser.GameObjects.Text;meta:Phaser.GameObjects.Text}>();
+  private mobileSectionButtons=new Map<DesktopSection,{bg:Phaser.GameObjects.Rectangle;icon:Phaser.GameObjects.Text;label:Phaser.GameObjects.Text}>();
 
   constructor(){super("menu");}
 
@@ -374,56 +375,169 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private createMobileMenu():void{
-    if(TROLL_MENU_ENABLED)this.drawTrollIdentity();
-    const online=this.add.text(42,54,"● — ONLINE",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(12,2),fontStyle:"bold",color:"#78bfa0"}).setOrigin(0,.5);
+    this.drawTrollIdentity();
+    this.add.text(28,35,"HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(24,2),fontStyle:"bold",color:"#f1f4ef"}).setOrigin(0,.5);
+    this.add.rectangle(30,58,54,3,0xc2ef63,.92).setOrigin(0,.5);
+    const wallet=SaveSystem.wallet();
+    this.add.text(510,35,`◈ ${wallet.coins}   ◆ ${wallet.gems}`,{fontFamily:"system-ui",fontSize:uiFontSize(10,1),fontStyle:"bold",color:"#b9c4cc"}).setOrigin(1,.5);
+    const online=this.add.text(30,78,"● — ONLINE",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(9,1),fontStyle:"bold",color:"#78bfa0"}).setOrigin(0,.5);
     const stopOnline=LiveOps.onOnline(count=>online.setText(`● ${count==null?"—":count} ONLINE`));this.events.once("shutdown",stopOnline);
     this.languageSelectorMobile();
-    this.add.text(DESIGN_WIDTH/2,116,"HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(39,2),fontStyle:"bold",color:TROLL_MENU_ENABLED?"#c2ef63":"#f5f7fa"}).setOrigin(.5);
-    this.add.rectangle(244,154,52,3,TROLL_MENU_ENABLED?0xb68cff:0x6f98ae,.92);this.add.rectangle(296,154,52,3,TROLL_MENU_ENABLED?0xc2ef63:0x6f98ae,.76);
     const alias=BetaTelemetry.alias();
-    const identityBg=this.add.rectangle(270,202,280,36,alias?0x151522:0x211b18).setStrokeStyle(1,alias?0x3a3349:0x65562f).setInteractive({useHandCursor:true});
-    const identity=this.add.text(DESIGN_WIDTH/2,202,alias?`JUGADOR · ${alias}   ✎`:"ELIGE TU NOMBRE   ✎",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:alias?"#cfd2dc":"#e7c477"}).setOrigin(.5);
-    const editIdentity=()=>this.scene.start("player-profile");identityBg.on("pointerover",()=>identityBg.setFillStyle(alias?0x201c2c:0x302718)).on("pointerout",()=>identityBg.setFillStyle(alias?0x151522:0x211b18)).on("pointerup",editIdentity);identity.setInteractive({useHandCursor:true}).on("pointerup",editIdentity);
-    this.makeWideButton("CAMPAÑA",282,()=>this.scene.start("level-select",{mode:"classic",page:0}),true);
-    this.createMobileActions();
+    const identityBg=this.add.rectangle(270,115,300,38,alias?0x181420:0x211b18).setStrokeStyle(1,alias?0x49365d:0x65562f);
+    const identity=this.add.text(DESIGN_WIDTH/2,115,alias?`JUGADOR · ${alias}   ✎`:"ELIGE TU NOMBRE   ✎",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:"bold",color:alias?"#d3cedb":"#e7c477"}).setOrigin(.5);
+    this.wirePress(identityBg,identity,270,115,310,46,()=>this.scene.start("player-profile"),alias?0x181420:0x211b18,alias?0x241d30:0x302718);
+
+    this.add.rectangle(270,478,510,662,0x09080e,.78).setStrokeStyle(1,0x49375d,.55);
+    this.renderMobileSection();
+    this.createMobileUtilityBar();
+    this.createMobileSectionNav();
   }
 
   private languageSelectorMobile():void{
     const current=I18n.language(),select=(next:GameLanguage):void=>{if(next===I18n.language())return;I18n.set(next);this.scene.restart();};
-    const left=this.add.rectangle(248,54,42,30,current==="es"?0x29485a:0x111a21).setStrokeStyle(1,current==="es"?0x709bb1:0x2b3a45).setInteractive({useHandCursor:true});
-    const right=this.add.rectangle(292,54,42,30,current==="en"?0x29485a:0x111a21).setStrokeStyle(1,current==="en"?0x709bb1:0x2b3a45).setInteractive({useHandCursor:true});
-    const es=this.add.text(248,54,"ES",{fontFamily:"system-ui",fontSize:uiFontSize(9,1),fontStyle:"bold",color:current==="es"?"#eef7fb":"#718491"}).setOrigin(.5).setInteractive({useHandCursor:true});
-    const en=this.add.text(292,54,"EN",{fontFamily:"system-ui",fontSize:uiFontSize(9,1),fontStyle:"bold",color:current==="en"?"#eef7fb":"#718491"}).setOrigin(.5).setInteractive({useHandCursor:true});
+    const left=this.add.rectangle(456,78,38,28,current==="es"?0x35422e:0x14111c).setStrokeStyle(1,current==="es"?0x91b56f:0x40364d).setInteractive({useHandCursor:true});
+    const right=this.add.rectangle(498,78,38,28,current==="en"?0x35422e:0x14111c).setStrokeStyle(1,current==="en"?0x91b56f:0x40364d).setInteractive({useHandCursor:true});
+    const es=this.add.text(456,78,"ES",{fontFamily:"system-ui",fontSize:uiFontSize(8,1),fontStyle:"bold",color:current==="es"?"#eef7e8":"#756d82"}).setOrigin(.5).setInteractive({useHandCursor:true});
+    const en=this.add.text(498,78,"EN",{fontFamily:"system-ui",fontSize:uiFontSize(8,1),fontStyle:"bold",color:current==="en"?"#eef7e8":"#756d82"}).setOrigin(.5).setInteractive({useHandCursor:true});
     left.on("pointerup",()=>select("es"));es.on("pointerup",()=>select("es"));right.on("pointerup",()=>select("en"));en.on("pointerup",()=>select("en"));
   }
 
   private drawTrollIdentity():void{
-    this.cameras.main.setBackgroundColor("#0e0c17");const g=this.add.graphics();g.fillStyle(0x6e4b92,.08);g.fillCircle(505,130,190);g.fillStyle(0xc2ef63,.045);g.fillCircle(18,850,150);g.lineStyle(1,0xb68cff,.09);g.lineBetween(46,342,494,342);
+    this.cameras.main.setBackgroundColor("#0e0c17");const g=this.add.graphics();g.fillStyle(0x6e4b92,.1);g.fillCircle(520,80,190);g.fillStyle(0xc2ef63,.055);g.fillCircle(5,870,180);g.lineStyle(1,0xb68cff,.06);for(let y=160;y<820;y+=82)g.lineBetween(18,y,522,y);
   }
 
-  private createMobileActions():void{
-    this.add.text(270,364,"PROGRESO",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#766c86"}).setOrigin(.5);
-    if(PRODUCT_FEATURES.cosmetics)this.makeWideButton("PERSONALIZAR",408,()=>this.scene.start("cosmetics"));else this.makeLockedWideButton("PERSONALIZAR",408);
-    this.makeWideButton("PRESTIGIO",466,()=>this.scene.start("rewards"),true);
-    if(PRODUCT_FEATURES.shop)this.makeWideButton("TIENDA",524,()=>this.scene.start("shop"));else this.makeLockedWideButton("TIENDA",524);
-    this.add.text(270,590,"MENÚ",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#766c86"}).setOrigin(.5);
-    this.makeWideButton(PatchNotes.hasUnread()?"PATCH NOTES   ·   ● NUEVO":"PATCH NOTES",634,()=>this.scene.start("patch-notes"),PatchNotes.hasUnread());
-    this.makeWideButton("ASISTENCIA AL JUGADOR",692,()=>this.scene.start("assistance"));
-    if(PRODUCT_FEATURES.communityMaps)this.makeWideButton("COMMUNITY MAPS",750,()=>{void this.openCommunity();});else this.makeLockedWideButton("COMMUNITY MAPS",750);
-    if(BETA_TESTING){const beta=this.add.rectangle(270,826,250,38,0x0e141a).setStrokeStyle(1,0x293744),betaText=this.add.text(270,826,`BETA LAB · ${BetaFeedbackSystem.count()} FB`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(8,2),fontStyle:"bold",color:"#718390"}).setOrigin(.5);this.wirePress(beta,betaText,270,826,270,46,()=>this.scene.start("editor"),0x0e141a,0x17222a);}
+  private renderMobileSection(direction=0):void{
+    const old=this.sectionLayer;
+    const build=():void=>{
+      const layer=this.add.container(direction===0?0:direction*34,0).setAlpha(direction===0?1:0);
+      this.sectionLayer=layer;
+      if(this.desktopSection==="campaign")this.renderMobileCampaign(layer);
+      else if(this.desktopSection==="cosmetics")this.renderMobileCosmetics(layer);
+      else if(this.desktopSection==="shop")this.renderMobileShop(layer);
+      else this.renderMobilePrestige(layer);
+      if(direction!==0)this.tweens.add({targets:layer,x:0,alpha:1,duration:170,ease:"Cubic.easeOut"});
+    };
+    if(!old){build();return;}
+    this.tweens.add({targets:old,x:-direction*34,alpha:0,duration:105,ease:"Cubic.easeIn",onComplete:()=>{old.destroy(true);build();}});
   }
+
+  private renderMobileCampaign(layer:Phaser.GameObjects.Container):void{
+    this.addMobileHeading(layer,"CAMPAÑA","ELIGE CAPÍTULO",`★ ${SaveSystem.totalStars(CAMPAIGN_ENTRIES.map(entry=>entry.level.id))}`);
+    const chapter=CHAPTER_MENU_CARDS[this.carouselOffset]??CHAPTER_MENU_CARDS[0]!;
+    this.addMobileChapterCard(layer,chapter);
+    this.addMobileCarouselControls(layer,CHAPTER_MENU_CARDS.length);
+  }
+
+  private addMobileChapterCard(layer:Phaser.GameObjects.Container,chapter:ChapterMenuCard):void{
+    const x=270,y=493,w=430,h=518,upcoming=!chapter.exists,accent=chapter.index===0?0x8fce72:chapter.index===1?0x72a8d8:0x5b5265,fill=upcoming?0x121019:chapter.index===0?0x142019:0x141a22;
+    const bg=this.add.rectangle(x,y,w,h,fill,.98).setStrokeStyle(upcoming?1:2,upcoming?0x393140:accent,.78);
+    const stripe=this.add.rectangle(x-w/2+5,y,7,h-10,accent,upcoming?.25:.95);
+    const label=this.add.text(82,261,"CAPÍTULO",{fontFamily:"system-ui",fontSize:uiFontSize(10,1),fontStyle:"bold",color:upcoming?"#5f5868":"#84918a"}).setOrigin(0,.5);
+    const number=this.add.text(456,261,String(chapter.index+1).padStart(2,"0"),{fontFamily:"system-ui",fontSize:uiFontSize(11,1),fontStyle:"bold",color:upcoming?"#5e5668":"#8e9a91"}).setOrigin(1,.5);
+    const title=this.add.text(82,305,chapter.name,{fontFamily:"system-ui",fontSize:uiFontSize(29,2),fontStyle:"bold",color:upcoming?"#77707e":"#f0f4ef"}).setOrigin(0,.5);
+    const art=this.add.graphics();this.drawMobileChapterArt(art,chapter,x,420,w,accent,upcoming);
+
+    let status="PRÓXIMAMENTE",detail="CAPÍTULO EN DESARROLLO",progressText="CONTENIDO AÚN NO DISPONIBLE";let action:(()=>void)|undefined,ratio=0;
+    if(chapter.exists){
+      const progress=SaveSystem.campaignChapterProgress(chapter.index*CAMPAIGN_CHAPTER_SIZE),entries=CAMPAIGN_ENTRIES.slice(chapter.index*CAMPAIGN_CHAPTER_SIZE,(chapter.index+1)*CAMPAIGN_CHAPTER_SIZE),completed=entries.filter(entry=>SaveSystem.record(entry.level.id).completed).length,stars=SaveSystem.totalStars(entries.map(entry=>entry.level.id));
+      detail="10 NIVELES";progressText=`${completed} / ${entries.length} COMPLETADOS   ·   ★ ${stars} / ${entries.length*3}`;ratio=entries.length===0?0:completed/entries.length;
+      if(BETA_TESTING||progress.unlocked){status=BETA_TESTING?"ABIERTO EN BETA":"JUGAR";action=()=>this.openCampaignChapter(chapter.index);}
+      else if(progress.eligible&&!progress.claimed){status="RECLAMAR EN PRESTIGIO";action=()=>this.openMobilePrestigeReward(campaignChapterDefinition(chapter.index).claimRewardId??undefined);}
+      else status=`★ ${progress.totalStars} / ${progress.requiredStars}`;
+    }
+    const detailText=this.add.text(82,549,detail,{fontFamily:"system-ui",fontSize:uiFontSize(10,1),fontStyle:"bold",color:upcoming?"#5e5766":"#8d9991"}).setOrigin(0,.5);
+    const progressLabel=this.add.text(82,578,progressText,{fontFamily:"system-ui",fontSize:uiFontSize(9,1),fontStyle:"bold",color:upcoming?"#4f4858":"#b5c2b8"}).setOrigin(0,.5);
+    const progressBg=this.add.rectangle(270,606,376,5,0x26222c),progressFill=this.add.rectangle(82,606,376*ratio,5,accent,.9).setOrigin(0,.5);
+    const button=this.add.rectangle(270,704,376,58,action?0x283024:0x17141d).setStrokeStyle(1,action?accent:0x3a3342),buttonText=this.add.text(270,704,status,{fontFamily:"system-ui",fontSize:uiFontSize(12,1),fontStyle:"bold",color:action?"#e6f4dc":"#6f6877"}).setOrigin(.5);
+    layer.add([bg,stripe,label,number,title,art,detailText,progressLabel,progressBg,progressFill,button,buttonText]);
+    if(action)this.wireLayerPress(layer,button,buttonText,270,704,386,66,action,0x283024,chapter.index===0?0x394733:0x263b4d);
+  }
+
+  private drawMobileChapterArt(g:Phaser.GameObjects.Graphics,chapter:ChapterMenuCard,x:number,y:number,w:number,accent:number,upcoming:boolean):void{
+    g.fillStyle(accent,upcoming?.045:.12);g.fillRoundedRect(x-w/2+27,y-75,w-54,150,14);
+    if(chapter.index===0&&!upcoming){g.lineStyle(4,0x9bd77d,.72);g.lineBetween(92,y+48,250,y-31);g.lineBetween(250,y-31,445,y+48);g.lineStyle(1,0xc8f0ae,.25);g.lineBetween(92,y+17,445,y+17);g.fillStyle(0xc8f0ae,.9);g.fillCircle(151,y+11,12);g.fillStyle(0x080b09,1);g.fillCircle(403,y+17,20);}
+    else if(chapter.index===1&&!upcoming){g.fillStyle(0x72a8d8,.3);g.fillRect(100,y+3,62,50);g.fillRect(177,y-24,76,77);g.fillRect(270,y-51,60,104);g.fillRect(346,y-8,54,61);g.lineStyle(2,0xa8ccea,.62);g.lineBetween(88,y+54,452,y+54);}
+    else{g.lineStyle(1,0x756b80,.22);for(let i=0;i<6;i+=1)g.strokeCircle(x+(i-2.5)*55,y+5,10+i*2);}
+  }
+
+  private renderMobileCosmetics(layer:Phaser.GameObjects.Container):void{
+    const save=SaveSystem.cosmetics(),categories:CosmeticCategory[]=["ball","trail","holeEffect"],category=categories[this.carouselOffset]??categories[0]!,items=cosmeticsByCategory(category),owned=items.filter(item=>save.owned.includes(item.id)),equipped=cosmeticById(save.equipped[category]);
+    this.addMobileHeading(layer,"COSMÉTICOS","TU COLECCIÓN",`${save.owned.length} OBJ.`);
+    const bg=this.add.rectangle(270,493,430,518,0x15121d,.98).setStrokeStyle(2,0x76558f,.72),eyebrow=this.add.text(82,261,"COLECCIÓN",{fontFamily:"system-ui",fontSize:uiFontSize(10,1),fontStyle:"bold",color:"#83778e"}).setOrigin(0,.5),title=this.add.text(82,305,CATEGORY_LABELS[category],{fontFamily:"system-ui",fontSize:uiFontSize(27,2),fontStyle:"bold",color:"#f0edf4"}).setOrigin(0,.5),preview=this.add.graphics();
+    if(equipped)this.drawMobileCosmeticPreview(preview,equipped,270,435);
+    const count=this.add.text(270,565,`${owned.length} / ${items.length} OBJETOS`,{fontFamily:"system-ui",fontSize:uiFontSize(11,1),fontStyle:"bold",color:"#9f95a7"}).setOrigin(.5),equippedText=this.add.text(270,598,`EQUIPADO · ${equipped?.name??"—"}`,{fontFamily:"system-ui",fontSize:uiFontSize(10,1),color:"#c2ef63"}).setOrigin(.5),button=this.add.rectangle(270,704,376,58,0x2a2335).setStrokeStyle(1,0xb68cff,.72),buttonText=this.add.text(270,704,"ABRIR COLECCIÓN",{fontFamily:"system-ui",fontSize:uiFontSize(12,1),fontStyle:"bold",color:"#eee8f3"}).setOrigin(.5);
+    layer.add([bg,eyebrow,title,preview,count,equippedText,button,buttonText]);this.wireLayerPress(layer,button,buttonText,270,704,386,66,()=>this.scene.start("cosmetics",{category}),0x2a2335,0x3a2f49);this.addMobileCarouselControls(layer,categories.length);
+  }
+
+  private drawMobileCosmeticPreview(g:Phaser.GameObjects.Graphics,item:CosmeticDefinition,x:number,y:number):void{
+    g.fillStyle(item.primary,.08);g.fillRoundedRect(x-168,y-92,336,184,16);g.lineStyle(1,item.secondary??item.primary,.3);g.strokeRoundedRect(x-168,y-92,336,184,16);
+    if(item.category==="ball"){drawBall(g,item,x,y,55);return;}
+    if(item.category==="trail"){for(let i=0;i<9;i+=1){const t=i/8;g.fillStyle(i%2===0?item.primary:(item.secondary??item.primary),.15+t*.72);g.fillCircle(x-125+i*29,y+Math.sin(i*1.4)*10,6+t*9);}g.fillStyle(0xf4f7f8,1);g.fillCircle(x+132,y,34);return;}
+    g.fillStyle(0x070609,1);g.fillCircle(x,y,44);g.lineStyle(6,item.primary,.9);g.strokeCircle(x,y,60);g.lineStyle(3,item.secondary??item.primary,.5);g.strokeCircle(x,y,78);
+  }
+
+  private renderMobileShop(layer:Phaser.GameObjects.Container):void{
+    this.addMobileHeading(layer,"TIENDA",PRODUCT_FEATURES.shop?"ROTACIÓN ACTUAL":"EN PREPARACIÓN",PRODUCT_FEATURES.shop?"":"PRÓXIMAMENTE");
+    if(!PRODUCT_FEATURES.shop){const bg=this.add.rectangle(270,493,430,518,0x131019,.98).setStrokeStyle(1,0x403647),glyph=this.add.text(270,421,"◇",{fontFamily:"system-ui",fontSize:uiFontSize(92,2),fontStyle:"bold",color:"#4f4658"}).setOrigin(.5),title=this.add.text(270,520,"TIENDA",{fontFamily:"system-ui",fontSize:uiFontSize(29,2),fontStyle:"bold",color:"#85808a"}).setOrigin(.5),body=this.add.text(270,562,"PRÓXIMAMENTE",{fontFamily:"system-ui",fontSize:uiFontSize(12,1),fontStyle:"bold",color:"#68616f"}).setOrigin(.5);layer.add([bg,glyph,title,body]);return;}
+    const items=dailyShopIds().map(id=>cosmeticById(id)).filter(item=>item!==undefined),item=items[this.carouselOffset]??items[0];if(!item)return;
+    const bg=this.add.rectangle(270,493,430,518,0x15121d).setStrokeStyle(2,0x76558f,.72),category=this.add.text(82,261,CATEGORY_LABELS[item.category],{fontFamily:"system-ui",fontSize:uiFontSize(10,1),fontStyle:"bold",color:"#83778e"}).setOrigin(0,.5),title=this.add.text(82,305,item.name,{fontFamily:"system-ui",fontSize:uiFontSize(27,2),fontStyle:"bold",color:"#f0edf4"}).setOrigin(0,.5),preview=this.add.graphics();this.drawMobileCosmeticPreview(preview,item,270,435);
+    const description=this.add.text(270,570,item.description,{fontFamily:"system-ui",fontSize:uiFontSize(11,1),color:"#a49baa",wordWrap:{width:350},align:"center"}).setOrigin(.5),button=this.add.rectangle(270,704,376,58,0x2a2335).setStrokeStyle(1,0xb68cff,.72),buttonText=this.add.text(270,704,`◈ ${item.price??0}`,{fontFamily:"system-ui",fontSize:uiFontSize(12,1),fontStyle:"bold",color:"#eee8f3"}).setOrigin(.5);layer.add([bg,category,title,preview,description,button,buttonText]);this.wireLayerPress(layer,button,buttonText,270,704,386,66,()=>this.scene.start("shop"),0x2a2335,0x3a2f49);this.addMobileCarouselControls(layer,items.length);
+  }
+
+  private renderMobilePrestige(layer:Phaser.GameObjects.Container):void{
+    const stars=SaveSystem.totalStars(CAMPAIGN_ENTRIES.map(entry=>entry.level.id)),reward=PRESTIGE_REWARDS[this.carouselOffset]??PRESTIGE_REWARDS[0]!;this.addMobileHeading(layer,"PRESTIGIO","RECOMPENSAS PERMANENTES",`★ ${stars}`);
+    const state=SaveSystem.prestigeRewardState(reward.id),ready=state.eligible&&!state.claimed,name=reward.kind==="cosmetic"?(cosmeticById(reward.cosmeticId)?.name??"COSMÉTICO"):campaignChapterDefinition(reward.chapterIndex).name,kind=reward.kind==="cosmetic"?"COSMÉTICO":"NUEVO CAPÍTULO",bg=this.add.rectangle(270,493,430,518,state.claimed?0x152018:ready?0x282317:0x15121d).setStrokeStyle(2,state.claimed?0x587d55:ready?0xd7b85e:0x463754),threshold=this.add.text(82,271,`★ ${reward.stars}`,{fontFamily:"system-ui",fontSize:uiFontSize(24,2),fontStyle:"bold",color:state.claimed?"#9dd88b":ready?"#f0cf70":"#776d81"}).setOrigin(0,.5),preview=this.add.graphics(),cosmetic=reward.kind==="cosmetic"?cosmeticById(reward.cosmeticId):undefined;
+    if(cosmetic)this.drawMobileCosmeticPreview(preview,cosmetic,270,435);else{preview.fillStyle(0xb68cff,.07);preview.fillRoundedRect(102,343,336,184,16);preview.lineStyle(4,0x72a8d8,state.claimed||ready?.75:.25);preview.strokeCircle(270,435,58);preview.lineStyle(2,0xb68cff,.42);preview.strokeCircle(270,435,79);}
+    const kindText=this.add.text(270,557,kind,{fontFamily:"system-ui",fontSize:uiFontSize(10,1),fontStyle:"bold",color:"#887c92"}).setOrigin(.5),title=this.add.text(270,592,name,{fontFamily:"system-ui",fontSize:uiFontSize(24,2),fontStyle:"bold",color:state.claimed||ready?"#f1edf4":"#89818f",align:"center",wordWrap:{width:360}}).setOrigin(.5),status=state.claimed?"RECLAMADO":ready?"RECLAMAR":`${Math.min(stars,reward.stars)} / ${reward.stars} ESTRELLAS`,button=this.add.rectangle(270,704,376,58,ready?0x3a301c:0x1c1822).setStrokeStyle(1,ready?0xd7b85e:0x403647),buttonText=this.add.text(270,704,status,{fontFamily:"system-ui",fontSize:uiFontSize(12,1),fontStyle:"bold",color:ready?"#f6dda0":state.claimed?"#7f9a78":"#746d7a"}).setOrigin(.5);
+    layer.add([bg,threshold,preview,kindText,title,button,buttonText]);if(ready)this.wireLayerPress(layer,button,buttonText,270,704,386,66,()=>this.claimMobilePrestigeReward(reward.id),0x3a301c,0x504326);this.addMobileCarouselControls(layer,PRESTIGE_REWARDS.length);
+  }
+
+  private addMobileHeading(layer:Phaser.GameObjects.Container,title:string,subtitle:string,metric:string):void{
+    const titleText=this.add.text(30,174,title,{fontFamily:"system-ui",fontSize:uiFontSize(22,2),fontStyle:"bold",color:"#f1edf4"}).setOrigin(0,.5),subtitleText=this.add.text(30,202,subtitle,{fontFamily:"system-ui",fontSize:uiFontSize(9,1),fontStyle:"bold",color:"#81768b"}).setOrigin(0,.5),metricText=this.add.text(510,177,metric,{fontFamily:"system-ui",fontSize:uiFontSize(11,1),fontStyle:"bold",color:"#c2ef63"}).setOrigin(1,.5);layer.add([titleText,subtitleText,metricText]);
+  }
+
+  private addMobileCarouselControls(layer:Phaser.GameObjects.Container,total:number):void{
+    if(total<=1)return;const enabledLeft=this.carouselOffset>0,enabledRight=this.carouselOffset<total-1;
+    this.addMobileArrow(layer,31,493,"‹",enabledLeft,()=>this.moveMobileCarousel(-1));this.addMobileArrow(layer,509,493,"›",enabledRight,()=>this.moveMobileCarousel(1));
+    for(let i=0;i<total;i+=1){const dot=this.add.circle(270+(i-(total-1)/2)*17,778,i===this.carouselOffset?4:3,i===this.carouselOffset?0xc2ef63:0x51475c,i===this.carouselOffset?1:.72);layer.add(dot);}
+    let startX=0;const swipe=this.add.zone(270,456,390,330).setInteractive();swipe.on("pointerdown",(pointer:Phaser.Input.Pointer)=>{startX=pointer.x;});swipe.on("pointerup",(pointer:Phaser.Input.Pointer)=>{const delta=pointer.x-startX;if(Math.abs(delta)>48)this.moveMobileCarousel(delta<0?1:-1);});layer.add(swipe);
+  }
+
+  private addMobileArrow(layer:Phaser.GameObjects.Container,x:number,y:number,label:string,enabled:boolean,action:()=>void):void{
+    const bg=this.add.rectangle(x,y,32,80,enabled?0x211a2b:0x111017,.96).setStrokeStyle(1,enabled?0x5c486e:0x29242f),text=this.add.text(x,y-3,label,{fontFamily:"system-ui",fontSize:uiFontSize(29,1),fontStyle:"bold",color:enabled?"#ded6e5":"#3f3945"}).setOrigin(.5);layer.add([bg,text]);if(enabled)this.wireLayerPress(layer,bg,text,x,y,38,88,action,0x211a2b,0x342541);
+  }
+
+  private moveMobileCarousel(delta:number):void{
+    const total=this.mobileCarouselTotal(),next=Phaser.Math.Clamp(this.carouselOffset+delta,0,Math.max(0,total-1));if(next===this.carouselOffset)return;this.carouselOffset=next;this.renderMobileSection(delta);
+  }
+
+  private mobileCarouselTotal():number{
+    if(this.desktopSection==="campaign")return CHAPTER_MENU_CARDS.length;if(this.desktopSection==="cosmetics")return 3;if(this.desktopSection==="prestige")return PRESTIGE_REWARDS.length;if(this.desktopSection==="shop"&&PRODUCT_FEATURES.shop)return dailyShopIds().length;return 1;
+  }
+
+  private createMobileSectionNav():void{
+    this.add.rectangle(270,907,524,88,0x0a080f,.98).setStrokeStyle(1,0x49375d,.6);const icons=["●","✦","◇","★"];
+    DESKTOP_SECTIONS.forEach((section,index)=>{const x=67.5+index*135,active=section.id===this.desktopSection,bg=this.add.rectangle(x,907,128,74,active?0x2a2335:0x121018).setStrokeStyle(active?2:1,active?0xb68cff:0x312939),icon=this.add.text(x,886,icons[index]!,{fontFamily:"system-ui",fontSize:uiFontSize(17,1),fontStyle:"bold",color:active?"#c2ef63":"#655b70"}).setOrigin(.5),label=this.add.text(x,918,section.label,{fontFamily:"system-ui",fontSize:uiFontSize(8,1),fontStyle:"bold",color:active?"#f2edf5":"#8a8192"}).setOrigin(.5),zone=this.add.zone(x,907,130,78).setInteractive({useHandCursor:true});zone.on("pointerdown",()=>bg.setScale(.98));zone.on("pointerup",()=>{bg.setScale(1);this.selectMobileSection(section.id);});zone.on("pointerout",()=>bg.setScale(1));this.mobileSectionButtons.set(section.id,{bg,icon,label});});
+  }
+
+  private selectMobileSection(section:DesktopSection):void{
+    if(section===this.desktopSection)return;const previous=DESKTOP_SECTIONS.findIndex(item=>item.id===this.desktopSection),next=DESKTOP_SECTIONS.findIndex(item=>item.id===section);this.desktopSection=section;this.carouselOffset=0;this.syncMobileSectionNav();this.renderMobileSection(next>previous?1:-1);
+  }
+
+  private syncMobileSectionNav():void{
+    for(const section of DESKTOP_SECTIONS){const button=this.mobileSectionButtons.get(section.id);if(!button)continue;const active=section.id===this.desktopSection;button.bg.setFillStyle(active?0x2a2335:0x121018).setStrokeStyle(active?2:1,active?0xb68cff:0x312939);button.icon.setColor(active?"#c2ef63":"#655b70");button.label.setColor(active?"#f2edf5":"#8a8192");}
+  }
+
+  private createMobileUtilityBar():void{
+    const links:{label:string;action:()=>void;accent?:boolean}[]=[{label:"AYUDA",action:()=>this.scene.start("assistance")},{label:PatchNotes.hasUnread()?"NOTAS · ●":"NOTAS",action:()=>this.scene.start("patch-notes"),accent:PatchNotes.hasUnread()}];if(PRODUCT_FEATURES.communityMaps)links.push({label:"MAPAS",action:()=>{void this.openCommunity();}});if(BETA_TESTING)links.push({label:`BETA · ${BetaFeedbackSystem.count()} FB`,action:()=>this.scene.start("editor")});
+    const gap=6,w=(500-gap*(links.length-1))/links.length;links.forEach((link,index)=>{const x=20+w/2+index*(w+gap),rest=link.accent?0x2b202f:0x15121c,hover=link.accent?0x3d2a40:0x241b2c,bg=this.add.rectangle(x,827,w,38,rest).setStrokeStyle(1,link.accent?0x7c546f:0x382f42),label=this.add.text(x,827,link.label,{fontFamily:"system-ui",fontSize:uiFontSize(8,1),fontStyle:"bold",color:link.accent?"#e2b7d8":"#92899b"}).setOrigin(.5);this.wirePress(bg,label,x,827,w,44,link.action,rest,hover);});
+  }
+
+  private openMobilePrestigeReward(rewardId:string|undefined):void{const index=rewardId?PRESTIGE_REWARDS.findIndex(reward=>reward.id===rewardId):0;this.desktopSection="prestige";this.carouselOffset=Math.max(0,index);this.syncMobileSectionNav();this.renderMobileSection(1);}
+  private claimMobilePrestigeReward(rewardId:string):void{if(!SaveSystem.claimPrestigeReward(rewardId).ok)return;this.renderMobileSection();}
 
   private async openCommunity():Promise<void>{await BetaTelemetry.ensureTester(false);this.scene.start("community-maps");}
-  private lockedCopy():string{return I18n.language()==="es"?"PRÓXIMAMENTE":"COMING SOON";}
-
-  private makeLockedWideButton(label:string,y:number):void{
-    const bg=this.add.rectangle(270,y,390,50,0x10161c).setStrokeStyle(1,0x293641);this.add.text(108,y,label,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(12,2),fontStyle:"bold",color:"#687987"}).setOrigin(0,.5);this.add.text(432,y,this.lockedCopy(),{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(8,2),fontStyle:"bold",color:"#786e7f"}).setOrigin(1,.5);bg.setAlpha(.9);
-  }
-
-  private makeWideButton(label:string,y:number,action:()=>void,accent=false):void{
-    const rest=TROLL_MENU_ENABLED?(accent?0x2a3430:0x211b30):accent?0x192831:0x151d25,hover=TROLL_MENU_ENABLED?0x3d354e:accent?0x294250:0x222f3b;
-    const bg=this.add.rectangle(270,y,390,50,rest).setStrokeStyle(accent?2:1,TROLL_MENU_ENABLED?(accent?0xc2ef63:0x65517c):accent?0x52788c:0x364653),labelText=this.add.text(270,y,label,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(13,2),fontStyle:"bold",color:TROLL_MENU_ENABLED&&accent?"#c2ef63":accent?"#d9eef8":"#d7e0e8"}).setOrigin(.5);this.wirePress(bg,labelText,270,y,410,58,action,rest,hover);
-  }
 
   private wirePress(bg:Phaser.GameObjects.Rectangle,labels:Phaser.GameObjects.Text|Phaser.GameObjects.Text[],x:number,y:number,w:number,h:number,action:()=>void,rest:number,hover:number):void{
     const items=Array.isArray(labels)?labels:[labels],zone=this.add.zone(x,y,w,h).setInteractive({useHandCursor:true}),scale=(value:number):void=>{bg.setScale(value);for(const item of items)item.setScale(value);};
