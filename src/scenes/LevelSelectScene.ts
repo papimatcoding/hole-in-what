@@ -82,7 +82,7 @@ export class LevelSelectScene extends Phaser.Scene {
     const cols=5,cardW=250,cardH=244,gapX=26,gapY=26,startX=DESIGN_WIDTH/2-2*(cardW+gapX),startY=326;
     levels.forEach((level,localIndex)=>{
       const index=pageStart+localIndex,col=localIndex%cols,row=Math.floor(localIndex/cols),x=startX+col*(cardW+gapX),y=startY+row*(cardH+gapY);
-      this.addDesktopLevelCard(level,index,x,y,cardW,cardH,isOpen(index),accent);
+      this.addDesktopLevelCard(level,index,x,y,cardW,cardH,BETA_TESTING||isOpen(index),accent);
     });
   }
 
