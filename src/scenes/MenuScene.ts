@@ -3,11 +3,12 @@ import { BETA_TESTING } from "../config/beta";
 import { DESIGN_WIDTH, VIEW_WIDTH, isDesktopUI, setupDesignCamera, sharpenSceneText, uiFontSize } from "../config/display";
 import { PRODUCT_FEATURES, TROLL_MENU_ENABLED } from "../config/product";
 import { CAMPAIGN_ENTRIES } from "../data/campaign";
-import { cosmeticById, cosmeticsByCategory, type CosmeticCategory } from "../data/cosmetics";
+import { cosmeticById, cosmeticsByCategory, type CosmeticCategory, type CosmeticDefinition } from "../data/cosmetics";
 import { CAMPAIGN_CHAPTER_SIZE, PRESTIGE_REWARDS, campaignChapterDefinition } from "../data/progression";
 import { dailyShopIds } from "../data/shopRotation";
 import { BetaFeedbackSystem } from "../systems/BetaFeedbackSystem";
 import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
+import { drawBall } from "../systems/CosmeticRenderer";
 import { I18n, type GameLanguage } from "../systems/I18nSystem";
 import { LiveOps } from "../systems/LiveOpsSystem";
 import { PatchNotes } from "../systems/PatchNotesSystem";
@@ -18,6 +19,7 @@ type DesktopSection="campaign"|"cosmetics"|"shop"|"prestige";
 
 interface SectionDefinition{ id:DesktopSection; label:string; }
 interface ChapterMenuCard{ index:number; name:string; exists:boolean; }
+interface MenuData{ section?:DesktopSection; carouselOffset?:number; }
 
 const DESKTOP_SECTIONS:SectionDefinition[]=[
   {id:"campaign",label:"CAMPAÑA"},
@@ -46,6 +48,12 @@ export class MenuScene extends Phaser.Scene {
 
   constructor(){super("menu");}
 
+  init(data:MenuData={}):void{
+    const validSection=DESKTOP_SECTIONS.some(section=>section.id===data.section);
+    this.desktopSection=validSection?data.section!:"campaign";
+    this.carouselOffset=Math.max(0,Math.floor((data.carouselOffset??0)/3)*3);
+  }
+
   create():void{
     setupDesignCamera(this);this.desktop=isDesktopUI();
     this.cameras.main.setBackgroundColor("#0b0f14");
@@ -65,9 +73,8 @@ export class MenuScene extends Phaser.Scene {
 
     this.add.text(left+68,54,"HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:"30px",fontStyle:"bold",color:"#eaf0e6"}).setOrigin(0,.5);
     this.add.rectangle(left+72,82,62,3,0xc2ef63,.92).setOrigin(0,.5);
-    this.add.text(left+150,82,"PARECE GOLF. NO TE FÍES.",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#756d82"}).setOrigin(0,.5);
 
-    const online=this.add.text(left+68,116,"● — ONLINE",{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#78bfa0"}).setOrigin(0,.5);
+    const online=this.add.text(left+68,108,"● — ONLINE",{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#78bfa0"}).setOrigin(0,.5);
     const stopOnline=LiveOps.onOnline(count=>online.setText(`● ${count==null?"—":count} ONLINE`));
     this.events.once("shutdown",stopOnline);
 
@@ -170,46 +177,56 @@ export class MenuScene extends Phaser.Scene {
 
   private renderCampaignCards(layer:Phaser.GameObjects.Container):void{
     this.addSectionHeading(layer,"CAMPAÑA","ELIGE CAPÍTULO",`★ ${SaveSystem.totalStars(CAMPAIGN_ENTRIES.map(entry=>entry.level.id))}`);
-    CHAPTER_MENU_CARDS.slice(this.carouselOffset,this.carouselOffset+3).forEach((chapter,slot)=>this.addChapterCard(layer,chapter,slot));
+    const chapters=CHAPTER_MENU_CARDS.slice(this.carouselOffset,this.carouselOffset+3);
+    chapters.forEach((chapter,slot)=>this.addChapterCard(layer,chapter,slot,chapters.length));
     this.addCarouselControls(layer,CHAPTER_MENU_CARDS.length);
   }
 
-  private addChapterCard(layer:Phaser.GameObjects.Container,chapter:ChapterMenuCard,slot:number):void{
-    const x=DESIGN_WIDTH/2+(slot-1)*388,y=532,w=356,h=402,upcoming=!chapter.exists;
+  private addChapterCard(layer:Phaser.GameObjects.Container,chapter:ChapterMenuCard,slot:number,count:number):void{
+    const x=this.carouselCardX(slot,count),y=532,w=356,h=402,upcoming=!chapter.exists;
     const accent=chapter.index===0?0x8fce72:chapter.index===1?0x72a8d8:0x5b5265;
     const fill=upcoming?0x121019:chapter.index===0?0x142019:0x141a22;
-    const bg=this.add.rectangle(x,y,w,h,fill,.98).setStrokeStyle(1,upcoming?0x393140:accent,.72);
-    const stripe=this.add.rectangle(x-w/2+5,y,6,h-10,accent,upcoming?.25:.92);
-    const number=this.add.text(x-w/2+26,y-h/2+32,String(chapter.index+1).padStart(2,"0"),{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:upcoming?"#5e5668":"#8e9a91"}).setOrigin(0,.5);
-    const label=this.add.text(x-w/2+26,y-h/2+91,"CAPÍTULO",{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:upcoming?"#5f5868":"#84918a"}).setOrigin(0,.5);
-    const title=this.add.text(x-w/2+26,y-h/2+126,chapter.name,{fontFamily:"system-ui, sans-serif",fontSize:"27px",fontStyle:"bold",color:upcoming?"#77707e":"#f0f4ef"}).setOrigin(0,.5);
+    const bg=this.add.rectangle(x,y,w,h,fill,.98).setStrokeStyle(upcoming?1:2,upcoming?0x393140:accent,.74);
+    const stripe=this.add.rectangle(x-w/2+5,y,6,h-10,accent,upcoming?.25:.94);
+    const number=this.add.text(x+w/2-26,y-h/2+34,String(chapter.index+1).padStart(2,"0"),{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:upcoming?"#5e5668":"#8e9a91"}).setOrigin(1,.5);
+    const label=this.add.text(x-w/2+26,y-h/2+34,"CAPÍTULO",{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:upcoming?"#5f5868":"#84918a"}).setOrigin(0,.5);
+    const title=this.add.text(x-w/2+26,y-h/2+76,chapter.name,{fontFamily:"system-ui, sans-serif",fontSize:"27px",fontStyle:"bold",color:upcoming?"#77707e":"#f0f4ef"}).setOrigin(0,.5);
 
     const art=this.add.graphics();
     if(chapter.index===0&&!upcoming){
-      art.fillStyle(0x8fce72,.16);art.fillRoundedRect(x-w/2+26,y-28,w-52,112,12);
-      art.lineStyle(3,0x9bd77d,.7);art.lineBetween(x-w/2+48,y+54,x-10,y-2);art.lineBetween(x-10,y-2,x+w/2-50,y+54);
-      art.fillStyle(0xc8f0ae,.85);art.fillCircle(x-82,y+23,10);art.fillStyle(0x0a0d0b,.9);art.fillCircle(x+94,y+29,15);
+      art.fillStyle(0x8fce72,.13);art.fillRoundedRect(x-w/2+26,y-68,w-52,132,12);
+      art.lineStyle(3,0x9bd77d,.72);art.lineBetween(x-w/2+48,y+44,x-10,y-22);art.lineBetween(x-10,y-22,x+w/2-50,y+44);
+      art.lineStyle(1,0xc8f0ae,.24);art.lineBetween(x-w/2+48,y+15,x+w/2-50,y+15);
+      art.fillStyle(0xc8f0ae,.88);art.fillCircle(x-82,y+11,10);art.fillStyle(0x080b09,.96);art.fillCircle(x+94,y+17,17);
     }else if(chapter.index===1&&!upcoming){
-      art.fillStyle(0x72a8d8,.12);art.fillRoundedRect(x-w/2+26,y-28,w-52,112,12);
-      art.fillStyle(0x72a8d8,.28);art.fillRect(x-116,y+16,50,40);art.fillRect(x-52,y-8,62,64);art.fillRect(x+24,y-28,48,84);art.fillRect(x+86,y+2,42,54);
-      art.lineStyle(2,0xa8ccea,.55);art.lineBetween(x-128,y+56,x+130,y+56);
+      art.fillStyle(0x72a8d8,.11);art.fillRoundedRect(x-w/2+26,y-68,w-52,132,12);
+      art.fillStyle(0x72a8d8,.3);art.fillRect(x-116,y+6,50,40);art.fillRect(x-52,y-18,62,64);art.fillRect(x+24,y-38,48,84);art.fillRect(x+86,y-8,42,54);
+      art.lineStyle(2,0xa8ccea,.62);art.lineBetween(x-128,y+46,x+130,y+46);
     }else{
-      art.fillStyle(0x766c82,.055);art.fillRoundedRect(x-w/2+26,y-28,w-52,112,12);art.lineStyle(1,0x756b80,.25);
-      for(let i=0;i<5;i+=1)art.strokeCircle(x+(i-2)*42,y+27,9+i*2);
+      art.fillStyle(0x766c82,.045);art.fillRoundedRect(x-w/2+26,y-68,w-52,132,12);art.lineStyle(1,0x756b80,.2);
+      for(let i=0;i<5;i+=1)art.strokeCircle(x+(i-2)*42,y+6,9+i*2);
     }
 
-    let status="PRÓXIMAMENTE",detail="NUEVO CAPÍTULO";let action:(()=>void)|undefined;
+    let status="PRÓXIMAMENTE",detail="CAPÍTULO EN DESARROLLO",progressText="CONTENIDO AÚN NO DISPONIBLE";let action:(()=>void)|undefined;
     if(chapter.exists){
       const progress=SaveSystem.campaignChapterProgress(chapter.index*CAMPAIGN_CHAPTER_SIZE);
-      detail=`10 NIVELES · ${chapter.index===0?"GEOMETRÍA · BUMPERS · RAMPAS":"CAPÍTULO 2"}`;
+      const entries=CAMPAIGN_ENTRIES.slice(chapter.index*CAMPAIGN_CHAPTER_SIZE,(chapter.index+1)*CAMPAIGN_CHAPTER_SIZE);
+      const completed=entries.filter(entry=>SaveSystem.record(entry.level.id).completed).length;
+      const stars=SaveSystem.totalStars(entries.map(entry=>entry.level.id));
+      detail="10 NIVELES";progressText=`${completed} / ${entries.length} COMPLETADOS   ·   ★ ${stars} / ${entries.length*3}`;
       if(BETA_TESTING||progress.unlocked){status=BETA_TESTING?"ABIERTO EN BETA":"JUGAR";action=()=>this.openCampaignChapter(chapter.index);}
-      else if(progress.eligible&&!progress.claimed){status="RECLAMAR EN PRESTIGIO";action=()=>this.scene.start("rewards");}
+      else if(progress.eligible&&!progress.claimed){status="RECLAMAR EN PRESTIGIO";action=()=>this.openPrestigeReward(campaignChapterDefinition(chapter.index).claimRewardId??undefined);}
       else status=`★ ${progress.totalStars} / ${progress.requiredStars}`;
     }
-    const detailText=this.add.text(x-w/2+26,y+102,detail,{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:upcoming?"#5e5766":"#8d9991",wordWrap:{width:w-52}}).setOrigin(0,.5);
+    const detailText=this.add.text(x-w/2+26,y+80,detail,{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:upcoming?"#5e5766":"#8d9991",wordWrap:{width:w-52}}).setOrigin(0,.5);
+    const progressLabel=this.add.text(x-w/2+26,y+106,progressText,{fontFamily:"system-ui, sans-serif",fontSize:"9px",fontStyle:"bold",color:upcoming?"#4f4858":"#b5c2b8"}).setOrigin(0,.5);
+    const progressBg=this.add.rectangle(x,y+130,w-52,4,0x26222c);
+    const chapterEntries=chapter.exists?CAMPAIGN_ENTRIES.slice(chapter.index*CAMPAIGN_CHAPTER_SIZE,(chapter.index+1)*CAMPAIGN_CHAPTER_SIZE):[];
+    const completedRatio=chapterEntries.length===0?0:chapterEntries.filter(entry=>SaveSystem.record(entry.level.id).completed).length/chapterEntries.length;
+    const progressFill=this.add.rectangle(x-(w-52)/2,y+130,(w-52)*completedRatio,4,accent,.9).setOrigin(0,.5);
     const button=this.add.rectangle(x,y+h/2-42,w-52,50,action?0x283024:0x17141d).setStrokeStyle(1,action?accent:0x3a3342);
     const buttonText=this.add.text(x,y+h/2-42,status,{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:action?"#e6f4dc":"#6f6877"}).setOrigin(.5);
-    layer.add([bg,stripe,number,label,title,art,detailText,button,buttonText]);
+    layer.add([bg,stripe,number,label,title,art,detailText,progressLabel,progressBg,progressFill,button,buttonText]);
     if(action)this.wireLayerPress(layer,button,buttonText,x,y+h/2-42,w-44,56,action,0x283024,chapter.index===0?0x394733:0x263b4d);
   }
 
@@ -225,7 +242,7 @@ export class MenuScene extends Phaser.Scene {
     categories.forEach((category,slot)=>{
       const x=DESIGN_WIDTH/2+(slot-1)*388,y=532,w=356,h=402,items=cosmeticsByCategory(category),owned=items.filter(item=>save.owned.includes(item.id)),equippedId=save.equipped[category],equipped=cosmeticById(equippedId);
       const bg=this.add.rectangle(x,y,w,h,0x15121d,.98).setStrokeStyle(1,0x463754);
-      const icon=this.add.graphics();this.drawCategoryIcon(icon,category,x,y-42);
+      const icon=this.add.graphics();if(equipped)this.drawEquippedCosmetic(icon,equipped,x,y-42);
       const eyebrow=this.add.text(x-w/2+26,y-h/2+34,"COLECCIÓN",{fontFamily:"system-ui",fontSize:"10px",fontStyle:"bold",color:"#83778e"}).setOrigin(0,.5);
       const title=this.add.text(x-w/2+26,y-h/2+70,CATEGORY_LABELS[category],{fontFamily:"system-ui",fontSize:"23px",fontStyle:"bold",color:"#f0edf4"}).setOrigin(0,.5);
       const count=this.add.text(x,y+58,`${owned.length} / ${items.length} OBJETOS`,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:"#9f95a7"}).setOrigin(.5);
@@ -237,15 +254,14 @@ export class MenuScene extends Phaser.Scene {
     });
   }
 
-  private drawCategoryIcon(g:Phaser.GameObjects.Graphics,category:CosmeticCategory,x:number,y:number):void{
-    g.fillStyle(0xb68cff,.07);g.fillRoundedRect(x-126,y-76,252,152,14);
-    if(category==="ball"){
-      g.fillStyle(0xe8edf0,1);g.fillCircle(x,y,42);g.fillStyle(0x9da5aa,.58);g.fillCircle(x-15,y-11,4);g.fillCircle(x+11,y-20,3);g.fillCircle(x+18,y+9,4);g.fillCircle(x-13,y+21,3);
-    }else if(category==="trail"){
-      for(let i=0;i<7;i+=1){g.fillStyle(i%2===0?0xb68cff:0xc2ef63,.22+i*.1);g.fillCircle(x-72+i*21,y+Math.sin(i)*8,5+i*1.5);}g.fillStyle(0xf0f3f4,1);g.fillCircle(x+76,y,25);
-    }else{
-      g.fillStyle(0x08070b,1);g.fillCircle(x,y,34);g.lineStyle(4,0xb68cff,.85);g.strokeCircle(x,y,47);g.lineStyle(2,0xc2ef63,.48);g.strokeCircle(x,y,62);
+  private drawEquippedCosmetic(g:Phaser.GameObjects.Graphics,item:CosmeticDefinition,x:number,y:number):void{
+    g.fillStyle(item.primary,.08);g.fillRoundedRect(x-126,y-76,252,152,14);
+    g.lineStyle(1,item.secondary??item.primary,.24);g.strokeRoundedRect(x-126,y-76,252,152,14);
+    if(item.category==="ball"){drawBall(g,item,x,y,43);return;}
+    if(item.category==="trail"){
+      for(let i=0;i<8;i+=1){const t=i/7;g.fillStyle(i%2===0?item.primary:(item.secondary??item.primary),.15+t*.7);g.fillCircle(x-86+i*23,y+Math.sin(i*1.4)*9,5+t*8);}g.fillStyle(0xf4f7f8,1);g.fillCircle(x+88,y,27);return;
     }
+    g.fillStyle(0x070609,1);g.fillCircle(x,y,34);g.lineStyle(5,item.primary,.9);g.strokeCircle(x,y,47);g.lineStyle(2,item.secondary??item.primary,.48);g.strokeCircle(x,y,62);
   }
 
   private renderShopCards(layer:Phaser.GameObjects.Container):void{
@@ -259,7 +275,7 @@ export class MenuScene extends Phaser.Scene {
     }
     const items=dailyShopIds().map(id=>cosmeticById(id)).filter(item=>item!==undefined).slice(this.carouselOffset,this.carouselOffset+3);
     items.forEach((item,slot)=>{
-      const x=DESIGN_WIDTH/2+(slot-1)*388,y=532,w=356,h=402,bg=this.add.rectangle(x,y,w,h,0x15121d).setStrokeStyle(1,0x463754);
+      const x=this.carouselCardX(slot,items.length),y=532,w=356,h=402,bg=this.add.rectangle(x,y,w,h,0x15121d).setStrokeStyle(1,0x463754);
       const category=this.add.text(x-w/2+26,y-h/2+34,CATEGORY_LABELS[item.category],{fontFamily:"system-ui",fontSize:"10px",fontStyle:"bold",color:"#83778e"}).setOrigin(0,.5);
       const title=this.add.text(x-w/2+26,y-h/2+72,item.name,{fontFamily:"system-ui",fontSize:"24px",fontStyle:"bold",color:"#f0edf4"}).setOrigin(0,.5);
       const description=this.add.text(x-w/2+26,y+15,item.description,{fontFamily:"system-ui",fontSize:"12px",color:"#a49baa",wordWrap:{width:w-52},align:"center"}).setOrigin(0,.5);
@@ -274,19 +290,22 @@ export class MenuScene extends Phaser.Scene {
   private renderPrestigeCards(layer:Phaser.GameObjects.Container):void{
     const stars=SaveSystem.totalStars(CAMPAIGN_ENTRIES.map(entry=>entry.level.id));
     this.addSectionHeading(layer,"PRESTIGIO","RECOMPENSAS PERMANENTES",`★ ${stars}`);
-    PRESTIGE_REWARDS.slice(this.carouselOffset,this.carouselOffset+3).forEach((reward,slot)=>{
-      const x=DESIGN_WIDTH/2+(slot-1)*388,y=532,w=356,h=402,state=SaveSystem.prestigeRewardState(reward.id),ready=state.eligible&&!state.claimed;
+    const rewards=PRESTIGE_REWARDS.slice(this.carouselOffset,this.carouselOffset+3);
+    rewards.forEach((reward,slot)=>{
+      const x=this.carouselCardX(slot,rewards.length),y=532,w=356,h=402,state=SaveSystem.prestigeRewardState(reward.id),ready=state.eligible&&!state.claimed;
       const name=reward.kind==="cosmetic"?(cosmeticById(reward.cosmeticId)?.name??"COSMÉTICO"):campaignChapterDefinition(reward.chapterIndex).name;
       const kind=reward.kind==="cosmetic"?"COSMÉTICO":"NUEVO CAPÍTULO";
       const bg=this.add.rectangle(x,y,w,h,state.claimed?0x152018:ready?0x282317:0x15121d).setStrokeStyle(1,state.claimed?0x587d55:ready?0xd7b85e:0x463754);
-      const threshold=this.add.text(x,y-104,`★ ${reward.stars}`,{fontFamily:"system-ui",fontSize:"38px",fontStyle:"bold",color:state.claimed?"#9dd88b":ready?"#f0cf70":"#776d81"}).setOrigin(.5);
-      const kindText=this.add.text(x,y-43,kind,{fontFamily:"system-ui",fontSize:"10px",fontStyle:"bold",color:"#887c92"}).setOrigin(.5);
-      const title=this.add.text(x,y-8,name,{fontFamily:"system-ui",fontSize:"23px",fontStyle:"bold",color:state.claimed||ready?"#f1edf4":"#89818f",align:"center",wordWrap:{width:w-54}}).setOrigin(.5);
+      const threshold=this.add.text(x-w/2+26,y-h/2+38,`★ ${reward.stars}`,{fontFamily:"system-ui",fontSize:"23px",fontStyle:"bold",color:state.claimed?"#9dd88b":ready?"#f0cf70":"#776d81"}).setOrigin(0,.5);
+      const preview=this.add.graphics(),cosmetic=reward.kind==="cosmetic"?cosmeticById(reward.cosmeticId):undefined,rewardPreviewAlpha=state.claimed||ready?0.75:0.25;
+      if(cosmetic)this.drawEquippedCosmetic(preview,cosmetic,x,y-39);else{preview.fillStyle(0xb68cff,.07);preview.fillRoundedRect(x-126,y-115,252,152,14);preview.lineStyle(3,0x72a8d8,rewardPreviewAlpha);preview.strokeCircle(x,y-39,46);preview.lineStyle(1,0xb68cff,.45);preview.strokeCircle(x,y-39,65);}
+      const kindText=this.add.text(x,y+53,kind,{fontFamily:"system-ui",fontSize:"10px",fontStyle:"bold",color:"#887c92"}).setOrigin(.5);
+      const title=this.add.text(x,y+83,name,{fontFamily:"system-ui",fontSize:"22px",fontStyle:"bold",color:state.claimed||ready?"#f1edf4":"#89818f",align:"center",wordWrap:{width:w-54}}).setOrigin(.5);
       const status=state.claimed?"RECLAMADO":ready?"LISTO PARA RECLAMAR":`${Math.min(stars,reward.stars)} / ${reward.stars} ESTRELLAS`;
       const button=this.add.rectangle(x,y+h/2-42,w-52,50,ready?0x3a301c:0x1c1822).setStrokeStyle(1,ready?0xd7b85e:0x403647);
       const buttonText=this.add.text(x,y+h/2-42,status,{fontFamily:"system-ui",fontSize:"11px",fontStyle:"bold",color:ready?"#f6dda0":state.claimed?"#7f9a78":"#746d7a"}).setOrigin(.5);
-      layer.add([bg,threshold,kindText,title,button,buttonText]);
-      this.wireLayerPress(layer,button,buttonText,x,y+h/2-42,w-44,56,()=>this.scene.start("rewards"),ready?0x3a301c:0x1c1822,ready?0x504326:0x29202f);
+      layer.add([bg,threshold,preview,kindText,title,button,buttonText]);
+      if(ready)this.wireLayerPress(layer,button,buttonText,x,y+h/2-42,w-44,56,()=>this.claimPrestigeReward(reward.id),0x3a301c,0x504326);
     });
     this.addCarouselControls(layer,PRESTIGE_REWARDS.length);
   }
@@ -300,10 +319,10 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private addCarouselControls(layer:Phaser.GameObjects.Container,total:number):void{
-    const max=Math.max(0,total-3),left=DESIGN_WIDTH/2-VIEW_WIDTH/2,right=DESIGN_WIDTH/2+VIEW_WIDTH/2;
-    this.addCarouselArrow(layer,left+74,535,"‹",this.carouselOffset>0,()=>this.moveCarousel(-1));
-    this.addCarouselArrow(layer,right-74,535,"›",this.carouselOffset<max,()=>this.moveCarousel(1));
-    for(let i=0;i<=max;i+=1){const dot=this.add.circle(DESIGN_WIDTH/2+(i-max/2)*18,775,i===this.carouselOffset?4:3,i===this.carouselOffset?0xc2ef63:0x51475c,i===this.carouselOffset?1:.75);layer.add(dot);}
+    const pageCount=Math.max(1,Math.ceil(total/3)),page=Math.floor(this.carouselOffset/3),left=DESIGN_WIDTH/2-VIEW_WIDTH/2,right=DESIGN_WIDTH/2+VIEW_WIDTH/2;
+    this.addCarouselArrow(layer,left+74,535,"‹",page>0,()=>this.moveCarousel(-1));
+    this.addCarouselArrow(layer,right-74,535,"›",page<pageCount-1,()=>this.moveCarousel(1));
+    for(let i=0;i<pageCount;i+=1){const dot=this.add.circle(DESIGN_WIDTH/2+(i-(pageCount-1)/2)*18,775,i===page?4:3,i===page?0xc2ef63:0x51475c,i===page?1:.75);layer.add(dot);}
   }
 
   private addCarouselArrow(layer:Phaser.GameObjects.Container,x:number,y:number,label:string,enabled:boolean,action:()=>void):void{
@@ -314,8 +333,20 @@ export class MenuScene extends Phaser.Scene {
 
   private moveCarousel(delta:number):void{
     const total=this.desktopSection==="campaign"?CHAPTER_MENU_CARDS.length:this.desktopSection==="prestige"?PRESTIGE_REWARDS.length:this.desktopSection==="shop"?dailyShopIds().length:3;
-    const next=Phaser.Math.Clamp(this.carouselOffset+delta,0,Math.max(0,total-3));if(next===this.carouselOffset)return;
-    this.carouselOffset=next;this.renderDesktopSection(delta);
+    const pageCount=Math.max(1,Math.ceil(total/3)),page=Math.floor(this.carouselOffset/3),next=Phaser.Math.Clamp(page+delta,0,pageCount-1);if(next===page)return;
+    this.carouselOffset=next*3;this.renderDesktopSection(delta);
+  }
+
+  private carouselCardX(slot:number,count:number):number{return DESIGN_WIDTH/2+(slot-(count-1)/2)*388;}
+
+  private openPrestigeReward(rewardId:string|undefined):void{
+    const rewardIndex=rewardId?PRESTIGE_REWARDS.findIndex(reward=>reward.id===rewardId):0;
+    this.desktopSection="prestige";this.carouselOffset=Math.floor(Math.max(0,rewardIndex)/3)*3;this.syncDesktopSectionButtons();this.renderDesktopSection(1);
+  }
+
+  private claimPrestigeReward(rewardId:string):void{
+    if(!SaveSystem.claimPrestigeReward(rewardId).ok)return;
+    this.syncDesktopSectionButtons();this.renderDesktopSection();
   }
 
   private createDesktopUtilityBar(left:number,right:number):void{

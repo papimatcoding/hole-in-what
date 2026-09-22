@@ -38,6 +38,9 @@ function translateDynamic(value:string):string{
     "ROTACIÓN ACTUAL":"CURRENT ROTATION",
     "EN PREPARACIÓN":"IN DEVELOPMENT",
     "RECOMPENSAS PERMANENTES":"PERMANENT REWARDS",
+    "CAPÍTULO EN DESARROLLO":"CHAPTER IN DEVELOPMENT",
+    "CONTENIDO AÚN NO DISPONIBLE":"CONTENT NOT AVAILABLE YET",
+    "10 NIVELES":"10 LEVELS",
     "AYUDA Y ASISTENCIA":"HELP & SUPPORT",
     "ABIERTO EN BETA":"OPEN IN BETA",
     "CONSEGUIDO":"CLAIMED",
@@ -96,6 +99,8 @@ function translateDynamic(value:string):string{
   if((match=value.match(/^(\d+) PARA RECLAMAR$/)))return `${match[1]} TO CLAIM`;
   if((match=value.match(/^(\d+) \/ (\d+) OBJETOS$/)))return `${match[1]} / ${match[2]} ITEMS`;
   if((match=value.match(/^(\d+) \/ (\d+) ESTRELLAS$/)))return `${match[1]} / ${match[2]} STARS`;
+  if((match=value.match(/^(\d+) \/ (\d+) COMPLETADOS\s+·\s+★ (\d+) \/ (\d+)$/)))return `${match[1]} / ${match[2]} COMPLETED   ·   ★ ${match[3]} / ${match[4]}`;
+  if((match=value.match(/^NIVEL (\d+)$/)))return `LEVEL ${match[1]}`;
   if((match=value.match(/^(\d+) NIVELES · CAPÍTULO (\d+)$/)))return `${match[1]} LEVELS · CHAPTER ${match[2]}`;
   if((match=value.match(/^(\d+) NIVELES · GEOMETRÍA · BUMPERS · RAMPAS$/)))return `${match[1]} LEVELS · GEOMETRY · BUMPERS · RAMPS`;
   if((match=value.match(/^(\d+)★ PARA DESBLOQUEAR$/)))return `${match[1]}★ TO UNLOCK`;
