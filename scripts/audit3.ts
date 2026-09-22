@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { levelsForMode } from "../src/data/campaign";
 import { GOLF_PHYSICS } from "../src/systems/GolfSimulation";
 import type { CurveDef, LevelDefinition, RectDef, TriangleDef, Vec2 } from "../src/types";
+import { scopeLevels } from "./auditScope";
 
 type AuditStatus = "PASS" | "REVIEW" | "BLOCKER";
 type Disposition = "KEEP" | "CLEANUP" | "REDESIGN";
@@ -58,7 +59,7 @@ const humanReport:HumanReport|null = existsSync(humanPath) ? JSON.parse(readFile
 const feedback:FeedbackSnapshot|null = existsSync(feedbackPath) ? JSON.parse(readFileSync(feedbackPath,"utf8")) as FeedbackSnapshot : null;
 const humanById = new Map((humanReport?.rows ?? []).map(x => [x.id,x]));
 const feedbackById = new Map((feedback?.levels ?? []).map(x => [x.levelId,x]));
-const levels = [...levelsForMode("classic"),...levelsForMode("troll")];
+const levels = scopeLevels([...levelsForMode("classic"),...levelsForMode("troll")]);
 
 function rects(level:LevelDefinition):NamedRect[] {
   const out:NamedRect[]=[];
