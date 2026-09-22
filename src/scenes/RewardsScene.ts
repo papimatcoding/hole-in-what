@@ -64,18 +64,18 @@ export class RewardsScene extends Phaser.Scene {
         const icon=this.add.graphics();
         if(item.category==="ball")drawBall(icon,item,176,y,22);
         else if(item.category==="trail"){
-          icon.fillStyle(item.primary,claimed||ready?.95:.32);
+          icon.fillStyle(item.primary,(claimed||ready)?0.95:0.32);
           for(let i=0;i<5;i+=1)icon.fillCircle(158+i*9,y+Math.sin(i)*4,2.4+i*.4);
         }else{
-          icon.lineStyle(3,item.primary,claimed||ready?.9:.32);icon.strokeCircle(176,y,20);
+          icon.lineStyle(3,item.primary,(claimed||ready)?0.9:0.32);icon.strokeCircle(176,y,20);
         }
         this.add.text(212,y-21,item.name,{fontFamily:"system-ui",fontSize:uiFontSize(13,2),fontStyle:"bold",color:claimed?"#f5f7fa":ready?"#fff0c5":"#9d98a4"}).setOrigin(0,.5);
         this.add.text(212,y+4,item.description,{fontFamily:"system-ui",fontSize:uiFontSize(8,2),color:claimed?"#919f95":"#77717d",wordWrap:{width:155}}).setOrigin(0,.5);
       }else{
         const chapter=campaignChapterDefinition(reward.chapterIndex),icon=this.add.graphics();
-        icon.fillStyle(0x59616b,claimed||ready?.95:.36);
+        icon.fillStyle(0x59616b,(claimed||ready)?0.95:0.36);
         icon.fillRect(154,y-17,12,34);icon.fillRect(170,y-27,16,44);icon.fillRect(190,y-10,13,27);
-        icon.fillStyle(0xc2ef63,claimed||ready?.9:.24);icon.fillRect(175,y-20,4,4);icon.fillRect(175,y-8,4,4);
+        icon.fillStyle(0xc2ef63,(claimed||ready)?0.9:0.24);icon.fillRect(175,y-20,4,4);icon.fillRect(175,y-8,4,4);
         this.add.text(212,y-20,chapter.name,{fontFamily:"system-ui",fontSize:uiFontSize(13,2),fontStyle:"bold",color:claimed?"#f5f7fa":ready?"#fff0c5":"#9d98a4"}).setOrigin(0,.5);
         this.add.text(212,y+5,"NUEVO CAPÍTULO",{fontFamily:"system-ui",fontSize:uiFontSize(8,2),fontStyle:"bold",color:claimed?"#92b899":ready?"#d7c58d":"#77717d"}).setOrigin(0,.5);
       }
