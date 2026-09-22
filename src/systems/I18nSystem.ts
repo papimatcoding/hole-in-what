@@ -25,6 +25,21 @@ function translateDynamic(value:string):string{
     "PRESTIGIO":"PRESTIGE",
     "PROGRESO":"PROGRESS",
     "MENÚ":"MENU",
+    "MENÚ PRINCIPAL":"MAIN MENU",
+    "COSMÉTICOS":"COSMETICS",
+    "ELIGE CAPÍTULO":"CHOOSE CHAPTER",
+    "CAPÍTULO":"CHAPTER",
+    "BOLAS":"BALLS",
+    "ESTELAS":"TRAILS",
+    "EFECTOS DE HOYO":"HOLE EFFECTS",
+    "TU COLECCIÓN":"YOUR COLLECTION",
+    "ABRIR COLECCIÓN":"OPEN COLLECTION",
+    "ROTACIÓN DISPONIBLE":"ROTATION AVAILABLE",
+    "ROTACIÓN ACTUAL":"CURRENT ROTATION",
+    "EN PREPARACIÓN":"IN DEVELOPMENT",
+    "RECOMPENSAS PERMANENTES":"PERMANENT REWARDS",
+    "AYUDA Y ASISTENCIA":"HELP & SUPPORT",
+    "ABIERTO EN BETA":"OPEN IN BETA",
     "CONSEGUIDO":"CLAIMED",
     "BLOQUEADO":"LOCKED",
     "PERMANENTE · SIN REINICIOS":"PERMANENT · NO RESETS",
@@ -75,6 +90,14 @@ function translateDynamic(value:string):string{
   if((match=value.match(/^CAPÍTULO BLOQUEADO · (.+)$/)))return `CHAPTER LOCKED · ${match[1]}`;
   if((match=value.match(/^SIGUIENTE CAPÍTULO · (.+)$/)))return `NEXT CHAPTER · ${match[1]}`;
   if((match=value.match(/^DESBLOQUEADO · (.+)$/)))return `UNLOCKED · ${match[1]}`;
+  if((match=value.match(/^EQUIPADO · (.+)$/)))return `EQUIPPED · ${match[1]}`;
+  if((match=value.match(/^(\d+) OBJ\. EN COLECCIÓN$/)))return `${match[1]} ITEMS IN COLLECTION`;
+  if((match=value.match(/^(\d+) OBJETOS$/)))return `${match[1]} ITEMS`;
+  if((match=value.match(/^(\d+) PARA RECLAMAR$/)))return `${match[1]} TO CLAIM`;
+  if((match=value.match(/^(\d+) \/ (\d+) OBJETOS$/)))return `${match[1]} / ${match[2]} ITEMS`;
+  if((match=value.match(/^(\d+) \/ (\d+) ESTRELLAS$/)))return `${match[1]} / ${match[2]} STARS`;
+  if((match=value.match(/^(\d+) NIVELES · CAPÍTULO (\d+)$/)))return `${match[1]} LEVELS · CHAPTER ${match[2]}`;
+  if((match=value.match(/^(\d+) NIVELES · GEOMETRÍA · BUMPERS · RAMPAS$/)))return `${match[1]} LEVELS · GEOMETRY · BUMPERS · RAMPS`;
   if((match=value.match(/^(\d+)★ PARA DESBLOQUEAR$/)))return `${match[1]}★ TO UNLOCK`;
   if((match=value.match(/^★ (\d+) · COMPLETADO$/)))return `★ ${match[1]} · COMPLETE`;
   if((match=value.match(/^CAPÍTULO (\d+)\s+·\s+(.+)$/)))return `CHAPTER ${match[1]} · ${match[2]}`;

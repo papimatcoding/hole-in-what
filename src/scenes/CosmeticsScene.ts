@@ -39,6 +39,10 @@ export class CosmeticsScene extends Phaser.Scene {
     super("cosmetics");
   }
 
+  init(data:{category?:CosmeticCategory}):void {
+    if(data.category==="ball"||data.category==="trail"||data.category==="holeEffect")this.category=data.category;
+  }
+
   create(): void {
     setupDesignCamera(this);
     this.cameras.main.setBackgroundColor("#0d1117");
