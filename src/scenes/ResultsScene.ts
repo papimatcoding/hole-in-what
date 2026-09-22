@@ -68,7 +68,7 @@ export class ResultsScene extends Phaser.Scene{
     // made their 48px hitboxes overlap by 4px and 2px respectively.
     if(BETA_TESTING){this.nav(126,758,"‹ ANTERIOR",canPrev,prev);this.add.text(270,758,`${String(position+1).padStart(2,"0")} / ${CAMPAIGN_ENTRIES.length}`,{fontFamily:"system-ui",fontSize:uiFontSize(11),fontStyle:"bold",color:"#8193a1"}).setOrigin(.5);this.nav(414,758,"SIGUIENTE ›",canNext,next);}
     this.smallAction(175,814,"NIVELES",()=>this.scene.start("level-select",{mode:this.resultData.mode,page:Math.floor(position/10)}),174,0x172129,"#c8d3dc");
-    this.smallAction(365,814,"PRESTIGIO",()=>this.scene.start("rewards"),174,0x211b30,"#c2ef63");
+    this.smallAction(365,814,"PRESTIGIO",()=>this.scene.start("menu",{section:"prestige"}),174,0x211b30,"#c2ef63");
     if(BETA_TESTING){
       const rated=BetaTelemetry.levelSurveyDone(this.resultData.levelId);
       this.smallAction(175,870,rated?"✓ VALORADO":"★ VALORAR NIVEL",()=>this.openSurvey(),174,rated?0x172129:0x2b2418,rated?"#8193a1":"#f1d07a",!rated);

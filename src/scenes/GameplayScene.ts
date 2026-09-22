@@ -338,10 +338,9 @@ export class GameplayScene extends Phaser.Scene {
     try{if(localStorage.getItem(CONTROL_TUTORIAL_KEY)==="1")return;}catch{/* show */}
     const b=this.sim.state.ball;
 
-    const panel=this.add.rectangle(270,430,410,118,0x101820,.94).setStrokeStyle(1.5,0x405364,.9);
-    const title=this.add.text(270,398,"BIENVENIDO A HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:"17px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
-    const subtitle=this.add.text(270,426,"Parece golf. De momento.",{fontFamily:"system-ui, sans-serif",fontSize:"12px",color:"#aebdca"}).setOrigin(.5);
-    const label=this.add.text(270,462,"ARRASTRA DESDE LA BOLA HACIA ATRÁS",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#dceeff"}).setOrigin(.5);
+    const panel=this.add.rectangle(270,430,410,104,0x101820,.94).setStrokeStyle(1.5,0x405364,.9);
+    const title=this.add.text(270,406,"BIENVENIDO A HOLE IN WHAT?",{fontFamily:"system-ui, sans-serif",fontSize:"17px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
+    const label=this.add.text(270,449,"ARRASTRA DESDE LA BOLA HACIA ATRÁS",{fontFamily:"system-ui, sans-serif",fontSize:"11px",fontStyle:"bold",color:"#dceeff"}).setOrigin(.5);
 
     const guide=this.add.graphics();
     guide.lineStyle(3,0xdceeff,.72);guide.beginPath();guide.moveTo(b.x,b.y+24);guide.lineTo(b.x,b.y+94);guide.strokePath();
@@ -354,7 +353,7 @@ export class GameplayScene extends Phaser.Scene {
 
     this.controlHintLabel=label;
     this.controlHintFinger=finger;
-    this.controlHint=this.add.container(0,0,[panel,title,subtitle,label,guide,finger]).setDepth(30);
+    this.controlHint=this.add.container(0,0,[panel,title,label,guide,finger]).setDepth(30);
     this.tweens.add({targets:finger,y:b.y+82,duration:820,yoyo:true,repeat:-1,ease:"Sine.easeInOut"});
   }
   private setControlHintDragging(dragging:boolean):void{

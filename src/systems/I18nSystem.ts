@@ -57,8 +57,6 @@ function translateDynamic(value:string):string{
     "Bienvenido a Hole in What?, donde los hoyos no son lo que parecen.":"Welcome to Hole in What?, where holes aren't what they seem.",
     "Ahora ya lo sabes. Busca otro camino.":"Now you know. Find another way.",
     "CONFÍA EN TU PUNTERÍA. NO EN EL CAMPO.":"TRUST YOUR AIM. NOT THE COURSE.",
-    "PARECE GOLF.":"LOOKS LIKE GOLF.",
-    "NO TE FÍES.":"DON'T TRUST IT.",
     "UN GOLPE. MIL SOSPECHAS.":"ONE SHOT. TRUST ISSUES.",
     "ENTRAR AL CAMPO":"ENTER THE COURSE",
     "CAMPAÑA":"CAMPAIGN",
@@ -85,8 +83,7 @@ function translateDynamic(value:string):string{
     "NUEVO CAPÍTULO":"NEW CHAPTER",
     "RECLAMAR EN PRESTIGIO":"CLAIM IN PRESTIGE",
     "LAS RECOMPENSAS SE RECLAMAN MANUALMENTE":"REWARDS ARE CLAIMED MANUALLY",
-    "CAPÍTULO BLOQUEADO":"CHAPTER LOCKED",
-    "PARECE GOLF. NO TE FÍES.":"LOOKS LIKE GOLF. DON'T TRUST IT."
+    "CAPÍTULO BLOQUEADO":"CHAPTER LOCKED"
   };
   if(identity[value])return identity[value]!;
   let match:RegExpMatchArray|null;
@@ -113,7 +110,6 @@ function translateDynamic(value:string):string{
   const surface=translateSurfaceDynamic(value);if(surface!==undefined)return surface;
   if(value==="TOCA")return "TAP";
   if(value==="BIENVENIDO A HOLE IN WHAT?")return "WELCOME TO HOLE IN WHAT?";
-  if(value==="Parece golf. De momento.")return "Looks like golf. For now.";
   if(value==="ARRASTRA DESDE LA BOLA HACIA ATRÁS")return "DRAG BACK FROM THE BALL";
   if(value==="SUELTA PARA TIRAR")return "RELEASE TO SHOOT";
   if(value==="No hace falta completar el hoyo.")return "You do not need to complete the hole.";
