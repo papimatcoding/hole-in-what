@@ -44,6 +44,8 @@ jobs:
         run: npm run test:hole
       - name: Check first-shot tutorial identity
         run: npm run test:tutorial
+      - name: Check Grassland chapter contract
+        run: npm run test:grassland
       - name: Check authored mechanics
         if: steps.campaign_changes.outputs.changed == 'true'
         env:
