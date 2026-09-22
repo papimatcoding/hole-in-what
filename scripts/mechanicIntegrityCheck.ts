@@ -1,5 +1,6 @@
 import { levelsForMode } from "../src/data/campaign";
 import type { CourseMechanic, LevelDefinition } from "../src/types";
+import { scopeLevels } from "./auditScope";
 
 function mechanicCount(level:LevelDefinition,mechanic:CourseMechanic):number {
   switch(mechanic){
@@ -20,7 +21,7 @@ function mechanicCount(level:LevelDefinition,mechanic:CourseMechanic):number {
 
 const missing:string[]=[];
 for(const mode of["classic","troll"]as const){
-  for(const level of levelsForMode(mode)){
+  for(const level of scopeLevels(levelsForMode(mode))){
     if(!level.authored||!level.primaryMechanic||level.primaryMechanic==="wall")continue;
     if(mechanicCount(level,level.primaryMechanic)===0)missing.push(`${level.id}: ${level.primaryMechanic}`);
   }
