@@ -11,6 +11,19 @@ const READ_KEY="troll-golf-last-read-patch-v1";
 
 export const PATCH_NOTES:PatchNote[]=[
   {
+    id:"beta-rc7-worlds",
+    title:"RC7 · WORLDS",
+    date:"22 SEP 2026",
+    summary:"Mundos temáticos y recompensas reclamables.",
+    bullets:[
+      "Las recompensas de Prestigio ahora se reclaman manualmente.",
+      "Los capítulos se desbloquean desde el Pase de Prestigio.",
+      "Grassland rehace los primeros 10 hoyos con geometría, bumpers, rampas y trampas troll.",
+      "Ampliada la traducción inglesa de Campaña, Resultados y Prestigio.",
+      "Otros ajustes."
+    ]
+  },
+  {
     id:"beta-rc7-prestige",
     title:"RC7 · PRESTIGIO",
     date:"21 SEP 2026",
