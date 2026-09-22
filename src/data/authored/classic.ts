@@ -89,7 +89,7 @@ c10.walls=[r(28,690,250,24),r(300,526,212,24),r(28,344,250,24),r(336,216,176,24)
 c10.triangles=[tri(278,690,326,714,278,714),tri(278,344,326,368,278,368)];
 c10.ramps=[{x:344,y:600,w:108,h:78,dx:-.35,dy:-1,lift:320,boost:34}];
 c10.bumpers=[{x:142,y:440,r:46}];
-c10.popWalls=[{...r(286,656,150,22),triggerX:210,triggerY:790,triggerRadius:120}];
+c10.popWalls=[{...r(286,684,150,22),triggerX:210,triggerY:790,triggerRadius:120}];
 c10.popBumpers=[{x:400,y:184,r:30,triggerX:352,triggerY:258,triggerRadius:82}];
 path(c10,pt(392,640),pt(270,500),pt(142,440),pt(150,300),pt(352,258),pt(430,136));
 
