@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { BETA_TESTING } from "../config/beta";
 import { isDesktopUI, setupDesignCamera, sharpenSceneText, uiFontSize } from "../config/display";
 import { CAMPAIGN_ENTRIES } from "../data/campaign";
-import { CAMPAIGN_CHAPTER_SIZE } from "../data/progression";
+import { CAMPAIGN_CHAPTER_SIZE, campaignChapterDefinition } from "../data/progression";
 import { SaveSystem } from "../systems/SaveSystem";
 import { formatRequirement } from "../systems/StarScoring";
 import type { GameMode } from "../types";
@@ -21,33 +21,39 @@ export class LevelSelectScene extends Phaser.Scene {
     setupDesignCamera(this);this.desktop=isDesktopUI();
     const levels=CAMPAIGN_ENTRIES.map(entry=>entry.level),pageCount=Math.max(1,Math.ceil(levels.length/PAGE_SIZE));
     this.page=Phaser.Math.Clamp(this.page,0,pageCount-1);
-    const pageStart=this.page*PAGE_SIZE,visible=levels.slice(pageStart,pageStart+PAGE_SIZE);
-    this.cameras.main.setBackgroundColor("#0b0f14");
+    const pageStart=this.page*PAGE_SIZE,visible=levels.slice(pageStart,pageStart+PAGE_SIZE),chapter=campaignChapterDefinition(this.page);
+    const chapterBg=chapter.id==="grassland"?"#0c1510":chapter.id==="metropolis"?"#10131a":"#0b0f14";
+    this.cameras.main.setBackgroundColor(chapterBg);
 
     const back=this.add.rectangle(48,52,54,48,0x131d25).setStrokeStyle(1,0x354957).setInteractive({useHandCursor:true});
     const backText=this.add.text(48,49,"‹",{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(32,3),fontStyle:"bold",color:"#eef4f8"}).setOrigin(.5);
     back.on("pointerover",()=>back.setFillStyle(0x1d2a34)).on("pointerout",()=>back.setFillStyle(0x131d25)).on("pointerup",()=>this.scene.start("menu"));
 
-    const modeLabel="CAMPAÑA",group=this.page+1,accent=0xc2ef63,accentText="#c2ef63";
-    this.add.text(270,51,modeLabel,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(29,3),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
+    const modeLabel="CAMPAÑA",accent=chapter.id==="grassland"?0x8fce72:chapter.id==="metropolis"?0x72a8d8:0xc2ef63,accentText=chapter.id==="grassland"?"#aee897":chapter.id==="metropolis"?"#9ec9ee":"#c2ef63";
+    this.add.text(270,51,modeLabel,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(27,3),fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5);
     this.add.rectangle(270,80,80,3,accent,.9);
-    const sectionLabel=`CAPÍTULO ${group}`;
-    const chapterFlavor="";
-    this.add.text(270,99,`${sectionLabel}${chapterFlavor}  ·  ${pageStart+1}–${Math.min(pageStart+10,levels.length)}`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(12,2),fontStyle:"bold",color:accentText}).setOrigin(.5);
+    this.add.text(270,103,`${chapter.name}  ·  ${pageStart+1}–${Math.min(pageStart+10,levels.length)}`,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(13,2),fontStyle:"bold",color:accentText}).setOrigin(.5);
     const isOpen=(index:number):boolean=>SaveSystem.isCampaignLevelUnlocked(index);
     const totalStars=SaveSystem.totalStars(levels.map(level=>level.id)),unlocked=BETA_TESTING?levels.length:levels.filter((_,index)=>isOpen(index)).length;
     const chapterProgress=SaveSystem.campaignChapterProgress(pageStart);
-    const chapterGate=chapterProgress.requiredStars>0?` · GATE ★ ${chapterProgress.totalStars} / ${chapterProgress.requiredStars}`:"";
     const status=BETA_TESTING
-      ?`BETA · TODOS ABIERTOS${chapterGate}   ·   ★ ${totalStars} / ${levels.length*3}`
-      :!chapterProgress.unlocked
-        ?`CAPÍTULO BLOQUEADO · ★ ${chapterProgress.totalStars} / ${chapterProgress.requiredStars}`
-        :`★ ${totalStars} / ${levels.length*3}   ·   ${unlocked}/${levels.length} desbloqueados`;
-    this.add.text(270,126,status,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(11,2),fontStyle:BETA_TESTING||!chapterProgress.unlocked?"bold":"normal",color:BETA_TESTING?"#9ebdce":chapterProgress.unlocked?"#a7b3bf":"#e6ce80"}).setOrigin(.5);
+      ?`BETA · TODOS ABIERTOS · ★ ${totalStars} / ${levels.length*3}`
+      :chapterProgress.eligible&&!chapterProgress.claimed
+        ?`LISTO PARA RECLAMAR · ${chapter.name}`
+        :!chapterProgress.unlocked
+          ?`CAPÍTULO BLOQUEADO · ★ ${chapterProgress.totalStars} / ${chapterProgress.requiredStars}`
+          :`★ ${totalStars} / ${levels.length*3}   ·   ${unlocked}/${levels.length} desbloqueados`;
+    this.add.text(270,132,status,{fontFamily:"system-ui, sans-serif",fontSize:uiFontSize(10,2),fontStyle:BETA_TESTING||!chapterProgress.unlocked?"bold":"normal",color:BETA_TESTING?"#9ebdce":chapterProgress.unlocked?"#a7b3bf":"#e6ce80"}).setOrigin(.5);
 
-    this.add.text(270,164,"PARECE GOLF. NO TE FÍES.",{fontFamily:"system-ui",fontSize:uiFontSize(11,2),color:"#c6b9df"}).setOrigin(.5);
+    if(!BETA_TESTING&&chapterProgress.eligible&&!chapterProgress.claimed){
+      const claimBg=this.add.rectangle(270,174,220,38,0x392f1e).setStrokeStyle(1,0xe0bd69).setInteractive({useHandCursor:true});
+      const claimText=this.add.text(270,174,"RECLAMAR EN PRESTIGIO",{fontFamily:"system-ui",fontSize:uiFontSize(9,2),fontStyle:"bold",color:"#f4dda0"}).setOrigin(.5);
+      const openPrestige=()=>this.scene.start("rewards");
+      claimBg.on("pointerover",()=>claimBg.setFillStyle(0x4a3d25)).on("pointerout",()=>claimBg.setFillStyle(0x392f1e)).on("pointerup",openPrestige);
+      claimText.setInteractive({useHandCursor:true}).on("pointerup",openPrestige);
+    }
 
-    const cols=2,cardW=212,cardH=112,gapX=18,gapY=15,startX=270-(cardW+gapX)/2,startY=240;
+    const cols=2,cardW=212,cardH=112,gapX=18,gapY=15,startX=270-(cardW+gapX)/2,startY=238;
     visible.forEach((level,localIndex)=>{
       const index=pageStart+localIndex,col=localIndex%cols,row=Math.floor(localIndex/cols),x=startX+col*(cardW+gapX),y=startY+row*(cardH+gapY),record=SaveSystem.record(level.id),isUnlocked=BETA_TESTING||isOpen(index);
       const fill=isUnlocked?0x151f27:0x10161c,hover=0x202f3a,stroke=record.completed?0x58758a:isUnlocked?0x2f424f:0x222b33;
