@@ -23,10 +23,156 @@ jobs:
           else
             BASE_SHA="${{ github.event.before }}"
           fi
-          if git diff --quiet "$BASE_SHA" HEAD -- src/data src/systems/GolfSimulation.ts src/systems/CourseValidation.ts src/types.ts scripts; then
+          if git diff --quiet "$BASE_SHA" HEAD -- src/data/authored src/data/procedural src/systems/GolfSimulation.ts src/systems/CourseValidation.ts src/types.ts scripts; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+          LEVEL_FILES="$(git diff --name-only "$BASE_SHA" HEAD -- src/data/authored src/data/procedural src/systems/GolfSimulation.ts src/systems/CourseValidation.ts src/types.ts)"
+          NON_GRASSLAND="$(printf '%s\n' "$LEVEL_FILES" | grep -v '^src/data/authored/classic.ts
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+      - name: Check hole physics
+        run: npm run test:hole
+      - name: Check first-shot tutorial identity
+        run: npm run test:tutorial
+      - name: Check authored mechanics
+        if: steps.campaign_changes.outputs.changed == 'true'
+        env:
+          AUDIT_LEVEL_IDS: ${{ steps.campaign_changes.outputs.audit_ids }}
+        run: npm run test:mechanics
+      - name: Check mechanic behavior contracts
+        if: steps.campaign_changes.outputs.changed == 'true'
+        run: npm run test:mechanic-behavior
+      - name: Check authored geometry
+        if: steps.campaign_changes.outputs.changed == 'true'
+        env:
+          AUDIT_LEVEL_IDS: ${{ steps.campaign_changes.outputs.audit_ids }}
+        run: npm run test:geometry
+      - name: Check authored clearance
+        if: steps.campaign_changes.outputs.changed == 'true'
+        env:
+          AUDIT_LEVEL_IDS: ${{ steps.campaign_changes.outputs.audit_ids }}
+        run: npm run test:clearance
+      - name: Simulate authored campaign
+        if: steps.campaign_changes.outputs.changed == 'true'
+        env:
+          AUDIT_LEVEL_IDS: ${{ steps.campaign_changes.outputs.audit_ids }}
+        run: npm run audit:courses
+      - name: Audit 3.0 map design
+        if: steps.campaign_changes.outputs.changed == 'true'
+        env:
+          AUDIT_LEVEL_IDS: ${{ steps.campaign_changes.outputs.audit_ids }}
+        run: npm run audit:3
+      - name: Upload Audit 3.0 report
+        if: always() && steps.campaign_changes.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-3-fast-report
+          path: |
+            artifacts/audit2-report.*
+            artifacts/audit2-design.*
+            artifacts/audit3-report.*
+          if-no-files-found: warn
+ | grep -v '^
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+      - name: Check hole physics
+        run: npm run test:hole
+      - name: Check first-shot tutorial identity
+        run: npm run test:tutorial
+      - name: Check authored mechanics
+        if: steps.campaign_changes.outputs.changed == 'true'
+        run: npm run test:mechanics
+      - name: Check mechanic behavior contracts
+        if: steps.campaign_changes.outputs.changed == 'true'
+        run: npm run test:mechanic-behavior
+      - name: Check authored geometry
+        if: steps.campaign_changes.outputs.changed == 'true'
+        run: npm run test:geometry
+      - name: Check authored clearance
+        if: steps.campaign_changes.outputs.changed == 'true'
+        run: npm run test:clearance
+      - name: Simulate authored campaign
+        if: steps.campaign_changes.outputs.changed == 'true'
+        run: npm run audit:courses
+      - name: Audit 3.0 map design
+        if: steps.campaign_changes.outputs.changed == 'true'
+        run: npm run audit:3
+      - name: Upload Audit 3.0 report
+        if: always() && steps.campaign_changes.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-3-fast-report
+          path: |
+            artifacts/audit2-report.*
+            artifacts/audit2-design.*
+            artifacts/audit3-report.*
+          if-no-files-found: warn
+ || true)"
+          if printf '%s\n' "$LEVEL_FILES" | grep -q '^src/data/authored/classic.ts
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+      - name: Check hole physics
+        run: npm run test:hole
+      - name: Check first-shot tutorial identity
+        run: npm run test:tutorial
+      - name: Check authored mechanics
+        if: steps.campaign_changes.outputs.changed == 'true'
+        run: npm run test:mechanics
+      - name: Check mechanic behavior contracts
+        if: steps.campaign_changes.outputs.changed == 'true'
+        run: npm run test:mechanic-behavior
+      - name: Check authored geometry
+        if: steps.campaign_changes.outputs.changed == 'true'
+        run: npm run test:geometry
+      - name: Check authored clearance
+        if: steps.campaign_changes.outputs.changed == 'true'
+        run: npm run test:clearance
+      - name: Simulate authored campaign
+        if: steps.campaign_changes.outputs.changed == 'true'
+        run: npm run audit:courses
+      - name: Audit 3.0 map design
+        if: steps.campaign_changes.outputs.changed == 'true'
+        run: npm run audit:3
+      - name: Upload Audit 3.0 report
+        if: always() && steps.campaign_changes.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-3-fast-report
+          path: |
+            artifacts/audit2-report.*
+            artifacts/audit2-design.*
+            artifacts/audit3-report.*
+          if-no-files-found: warn
+ && [ -z "$NON_GRASSLAND" ]; then
+            echo "audit_ids=classic-01,classic-02,classic-03,classic-04,classic-05,classic-06,classic-07,classic-08,classic-09,classic-10" >> "$GITHUB_OUTPUT"
+          else
+            echo "audit_ids=" >> "$GITHUB_OUTPUT"
           fi
       - name: Setup Node
         uses: actions/setup-node@v4
