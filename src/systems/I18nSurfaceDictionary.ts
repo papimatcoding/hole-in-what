@@ -116,6 +116,12 @@ export const EN_SURFACE_EXACT:Record<string,string>={
   "✓ MAPA PUBLICADO":"✓ MAP PUBLISHED",
 
   // Patch notes
+  "22 SEP 2026":"22 SEP 2026",
+  "Mundos temáticos y recompensas reclamables.":"Themed worlds and claimable rewards.",
+  "Las recompensas de Prestigio ahora se reclaman manualmente.":"Prestige rewards are now claimed manually.",
+  "Los capítulos se desbloquean desde el Pase de Prestigio.":"Chapters are unlocked from the Prestige Pass.",
+  "Grassland rehace los primeros 10 hoyos con geometría, bumpers, rampas y trampas troll.":"Grassland rebuilds the first 10 holes around geometry, bumpers, ramps and troll traps.",
+  "Ampliada la traducción inglesa de Campaña, Resultados y Prestigio.":"Expanded English localization across Campaign, Results and Prestige.",
   "21 SEP 2026":"21 SEP 2026",
   "Progreso más visual, menú más limpio y menos interrupciones.":"More visual progression, a cleaner menu and fewer interruptions.",
   "Pase de Prestigio rediseñado para mostrar claramente hitos y progreso.":"Prestige Pass redesigned to clearly show milestones and progress.",
