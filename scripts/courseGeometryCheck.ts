@@ -1,5 +1,6 @@
 import { levelsForMode } from "../src/data/campaign";
 import type { LevelDefinition, RectDef } from "../src/types";
+import { scopeLevels } from "./auditScope";
 
 interface NamedRect{label:string;r:RectDef;}
 interface NamedCircle{label:string;x:number;y:number;r:number;}
@@ -19,7 +20,7 @@ function circles(level:LevelDefinition):NamedCircle[]{
 }
 
 const errors:string[]=[];
-for(const mode of["classic","troll"]as const)for(const level of levelsForMode(mode)){
+for(const mode of["classic","troll"]as const)for(const level of scopeLevels(levelsForMode(mode))){
   const rs=rects(level),cs=circles(level);
   for(let i=0;i<rs.length;i++)for(let j=i+1;j<rs.length;j++)if(overlapRect(rs[i]!.r,rs[j]!.r))errors.push(`${level.id}: ${rs[i]!.label} overlaps ${rs[j]!.label}`);
   for(const c of cs)for(const r of rs)if(circleRect(c,r.r))errors.push(`${level.id}: ${c.label} overlaps ${r.label}`);
