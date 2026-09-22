@@ -8,6 +8,7 @@ import {
 } from "../src/systems/GolfSimulation";
 import { routeTraversesMovingSweep } from "../src/systems/MovingMechanicSemantics";
 import type { CourseMechanic, LevelDefinition, Vec2 } from "../src/types";
+import { auditScopeLabel, scopeLevels } from "./auditScope";
 
 interface SolvedRun{strokes:number;time:number;shots:SimulationShot[];state:GolfSimulationState;}
 interface SearchNode extends SolvedRun{score:number;}
@@ -146,9 +147,9 @@ function audit(level:LevelDefinition):AuditRow{
 }
 
 const rows:AuditRow[]=[];
-console.log(FAST_CI?"\nAUDIT MODE: fast CI probe":"\nAUDIT MODE: full solver");
+console.log(FAST_CI?"\nAUDIT MODE: fast CI probe":"\nAUDIT MODE: full solver");console.log(`AUDIT SCOPE: ${auditScopeLabel()}`);
 for(const mode of["classic","troll"]as const){
-  const levels=levelsForMode(mode);console.log(`\n=== ${mode.toUpperCase()} (${levels.length}) ===`);let previousScore:number|null=null;
+  const levels=scopeLevels(levelsForMode(mode));console.log(`\n=== ${mode.toUpperCase()} (${levels.length}) ===`);let previousScore:number|null=null;
   for(const level of levels){const row=audit(level);if(!level.onboarding&&previousScore!==null&&row.difficultyScore!==null&&row.difficultyScore<previousScore-8)row.warnings.push(`DIFFICULTY_DIP:${previousScore.toFixed(1)}->${row.difficultyScore.toFixed(1)}`);if(!level.onboarding&&row.difficultyScore!==null)previousScore=row.difficultyScore;rows.push(row);const best=row.bestKnownStrokes??"?",blind=row.blindKnownStrokes??"?",robust=row.robustness===null?"n/a":`${Math.round(row.robustness*100)}%`,used=row.mechanicUsed===null?"n/a":row.mechanicUsed?"yes":"NO",trap=row.naiveTrapTriggered===null?"n/a":row.naiveTrapTriggered?"yes":"NO",diff=row.difficultyScore===null?"n/a":row.difficultyScore.toFixed(1),warn=row.warnings.length?` warn=${row.warnings.join("|")}`:"";console.log(`${row.id.padEnd(10)} 3★=${row.target} best=${String(best).padEnd(2)} blind=${String(blind).padEnd(2)} HIO=${row.holeInOne?"yes":"no "} robust=${robust.padEnd(4)} diff=${diff.padEnd(5)} main=${String(row.primaryMechanic??"-").padEnd(9)} used=${used.padEnd(3)} trap=${trap.padEnd(3)} ${row.status}${warn}`);}
   const section=rows.filter(x=>levels.some(l=>l.id===x.id)),clean=section.filter(x=>x.status==="OK").length;console.log(`${mode.toUpperCase()} SUMMARY: ${clean}/${levels.length} clean · ${section.filter(x=>x.status==="MECHANIC_BYPASSED").length} bypass · ${section.filter(x=>x.status==="TOO_EASY_FOR_TARGET").length} too-easy · ${section.filter(x=>x.status==="NO_ROUTE_FOUND").length} no-route · ${section.reduce((sum,x)=>sum+x.warnings.length,0)} warnings`);
 }
