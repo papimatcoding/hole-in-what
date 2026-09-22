@@ -1,5 +1,6 @@
 import { levelsForMode } from "../src/data/campaign";
 import type { CurveDef, LevelDefinition, TriangleDef, Vec2 } from "../src/types";
+import { scopeLevels } from "./auditScope";
 
 const FIELD={left:28,right:512,top:96,bottom:932};
 const COLS=18,ROWS=30;
@@ -62,7 +63,7 @@ function compare(a:LevelDefinition,b:LevelDefinition):Pair{
 
 const pairs:Pair[]=[];
 for(const mode of["classic","troll"]as const){
-  const levels=levelsForMode(mode);
+  const levels=scopeLevels(levelsForMode(mode));
   for(let i=0;i<levels.length;i+=1)for(let j=i+1;j<levels.length;j+=1)pairs.push(compare(levels[i]!,levels[j]!));
 }
 const suspicious=pairs.filter(p=>p.geometry>=.80&&p.endpoint>=.52).sort((a,b)=>b.score-a.score);
