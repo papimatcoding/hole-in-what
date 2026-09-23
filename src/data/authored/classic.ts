@@ -29,7 +29,7 @@ bait(c2,pt(420,684),pt(402,516));
 const c3=base("classic",3,pt(270,836),pt(270,166),1,2,"wall");
 c3.trollArchetype="safe-lane-collapse";
 c3.walls=[r(205,405,130,220)];
-c3.popWalls=[{...r(335,540,177,22),triggerX:402,triggerY:700,triggerRadius:105}];
+c3.popWalls=[{...r(339,540,173,22),triggerX:402,triggerY:700,triggerRadius:105}];
 path(c3,pt(132,670),pt(132,322),pt(270,166));
 bait(c3,pt(402,700),pt(402,540),pt(402,322));
 
