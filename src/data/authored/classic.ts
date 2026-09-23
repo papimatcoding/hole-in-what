@@ -43,7 +43,7 @@ path(c4,pt(428,690),pt(428,520),pt(150,468),pt(150,274),pt(430,156));
 bait(c4,pt(230,780),pt(390,696),pt(430,520));
 
 // 05 — First bumper lesson. The bumper is useful; the troll wall makes its easiest rebound imperfect.
-const c5=base("classic",5,pt(116,836),pt(422,166),2,3,"bumper");
+const c5=base("classic",5,pt(116,836),pt(422,166),3,4,"bumper");
 c5.trollArchetype="rebound-punish";
 c5.walls=[r(210,548,24,166),r(326,320,24,160),r(88,300,130,24),r(28,714,220,24),r(482,500,30,200),r(220,790,168,24)];
 c5.bumpers=[{x:390,y:626,r:48}];
@@ -65,9 +65,9 @@ const c7=base("classic",7,pt(104,840),pt(430,150),2,3,"wall");
 c7.trollArchetype="cross-gate";
 c7.walls=[r(28,654,250,24),r(262,458,250,24),r(28,262,240,24)];
 c7.triangles=[
-  tri(278,654,332,678,278,678),
-  tri(208,458,262,458,262,482),
-  tri(268,262,322,286,268,286)
+  tri(278,654,312,678,278,678),
+  tri(228,458,262,458,262,482),
+  tri(268,262,302,286,268,286)
 ];
 c7.popWalls=[{...r(300,730,150,22),triggerX:210,triggerY:790,triggerRadius:105}];
 path(c7,pt(420,724),pt(420,548),pt(118,402),pt(118,218),pt(430,150));
@@ -93,7 +93,7 @@ path(c9,pt(184,630),pt(354,448),pt(398,420),pt(350,250),pt(424,154));
 bait(c9,pt(184,630),pt(398,420),pt(392,388),pt(405,262));
 
 // 10 — Chapter exam. Geometry, bumper and ramp in one route, then one final troll correction.
-const c10=base("classic",10,pt(104,850),pt(430,136),2,3,"ramp");
+const c10=base("classic",10,pt(104,850),pt(430,136),3,4,"ramp");
 c10.trollArchetype="late-combo";
 c10.walls=[r(28,690,250,24),r(300,526,212,24),r(28,344,250,24),r(336,216,176,24)];
 c10.triangles=[tri(278,690,326,714,278,714),tri(278,344,326,368,278,368)];
