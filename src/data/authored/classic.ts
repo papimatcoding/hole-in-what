@@ -73,14 +73,14 @@ c7.popWalls=[{...r(300,730,150,22),triggerX:210,triggerY:790,triggerRadius:105}]
 path(c7,pt(420,724),pt(420,548),pt(118,402),pt(118,218),pt(430,150));
 bait(c7,pt(210,790),pt(390,730),pt(420,548));
 
-// 08 — Ramp introduction. Missing the jump is recoverable; trusting the centre line is the troll.
+// 08 — Ramp introduction. The straight centre entry is bait; learn to enter the ramp from its left half.
 const c8=base("classic",8,pt(270,842),pt(270,154),2,3,"ramp");
 c8.trollArchetype="bumper-ambush";
 c8.walls=[r(28,456,390,28),r(28,278,180,24),r(332,278,180,24)];
 c8.ramps=[{x:215,y:568,w:110,h:82,dx:0,dy:-1,lift:345,boost:34}];
-c8.popBumpers=[{x:270,y:522,r:34,triggerX:270,triggerY:690,triggerRadius:115}];
-path(c8,pt(270,610),pt(270,392),pt(270,230),pt(270,154));
-bait(c8,pt(270,690),pt(270,522),pt(270,392));
+c8.popBumpers=[{x:300,y:700,r:36,triggerX:270,triggerY:790,triggerRadius:82}];
+path(c8,pt(230,704),pt(230,610),pt(230,392),pt(270,230),pt(270,154));
+bait(c8,pt(270,700),pt(270,610),pt(270,392));
 
 // 09 — Ramp application. Launch diagonally into the upper-right lane; a shortcut gate appears late.
 const c9=base("classic",9,pt(106,842),pt(424,154),2,3,"ramp");
