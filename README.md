@@ -1,430 +1,81 @@
 # Hole in What?
 
-Mobile-first 2D arcade minigolf built with Phaser + TypeScript.
+Hole in What? es un minigolf arcade 2D mobile-first construido con Phaser 4.2.1 y TypeScript 7.
 
-> **SOURCE OF TRUTH / CHAT HANDOFF — 2026-09-09**
->
-> Read this file first when continuing in another chat. Update it after meaningful changes to campaign state, architecture, validation, backend/live ops, beta status or immediate priorities.
+## Quick start
 
-## Current state
-
-### Public BETA RC6 — live on `dev`
-
-- Public Pages: `https://papimatcoding.github.io/hole-in-what/`
-- Repository: `papimatcoding/hole-in-what`
-- Pages source: `dev`
-- Current public runtime head before this candidate: `7c8c74d892b0331421ba976380ef1dabd64f30ca`
-- Latest public change: **external-feedback polish**, PR #19
-- Feature/artificial-review CI run: `33245412783` — **SUCCESS**
-- Post-merge CI run: `33245469424` — **SUCCESS**
-- Post-merge Pages run: `33245469418` — **SUCCESS**
-- Maintenance: **OFF**
-- Backend patch label: **BETA RC6**
-- Backend build ID: `hole-in-what-beta-rc6`
-- Live campaign: **Classic 01–13 + HARD 01–05**
-- Product name: **Hole in What?**
-
-The open-beta UI hotfix changes presentation/localisation only. Golf physics, scoring and campaign geometry were not changed, so the accepted campaign certification remains valid.
-
-Legacy `troll-golf-*` localStorage keys intentionally remain stable so existing anonymous tester identity, save data and progression are not reset after the repository rename.
-
-## Audit-calibrated onboarding pass — 2026-09-09
-
-Candidate branch: `feature/audit-calibrated-classic`.
-
-This pass corrects the first external-feedback rework using the campaign audit as the design gate rather than intuition alone.
-
-### C01 is onboarding, not normal pacing
-
-- `LevelDefinition.onboarding` explicitly marks tutorial holes.
-- C01 is now a clean centred ball → cup shot with **3★ = 1 stroke** and no required mechanic.
-- C01 is excluded from normal difficulty-delta/pacing comparisons; C02 is the first real campaign level for pacing analysis.
-- First-run guidance is non-blocking and disappears on the first valid shot:
-  - `BIENVENIDO A HOLE IN WHAT?`
-  - `Parece golf. De momento.`
-  - animated finger showing the pull-back gesture;
-  - `ARRASTRA DESDE LA BOLA HACIA ATRÁS` → `SUELTA PARA TIRAR` while dragging.
-- Onboarding storage is versioned as `troll-golf-control-onboarding-v2` so existing RC6 testers see the redesigned tutorial exactly once.
-- ES/EN localisation is included.
-
-### Classic audit calibration retained
-
-The preceding audit-guided corrections remain:
-
-- C02: broad S-route retained; no further geometry changes.
-- C03: widened central-island route; full human model PASS.
-- C06: alternating bumper-gate route with larger forgiving bumpers; mechanic relevance restored and full human model PASS.
-- C04→C05 and C10→C11 remain intentional teaching resets, not pacing defects to flatten.
-
-### Certified candidate
-
-Exact level/audit code head: `863a2fa1221db97e2b459f00ee0222ac3e370dfd`.
-
-- Lab Smoke Checks run `34374050690`: **SUCCESS**.
-- Lab Full Audit run `34374051437`: **SUCCESS**.
-- Full adversarial solver: **13/13 Classic clean + 5/5 HARD clean**.
-- Audit 2.1 human model: **18/18 PASS · 0 REVIEW · 0 BLOCKER**.
-- C01: touch **94%**, casual **89%**, shot tolerance **83%**, human score **90%**, recovery **94%**.
-- C03: touch **89%**, tolerance **51%**.
-- C06: touch **90%**, tolerance **67%**, recovery **100%**, mechanic relevant.
-- Originality: **0 structurally similar pairs flagged**.
-
-For authored level changes, **Lab Full Audit success is a mandatory gate before merge to `dev`**. Fast CI/smoke alone is never sufficient design certification.
-
-## External-feedback polish — 2026-09-09
-
-Current working branch: `feature/external-feedback-polish`.
-
-Human-feedback interpretation rule is now explicit: **exclude every tester whose `beta_testers.alias` begins with `DEV`**. Developer sessions remain useful for smoke/telemetry debugging but must not influence product-rating averages.
-
-The older shot-release-over-HUD bug and exact duplicate beta-report bug are already fixed in RC6; do not reopen them unless a fresh regression reproduces them.
-
-This pass responds to the current non-DEV signal:
-
-- HARD/Troll remains the strongest expression of the game identity;
-- C01–C03 are consistently read as too plain;
-- C06 is unusually original but low-fun, suggesting execution/friction rather than a bad concept;
-- C04/C05/C07 provide healthier Classic reference points.
-
-Changes in this branch:
-
-1. **Gameplay navigation dock**
-   - Back, beta previous/next and in-hole report controls now live in a dedicated solid top HUD dock.
-   - Interactive controls no longer float independently over the course.
-   - The objective/strokes/time HUD is grouped into the same stable chrome.
-   - The old objective-fade/depth-jump workaround is removed because navigation is no longer treated as part of the play surface.
-
-2. **Classic feedback rework**
-   - C01: basic-shot lesson becomes a simple route decision rather than a straight free shot.
-   - C02: broad alternating shelves create an easy-to-read S route.
-   - C03: central island creates a genuine left/right route choice.
-   - C06: preserves the bumper identity but becomes a forgiving two-bumper pinball line with larger targets and clearer recovery space.
-
-Acceptance before calling this public:
-
-- normal TypeScript build;
-- geometry / clearance / mechanic integrity checks;
-- fast + strict/full campaign audits where CI supports them;
-- visual smoke on mobile and desktop, especially top-dock spacing and C01/C02/C03/C06 feel.
-
-## Open-beta UI hotfix — PR #18
-
-Branch: `feature/open-beta-ui-hotfix` → artificial review → `dev`.
-
-Merged as `767d887d32cd1f40299b3f24aaa91c34d437feca`.
-
-### 1. ES/EN localisation sweep
-
-The original RC6 dictionary covered the main tester flow well but newer surfaces had been added after it and still contained untranslated Spanish.
-
-The audit covered the player-facing scenes, with explicit new coverage for:
-
-- Editor / Beta Lab;
-- Customization / cosmetic collection;
-- Shop;
-- Rewards;
-- Level Preview;
-- Community Publish / draft flow;
-- Patch Notes;
-- Maintenance;
-- Update Required;
-- compound/dynamic labels such as rarity, shop rotation, object counts and build status.
-
-`src/systems/I18nSurfaceDictionary.ts` now supplements the original RC6 dictionary.
-
-Native browser `window.prompt()` / `window.confirm()` calls are also localised centrally by `I18nSystem`, which fixes Editor and Community Publish dialogs that could previously bypass the selected language.
-
-Older screens re-checked during the audit — Menu, Level Select, Profile, Assistance, Results, Global Survey, Community Maps and Community Play — were already substantially covered by the original RC6 dictionary.
-
-### 2. Seasonal cosmetics no longer imply an active pass
-
-The seasonal cosmetic teasers remain visible so players can see future content, but an unavailable season pass is no longer advertised.
-
-Current behavior for unowned seasonal cosmetics:
-
-- status: `PRÓXIMAMENTE` / `COMING SOON`;
-- detail: `Contenido de temporada · próximamente` / `Seasonal content · coming soon`;
-- no `PASE` / `PASS` purchase implication.
-
-Current seasonal definitions remain future content:
-
-- Spirit Orb;
-- Spirit Petals;
-- Spirit Bloom.
-
-Do not implement pass ownership/unlock behavior until the season-pass system actually exists.
-
-### 3. Cosmetic UI alignment
-
-Visual alignment was reviewed separately from gameplay rendering.
-
-Fixed UI presentation:
-
-- trail composition in the large Customization preview;
-- trail icons in Customization cards;
-- trail icons in Shop cards;
-- hole-effect preview vertical centering;
-- hole-effect list icon vertical centering.
-
-The actual ball renderer was reviewed: ball centers are consistent; intentionally asymmetric details such as Orbit's satellite are decorative and not object offsets.
-
-Gameplay cosmetic positioning, golf physics and collision geometry are unchanged.
-
-### 4. CI now matches the documented workflow
-
-`.github/workflows/ci.yml` now runs on pull requests targeting both `dev` and `main`.
-
-This means the documented default workflow is now mechanically supported:
-
-**`feature/**` → artificial review/CI → `dev` → human review → `main`**
-
-PR #18 itself passed that feature-branch CI before merge.
-
-## Repository rename — COMPLETE
-
-The repository was renamed from `troll-golf` to `hole-in-what` on 2026-08-29 before the Reddit/open-beta wave.
-
-PR #17 prepared the migration safely:
-
-- Vite derives the Pages base path from `GITHUB_REPOSITORY`;
-- pre-rename builds continued to work under `/troll-golf/`;
-- post-rename builds automatically target `/hole-in-what/`;
-- package/devcontainer metadata uses **Hole in What?**;
-- legacy browser-storage keys were deliberately preserved.
-
-Validation history:
-
-- PR #17 merge: `2d34b5f7478f46933077b71fa229e59193b94cc8`
-- pre-rename CI: `33244050708` — SUCCESS
-- pre-rename Pages: `33244050721` — SUCCESS
-- first post-rename trigger: `5a19e7b2c2c8c95d4358d4ccfe629dc2cd3b7a84`
-- post-rename Pages: `33244590415` — SUCCESS with environment URL `https://papimatcoding.github.io/hole-in-what/`
-
-The old `/troll-golf/` Pages path is not canonical and must not be shared with new testers.
-
-## Previous RC6 experience hotfix
-
-Latest mechanics-independent UX fixes before PR #18 were shipped in runtime commit `02357338a6eadbd4480c47d2cf0b9ef15e81a044`.
-
-### HARD preview
-
-HARD cards show only the start-visible miniature, level ID and star targets. They must not announce or hint that a trap exists.
-
-Forbidden trap-signposting includes language such as:
-
-- `TRAMPA`;
-- `OCULTA`;
-- `VISIBLE`;
-- `SIN SPOILERS`;
-- discovery instructions.
-
-Latent `popWalls`, `popBumpers` and `popVoids` remain absent from the miniature.
-
-Principle: **HARD must surprise through play, not announce that a surprise exists.**
-
-### Gameplay HUD accidental activation
-
-Back, beta previous/next and in-hole REPORT buttons arm from their own pointer-down. A shot gesture that starts elsewhere and releases over a button must not activate that button.
-
-If a stationary ball is physically underneath a HUD button, a pointer-down inside the ball grab radius prioritises the shot gesture.
-
-### Duplicate beta reports
-
-Exact duplicate reports are suppressed client + server:
-
-- identical in-flight client reports are coalesced;
-- identical recently-successful reports are suppressed for 3 seconds;
-- Supabase has a BEFORE INSERT guard for identical report fingerprints within 3 seconds;
-- transactional smoke confirmed first identical insert = 1 row, immediate second = 0 rows.
-
-Historical duplicate rows remain preserved as evidence.
-
-## RC6 human-validation status
-
-### DOM forms
-
-Real mobile smoke exposed Phaser 4.2.1 DOMElement origin drift under camera zoom. PR #14 deployed:
-
-```css
-#game input,
-#game textarea {
-  transform-origin: 0 0 !important;
-}
-```
-
-Human re-check remains useful for Profile, Assistance, Results/in-hole report and Community textareas on touch + desktop, especially keyboard/focus behavior.
-
-### Current player-facing beta flow
-
-- Player Profile name editing;
-- Assistance textarea;
-- Community comments/reports;
-- Results report detail textarea;
-- in-hole quick report with explicit category + optional detail;
-- persistent ES/EN selector;
-- Spanish default for fresh Spanish/Catalan locales, English otherwise;
-- seasonal cosmetics clearly marked as future content;
-- neutral HARD previews.
-
-## Current human feedback snapshot — external RC6 only
-
-Exclude legacy `Matkiller` and every alias prefixed `DEV |` from external-cohort interpretation.
-
-Snapshot from 2026-08-28:
-
-- 5 external RC6 browser/tester identities with activity;
-- all then classified desktop;
-- 39 attempts;
-- 20 completed attempts;
-- 17 level ratings;
-- 73 post-input-fix external `mouse` shots;
-- only 4 external `unknown` shots, all from older pre-fix data.
-
-| Mode | Ratings | Avg fun | Avg originality | Avg difficulty | Avg surprise |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Classic | 13 | **2.08/5** | **2.23/5** | 1.92/5 | — |
-| HARD | 4 | **4.25/5** | **4.00/5** | 1.75/5 | **4.00/5** |
-
-Per-level signal includes:
-
-- C01: 2.0 fun / 1.0 originality / 1.0 difficulty;
-- C02: 2.0 / 1.0 / 1.0;
-- C03: 1.5 / 1.5 / 1.0;
-- C09–C10: 3.0 fun in the first fuller external run;
-- H01: 3 fun / 3 originality / 3 surprise;
-- H03: 5 fun / 5 originality / 5 surprise;
-- H04: 4 fun / 4 originality / 5 surprise;
-- H05: 5 fun / 4 originality in the newest external rating.
-
-Interpretation only, not a redesign decision:
-
-- Classic is accessible but early C01–C03 currently read as too plain / low-variety;
-- do not simply make Classic harder, because the early holes are teaching levels;
-- HARD currently expresses the game's identity/fun substantially more strongly;
-- sample size is still too small for blind level rewrites.
-
-## Campaign artificial certification — CLOSED
-
-Accepted campaign Full Audit: run `33158002310`.
-
-- **18/18 PASS · 0 REVIEW · 0 BLOCKER** synthetic human model;
-- Classic strict solver: 13/13 clean, 0 bypass, 0 no-route;
-- HARD strict solver: 5/5 clean, 0 bypass, 0 no-route, 0 warnings;
-- authored mechanics / behavior contracts PASS;
-- geometry PASS;
-- persistent-trap clearance PASS;
-- permanent HARD03 RC5→RC5.1 regression PASS;
-- originality: 0 structurally similar pairs.
-
-Key accepted synthetic checkpoints:
-
-- C06 touch 86%, casual 77%, tolerance 85%, human 86%, recovery 100%;
-- C11 touch 98%, casual 84%, tolerance 75%, human 90%, recovery 100%;
-- C12 touch 71%, casual 62%, tolerance 54%, human 65%, recovery 94%;
-- H01 touch 95%, casual 82%, tolerance 78%, human 89%, recovery 94%, trap consequence 66%;
-- H03 touch 89%, casual 77%, tolerance 72%, human 83%, recovery 100%, trap consequence 80%.
-
-Campaign order is intentional. C04→C05 and C10→C11 are teaching resets.
-
-Do not reopen campaign geometry solely because of unrelated UX/i18n/telemetry work.
-
-## Audit policy
-
-Audit is an internal critic, not an oracle. Mathematical solution ≠ synthetic human model ≠ real human validation.
-
-Current V2 authority:
+Prerequisito: **Node.js 22**, la misma versión usada por CI.
 
 ```bash
-FULL_AUDIT=1 npm run audit:courses
-npm run audit:human:full
-npm run audit:design
-npm run audit:originality
+git clone https://github.com/papimatcoding/hole-in-what.git
+cd hole-in-what
+npm install
+npm run dev
 ```
 
-Physics authority: `src/systems/GolfSimulation.ts`.
-Keep the known-bad RC5 HARD03 fixture against accepted RC5.1 permanently.
+Para generar y probar una build local:
 
-## Audit V3.1 — shadow work
+```bash
+npm run build
+npm run preview
+```
 
-Branch: `feature/audit-v3`. Draft PR #7. Keep shadow-only until meaningful human calibration exists.
+## Scripts disponibles
 
-Accepted V3.1 candidate: `4e61ec0e213c5e8d8bc56077c0f05a619b13fdce`.
-Full Audit run `33168040095`, job `98838118811` — SUCCESS. Artifact `9684761826`.
+| Script | Qué hace |
+| --- | --- |
+| `npm run dev` | Inicia Vite en modo desarrollo accesible desde la red local. |
+| `npm run build` | Ejecuta el typecheck de TypeScript y genera la build de producción con Vite. |
+| `npm run preview` | Sirve localmente la build de producción generada por Vite. |
+| `npm run typecheck` | Ejecuta TypeScript sin emitir archivos para detectar errores de tipos. |
+| `npm run test:hole` | Ejecuta las comprobaciones de física del hoyo. |
+| `npm run test:tutorial` | Valida la identidad y el comportamiento esperado del tutorial. |
+| `npm run test:grassland` | Valida las reglas específicas del capítulo Grassland. |
+| `npm run test:mechanics` | Comprueba la integridad de las mecánicas y las reglas de Grassland. |
+| `npm run test:mechanic-behavior` | Ejecuta los contratos deterministas de comportamiento de las mecánicas. |
+| `npm run test:geometry` | Comprueba la geometría de los campos authored. |
+| `npm run test:clearance` | Comprueba márgenes y clearance de los campos y obstáculos. |
+| `npm run audit:courses` | Ejecuta el audit de campos y el solver de rutas, bypasses y solvencia. |
+| `npm run audit:originality` | Evalúa la originalidad estructural entre niveles. |
+| `npm run audit:human` | Ejecuta el modelo humano sintético en modo rápido. |
+| `npm run audit:human:full` | Ejecuta el modelo humano sintético en modo completo. |
+| `npm run audit:human:strict` | Ejecuta el modelo humano completo con el gate estricto de Audit 2. |
+| `npm run audit:design` | Ejecuta el análisis de diseño basado en Audit 2. |
+| `npm run audit:3:core` | Ejecuta únicamente el núcleo de Audit 3. |
+| `npm run audit:3` | Ejecuta el pipeline rápido de audit humano, diseño, originalidad y Audit 3. |
+| `npm run audit:3:full` | Ejecuta el pipeline de Audit 3 usando el modelo humano completo. |
+| `npm run audit:3:strict` | Ejecuta el pipeline completo de Audit 3 con su gate estricto activado. |
 
-| HARD | V3 consequence | V3.1 consequence | Option loss | Troll Score |
-| --- | ---: | ---: | ---: | ---: |
-| H01 | 62% | 78% | 25% | 83 → 86 |
-| H02 | 45% | 64% | 8% | 74 → 77 |
-| H03 | 91% | 91% | 53% | 87 → 87 |
-| H04 | 15% | 73% | 20% | 60 → 71 |
-| H05 | 51% | 66% | 11% | 78 → 81 |
+## Arquitectura
 
-Next cognition work: memory / learning across attempts.
-Future architecture direction: shared declarative **Trigger → Action** world-state engine for runtime + Audit V3 and trap-specific counterfactuals.
+`src/main.ts` crea `Phaser.Game` y registra las escenas en este orden: `BootScene`, `MaintenanceScene`, `UpdateRequiredScene`, `MenuScene`, `PatchNotesScene`, `GlobalSurveyScene`, `PlayerProfileScene`, `AssistanceScene`, `LevelSelectScene`, `GameplayScene`, `ResultsScene`, `CosmeticsScene`, `ShopScene`, `RewardsScene`, `EditorScene`, `LevelPreviewScene`, `CommunityMapsScene`, `CommunityPublishScene` y `CommunityPlayScene`. Las Scenes controlan el flujo de pantallas, la interacción y la presentación del juego.
 
-## Anonymous beta telemetry contract
+`src/systems/` concentra la lógica no visual y los servicios compartidos. La física y validación del golf viven en `GolfSimulation.ts` —autoridad del juego—, `CourseRenderer.ts`, `CourseValidation.ts`, `ShotInputSystem.ts`, `StarScoring.ts`, `MovingMechanicSemantics.ts`, `MechanicTutorialSystem.ts` y `AudioFeedback.ts`. Persistencia y estado de producto usan `SaveSystem.ts`, `LiveOpsSystem.ts`, `PatchNotesSystem.ts`, `ProductTelemetrySystem.ts` y `ProductPulseOverlay.ts`. La internacionalización se reparte entre `I18nSystem.ts`, `I18nDictionary.ts` e `I18nSurfaceDictionary.ts`; cosméticos usa `CosmeticRenderer.ts`; Community Maps usa `CommunityMapsSystem.ts` y `CommunityDraftSystem.ts`; y la beta usa `BetaTelemetrySystem.ts`, `BetaFeedbackSystem.ts` y `BetaReportOverlay.ts`.
 
-Detailed contract: `docs/beta-telemetry.md`.
+`src/data/` contiene el contenido y la definición de campaña: `campaign.ts`, `cosmetics.ts`, `progression.ts` y `shopRotation.ts`. Los niveles diseñados a mano viven en `src/data/authored/` mediante `authoring.ts`, `classic.ts`, `classicBlock2.ts` y `hard.ts`; la generación/prototipado procedural vive en `src/data/procedural/` con `campaignGenerator.ts`, `courseUtils.ts` y `gateGrammar.ts`.
 
-Current developer mobile-smoke alias: `DEV | Matkiller444`.
+`src/config/` agrupa configuración transversal en `beta.ts`, `display.ts`, `product.ts` y `survey.ts`. El proyecto usa Phaser + TypeScript con Vite y no añade un framework de UI adicional.
 
-- `beta_attempts.attempt_id` is the attempt authority;
-- `beta_shots` stores `attempt_id`;
-- completion/abandon summary updates that same attempt row;
-- `beta_runs` is a parallel completed-result record;
-- `beta_runs` currently has **no `attempt_id` column**.
+## Flujo de ramas
 
-Never describe the DB as a literal attempt→shots→run foreign-key chain.
+El flujo normal es **`feature/**` → `dev` → `main`**. Las ramas `feature/**` contienen el trabajo activo y su validación; `dev` es la beta pública y la fuente de GitHub Pages; `main` representa el release oficial aceptado. El proceso completo, incluidos gates de promoción y rollback, está documentado en [docs/release-process.md](docs/release-process.md).
 
-Historical RC6 shots before PR #11 can have `input_kind = unknown`; post-fix desktop data validates `mouse`. A fresh real-device mobile shot is still useful to reconfirm `touch` in the current public build.
+## Documentación adicional
 
-## Community Maps
+- [docs/BLOCK_2_DESIGN.md](docs/BLOCK_2_DESIGN.md) — Plan de diseño y authoring de Block 2, con ice, booster, portal, pacing y criterios de aceptación.
+- [docs/LEVEL_DESIGN.md](docs/LEVEL_DESIGN.md) — Reglas generales de diseño de niveles, pacing, acceptance gates y flujo de beta.
+- [docs/audit-3-map-design.md](docs/audit-3-map-design.md) — Especificación del Map Design Advisor de Audit 3, sus métricas, outcomes y comandos.
+- [docs/beta-telemetry.md](docs/beta-telemetry.md) — Contrato de telemetría anónima de beta, privacidad, métricas y calibración del audit.
+- [docs/beta-ux-i18n-rc6.md](docs/beta-ux-i18n-rc6.md) — Alcance y validación del trabajo RC6 de DOM UI e internacionalización ES/EN.
+- [docs/campaign-audit-2026-08-28.md](docs/campaign-audit-2026-08-28.md) — Certificación y resultados detallados del audit de campaña RC6 del 28 de agosto de 2026.
+- [docs/campaign-progression.md](docs/campaign-progression.md) — Orden y progresión de campaña según roles de aprendizaje y pacing, en lugar de dificultad bruta.
+- [docs/dev-beta-promotion-checklist.md](docs/dev-beta-promotion-checklist.md) — Checklist de promoción de una feature certificada a la beta pública en `dev`.
+- [docs/rc7-product-validation.md](docs/rc7-product-validation.md) — Alcance, cohorte, telemetría, métricas y release gates de la validación de producto RC7.
+- [docs/release-process.md](docs/release-process.md) — Proceso completo de ramas, promoción a beta/release, mantenimiento y rollback.
+- [docs/repository-rename-2026-08-29.md](docs/repository-rename-2026-08-29.md) — Registro de la migración del repositorio de `troll-golf` a `hole-in-what` y sus compatibilidades.
+- [docs/troll-identity-pass.md](docs/troll-identity-pass.md) — Estado del candidato de identidad troll, progresión/prestige, reversibilidad y gates pendientes.
+- [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) — Estado detallado e histórico de handoff trasladado desde el README anterior.
 
-Supported loop:
+## Estado del proyecto
 
-**Editor → draft → playtest → publish → discover → play → rate/comment/report**
-
-Rules:
-
-- editing invalidates playtest certification;
-- creator self-rating is blocked;
-- creator deletion is server-validated;
-- do not expand to multi-hole community courses until this loop survives real multi-user beta.
-
-## HARD design principles
-
-A good troll trap:
-
-1. makes an obvious read attractive;
-2. surprises the first attempt;
-3. is deterministic and understandable afterwards;
-4. changes the failed/learned route;
-5. leaves a fair learned answer;
-6. rewards knowledge more than pixel precision;
-7. creates “qué cabrón”, not “esto es random”.
-
-Never spoil HARD solutions **or the mere existence/location/type of a trap** in selectors, previews, tutorials, Patch Notes or translations.
-
-## Product direction after beta validation
-
-Longer-term vision remains:
-
-- expand campaign toward roughly 40 Classic/learning holes + 40 difficult/troll holes;
-- stars drive replay/optimisation;
-- competitive online up to 10 players, with bots filling empty slots and difficulty scaling with rank;
-- competitive winner = least strokes, then fastest time as tiebreak;
-- ranked points/ranks;
-- seasonal pass + themed season holes only once the underlying system actually exists;
-- first season concept: dreamy / spiritual-flower, ethereal, floral and mystical.
-
-Do not let roadmap cosmetics imply a live pass before that feature exists.
-
-## Immediate next steps — resume here
-
-1. Merge the certified `feature/audit-calibrated-classic` candidate to `dev` only if the PR CI remains green.
-2. Human-smoke public C01 once as a fresh/onboarding user: welcome copy, animated finger, pull-back instruction, release instruction and no input blocking.
-3. Re-enter C01 after onboarding is stored: the guidance must not replay.
-4. Human-smoke the compact top gameplay dock on mobile + desktop; the ball must never disappear behind it.
-5. Play C02→C06 in order and judge pacing/fun; use Audit 2.1 as the numerical baseline, not as a replacement for human feel.
-6. Keep collecting external feedback with all `DEV*` aliases excluded from human-review averages.
-7. Next content expansion should use C04/C05/C07 as Classic references and H04/H05 as HARD references; ranked/seasons remain later.
+El estado/handoff detallado del proyecto se conserva en [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md).
