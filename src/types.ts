@@ -145,8 +145,10 @@ export interface LevelDefinition {
   authored?: boolean;
   /** First-run onboarding hole. Excluded from normal campaign pacing comparisons. */
   onboarding?: boolean;
-  /** Intended route used by deterministic generation, auditing and bot research. */
+  /** Intended learned route used by deterministic generation, auditing and bot research. */
   designPath?: Vec2[];
+  /** Plausible first-read route used to validate that troll traps actually alter a tempting line. */
+  baitPath?: Vec2[];
   /** Mechanic the authored mastery route is expected to engage with. */
   primaryMechanic?: CourseMechanic;
   /** HARD surprise grammar. Pure metadata; gameplay is still expressed by normal primitives. */

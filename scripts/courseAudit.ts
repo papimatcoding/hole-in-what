@@ -119,7 +119,12 @@ function naiveTrapProbe(level:LevelDefinition):boolean|null{
 function rawComplexity(level:LevelDefinition):number{return Math.min(9,(level.walls?.length??0)*.35)+(level.bumpers?.length??0)*1.5+(level.sand?.length??0)*1.1+(level.ice?.length??0)*1.3+(level.fans?.length??0)*1.8+(level.boosters?.length??0)*1.6+(level.curves?.length??0)*2+(level.portals?.length??0)*2.4+(level.movingWalls?.length??0)*2.5+(level.movingBumpers?.length??0)*2.5+(level.voids?.length??0)*2+(level.ramps?.length??0)*2.4+(level.trampolines?.length??0)*2.2+(level.popWalls?.length??0)*2.6+(level.popBumpers?.length??0)*2.6+(level.popVoids?.length??0)*2.8;}
 function difficultyScore(level:LevelDefinition,best:SolvedRun|null,robust:number|null):number|null{if(!best)return null;const precision=robust===null?5:(1-robust)*10,mode=level.mode==="troll"?6:0;return Number((best.strokes*12+precision+rawComplexity(level)+mode).toFixed(1));}
 function eliteMechanicHio(level:LevelDefinition,best:SolvedRun|null,naiveTrap:boolean|null,robust:number|null,target:number):boolean{
-  return Boolean(best?.strokes===1&&target>=3&&robust!==null&&robust<=ELITE_HIO_MAX_ROBUSTNESS&&mechanicWasUsed(level,best,naiveTrap)===true);
+  if(!best||best.strokes!==1||target<3||robust===null||robust>ELITE_HIO_MAX_ROBUSTNESS)return false;
+  // A narrow mastery line is legitimate when it meaningfully engages either the primary mechanic
+  // or an authored troll beat. Wall-primary holes cannot reliably distinguish course walls from
+  // field-boundary bounces via touchedMechanics, so requiring primary-mechanic telemetry alone
+  // incorrectly rejects expert bank shots that still trigger the authored trap.
+  return mechanicWasUsed(level,best,naiveTrap)===true||best.state.triggeredTraps.length>0;
 }
 function classify(level:LevelDefinition,best:SolvedRun|null,naiveTrap:boolean|null,clearanceBlockingStates:string[],robust:number|null):AuditStatus{
   if(!best||clearanceBlockingStates.length>0)return"NO_ROUTE_FOUND";
