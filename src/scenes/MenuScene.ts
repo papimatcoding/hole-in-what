@@ -6,7 +6,6 @@ import { CAMPAIGN_ENTRIES } from "../data/campaign";
 import { cosmeticById, cosmeticsByCategory, type CosmeticCategory, type CosmeticDefinition } from "../data/cosmetics";
 import { CAMPAIGN_CHAPTER_SIZE, PRESTIGE_REWARDS, campaignChapterDefinition } from "../data/progression";
 import { dailyShopIds } from "../data/shopRotation";
-import { BetaFeedbackSystem } from "../systems/BetaFeedbackSystem";
 import { BetaTelemetry } from "../systems/BetaTelemetrySystem";
 import { drawBall } from "../systems/CosmeticRenderer";
 import { I18n, type GameLanguage } from "../systems/I18nSystem";
@@ -361,7 +360,6 @@ export class MenuScene extends Phaser.Scene {
     x+=this.utilityLink(x,894,190,"AYUDA Y ASISTENCIA",()=>this.scene.start("assistance"));
     x+=this.utilityLink(x,894,PatchNotes.hasUnread()?224:178,PatchNotes.hasUnread()?"PATCH NOTES · ● NUEVO":"PATCH NOTES",()=>this.scene.start("patch-notes"),PatchNotes.hasUnread());
     if(PRODUCT_FEATURES.communityMaps)x+=this.utilityLink(x,894,210,"COMMUNITY MAPS",()=>{void this.openCommunity();});
-    if(BETA_TESTING)this.utilityLink(x,894,196,`BETA LAB · ${BetaFeedbackSystem.count()} FB`,()=>this.scene.start("editor"));
     this.add.text(right-66,894,"RC7 · PC",{fontFamily:"system-ui",fontSize:"10px",fontStyle:"bold",color:"#57505f"}).setOrigin(1,.5);
   }
 
@@ -535,7 +533,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private createMobileUtilityBar():void{
-    const links:{label:string;action:()=>void;accent?:boolean}[]=[{label:"AYUDA",action:()=>this.scene.start("assistance")},{label:PatchNotes.hasUnread()?"NOTAS · ●":"NOTAS",action:()=>this.scene.start("patch-notes"),accent:PatchNotes.hasUnread()}];if(PRODUCT_FEATURES.communityMaps)links.push({label:"MAPAS",action:()=>{void this.openCommunity();}});if(BETA_TESTING)links.push({label:`BETA · ${BetaFeedbackSystem.count()} FB`,action:()=>this.scene.start("editor")});
+    const links:{label:string;action:()=>void;accent?:boolean}[]=[{label:"AYUDA",action:()=>this.scene.start("assistance")},{label:PatchNotes.hasUnread()?"NOTAS · ●":"NOTAS",action:()=>this.scene.start("patch-notes"),accent:PatchNotes.hasUnread()}];if(PRODUCT_FEATURES.communityMaps)links.push({label:"MAPAS",action:()=>{void this.openCommunity();}});
     const gap=6,w=(500-gap*(links.length-1))/links.length;links.forEach((link,index)=>{const x=20+w/2+index*(w+gap),rest=link.accent?0x2b202f:0x15121c,hover=link.accent?0x3d2a40:0x241b2c,bg=this.add.rectangle(x,827,w,38,rest).setStrokeStyle(1,link.accent?0x7c546f:0x382f42),label=this.add.text(x,827,link.label,{fontFamily:"system-ui",fontSize:uiFontSize(8,1),fontStyle:"bold",color:link.accent?"#e2b7d8":"#92899b"}).setOrigin(.5);this.wirePress(bg,label,x,827,w,44,link.action,rest,hover);});
   }
 

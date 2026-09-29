@@ -116,6 +116,17 @@ export const EN_SURFACE_EXACT:Record<string,string>={
   "✓ MAPA PUBLICADO":"✓ MAP PUBLISHED",
 
   // Patch notes
+  "BUZÓN DE PARCHES":"PATCH INBOX",
+  "No hay parches en el buzón":"No patches in your inbox",
+  "RECIENTES":"RECENT",
+  "BORRAR":"DELETE",
+  "BETA · GRASSLAND":"BETA · GRASSLAND",
+  "RC7 · PRESTIGIO":"RC7 · PRESTIGE",
+  "29 SEP 2026":"29 SEP 2026",
+  "Nuevos ángulos y trampas en los primeros hoyos.":"New angles and traps in the first holes.",
+  "Ajustadas rutas, trampas y objetivos de estrellas en los primeros diez hoyos.":"Adjusted routes, traps and star goals in the first ten holes.",
+  "Al volver de una sección, el menú recuerda dónde estabas.":"The menu remembers your section when you return.",
+  "Los mapas de Grassland siguen en prueba: tus comentarios nos ayudan a mejorarlos.":"Grassland maps are still in testing: your feedback helps us improve them.",
   "22 SEP 2026":"22 SEP 2026",
   "Mundos temáticos y recompensas reclamables.":"Themed worlds and claimable rewards.",
   "Las recompensas de Prestigio ahora se reclaman manualmente.":"Prestige rewards are now claimed manually.",

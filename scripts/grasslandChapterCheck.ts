@@ -55,20 +55,31 @@ for(let i=7;i<10;i++)assert((levels[i]!.ramps?.length??0)>0,`${levels[i]!.id} sh
 
 const shot=(degrees:number,power:number)=>({angle:degrees*Math.PI/180,power});
 const c4=levels[3]!,c4Start=simulateShotToRest(c4,createGolfSimulationState(c4),shot(344,.38),8).state;
-assert(simulateShotToRest(c4,c4Start,shot(235,.95),8).sunk,"C04's sloped bank must offer a successful alternative shot");
-assert(!simulateShotToRest({...c4,triangles:[]},c4Start,shot(235,.95),8).sunk,"C04's bank must change that shot, not decorate it");
+assert(simulateShotToRest(c4,c4Start,shot(249,.94),8).sunk,"C04's corner bank must offer a successful alternative shot");
+assert(!simulateShotToRest({...c4,triangles:[]},c4Start,shot(249,.94),8).sunk,"C04's bank must change that shot, not decorate it");
+assert.equal(c4.triangles![0]!.a.y,c4.walls![0]!.y,"C04 bank must join the wall top");
+
+const c6=levels[5]!,c6Bait=shot(220,.8),c6Blocked=simulateShotToRest(c6,createGolfSimulationState(c6),c6Bait,8),c6Open=simulateShotToRest({...c6,popWalls:[]},createGolfSimulationState(c6),c6Bait,8);
+assert(c6Blocked.state.triggeredTraps.includes("wall:0"),"C06 gate must activate after the tempting shot");
+assert(Math.hypot(c6Blocked.state.ball.x-c6Open.state.ball.x,c6Blocked.state.ball.y-c6Open.state.ball.y)>150,"C06 gate must change the route to the left bumper");
+assert.equal(c6.popWalls![0]!.y,c6.walls![0]!.y+c6.walls![0]!.h,"C06 gate must grow from the fixed wall");
+assert(Math.hypot(c6.ball.x-c6.popWalls![0]!.triggerX,c6.ball.y-c6.popWalls![0]!.triggerY)>c6.popWalls![0]!.triggerRadius,"C06 gate must stay hidden at spawn");
 
 const c7=levels[6]!,curveShot=shot(324,1),withCurve=simulateShotToRest(c7,createGolfSimulationState(c7),curveShot,8),withoutCurve=simulateShotToRest({...c7,curves:[]},createGolfSimulationState(c7),curveShot,8);
 assert(withCurve.state.touchedMechanics.includes("curve"),"C07's curve must participate in a plausible first shot");
 assert(Math.hypot(withCurve.state.ball.x-withoutCurve.state.ball.x,withCurve.state.ball.y-withoutCurve.state.ball.y)>60,"C07's curve must change that route");
+assert.equal(c7.curves![0]!.y-c7.curves![0]!.r,c7.walls![1]!.y+c7.walls![1]!.h,"C07 curve must meet the upper wall");
+assert(c7.walls![0]!.y-(c7.curves![0]!.y+Math.sin(c7.curves![0]!.endAngle)*c7.curves![0]!.r)>40,"C07 curve must leave a playable gap before the lower wall");
 
 const c9=levels[8]!,shortcut=shot(292,.5);
 assert(simulateShotToRest({...c9,popWalls:[]},createGolfSimulationState(c9),shortcut,8).sunk,"C09 bait must look like a real hole-in-one route");
 assert(!simulateShotToRest(c9,createGolfSimulationState(c9),shortcut,8).sunk,"C09 gate must deny that shortcut after it appears");
+assert.equal(c9.popWalls![0]!.x,c9.walls![2]!.x+c9.walls![2]!.w,"C09 gate must continue the upper wall");
 
 const c10=levels[9]!,finaleBait=shot(40,1);
 const floorDrop=simulateShotToRest(c10,createGolfSimulationState(c10),finaleBait,8);
 assert(floorDrop.voided&&floorDrop.events.some(event=>event.kind==="trap-void"),"C10's tempting bank shot must visibly force a retry");
 assert(simulateShotToRest({...c10,popVoids:[]},createGolfSimulationState(c10),finaleBait,8).sunk,"C10's floor drop must deny a genuine one-shot route");
+assert.equal(c10.popVoids![0]!.y+c10.popVoids![0]!.h,c10.walls![2]!.y,"C10 floor drop must meet the upper wall");
 
 console.log("PASS Grassland contract: 10 troll holes · trap consequences and useful banks · geometry/bumpers/ramp and finale floor drop");
