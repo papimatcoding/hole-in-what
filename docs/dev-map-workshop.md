@@ -1,6 +1,6 @@
 # Taller de mapas en `dev`
 
-Abre **BETA LAB** desde el menú. El editor existente conserva el guardado local, selección, arrastre, cambio de tamaño, duplicado, deshacer y **TEST** con la física real. Las flechas cambian la herramienta; **ROTAR** orienta la siguiente pieza y rota una pieza seleccionada.
+Abre **BETA LAB** desde el menú. El editor existente conserva el guardado local, selección, arrastre, cambio de tamaño, duplicado, deshacer y **TEST** con la física real. Toca el nombre de la herramienta para abrir la paleta completa; las flechas también cambian de herramienta. **ROTAR** orienta la siguiente pieza y rota una pieza seleccionada.
 
 ## Crear un hoyo
 

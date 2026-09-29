@@ -97,3 +97,4 @@ canvas {
 .dev-map-card p{margin:5px 0;font-size:13px}.dev-map-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .dev-map-notice{min-height:20px;color:#f3d681!important;font-weight:600}
 @media(max-width:560px){.dev-map-header,.dev-map-content{padding:14px}.dev-map-header h2{font-size:16px}.dev-map-actions .dev-map-button{flex:1 1 45%}}
+.dev-tool-panel{max-width:560px}.dev-tool-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:9px}.dev-tool-grid .dev-map-button{text-align:left}.dev-tool-active{background:#5a6b3b;border-color:#f2dd8d}

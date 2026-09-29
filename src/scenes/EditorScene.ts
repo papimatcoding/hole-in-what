@@ -95,7 +95,7 @@ export class EditorScene extends Phaser.Scene{
     this.add.rectangle(270,58,510,104,0x0b1117,.96).setStrokeStyle(1,0x344554,.9).setDepth(40);
     this.textButton("‹",42,42,()=>this.scene.start("menu"),28);
     this.textButton("◀",84,42,()=>this.changeTool(-1),18);
-    this.toolText=this.add.text(170,42,"",{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5).setDepth(42);
+    this.toolText=this.add.text(170,42,"",{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5).setDepth(42).setInteractive({useHandCursor:true}).on("pointerup",()=>this.openToolPalette());
     this.textButton("▶",255,42,()=>this.changeTool(1),18);
     this.textButton("ROTAR",310,42,()=>this.rotateSelected(),10);
     this.textButton("DUP",360,42,()=>this.duplicateSelected(),10);
@@ -138,6 +138,24 @@ export class EditorScene extends Phaser.Scene{
   private setTool(tool:EditorTool):void{const i=TOOLS.indexOf(tool);if(i>=0){this.toolIndex=i;this.pendingTrap=null;this.portalStart=null;this.dragStart=null;this.overlay.clear();this.refreshUi();}}
   private changeTool(delta:number):void{this.toolIndex=(this.toolIndex+delta+TOOLS.length)%TOOLS.length;this.pendingTrap=null;this.portalStart=null;this.dragStart=null;this.overlay.clear();this.refreshUi();}
   private activeTool():EditorTool{return TOOLS[this.toolIndex]!;}
+  private openToolPalette():void{
+    if(this.play)return;
+    const backdrop=document.createElement("div"),panel=document.createElement("div"),header=document.createElement("div"),content=document.createElement("div");
+    backdrop.className="dev-map-backdrop";panel.className="dev-map-panel dev-tool-panel";header.className="dev-map-header";content.className="dev-map-content";
+    const heading=document.createElement("h2");heading.textContent="ELIGE UNA HERRAMIENTA";const close=document.createElement("button");close.className="dev-map-button";close.textContent="Cerrar";close.onclick=()=>dispose();header.append(heading,close);
+    const groups:{title:string;tools:EditorTool[]}[]=[
+      {title:"Trazado y geometría",tools:["select","wall","triangle","curve","moving-wall","moving-bumper"]},
+      {title:"Trampas sorpresa",tools:["pop-wall","pop-bumper","pop-void"]},
+      {title:"Impulso y superficies",tools:["bumper","ramp","trampoline","booster","fan","portal","sand","ice","void"]},
+      {title:"Objetivos",tools:["ball","hole"]}
+    ];
+    for(const group of groups){const section=document.createElement("section"),title=document.createElement("h3"),grid=document.createElement("div");section.className="dev-map-section";title.textContent=group.title;grid.className="dev-tool-grid";
+      for(const tool of group.tools){const b=document.createElement("button");b.className="dev-map-button"+(tool===this.activeTool()?" dev-tool-active":"");b.textContent=TOOL_LABEL[tool];b.onclick=()=>{this.setTool(tool);dispose();};grid.append(b);}section.append(title,grid);content.append(section);}
+    const help=document.createElement("p");help.textContent="Arrastra para muros, triángulos y zonas. Para trampas: coloca la pieza y después su activador. TEST utiliza la física real.";content.prepend(help);
+    panel.append(header,content);backdrop.append(panel);document.body.append(backdrop);
+    backdrop.addEventListener("click",e=>{if(e.target===backdrop)dispose();});backdrop.addEventListener("keydown",e=>{e.stopPropagation();if(e.key==="Escape")dispose();});backdrop.addEventListener("keyup",e=>e.stopPropagation());
+    const dispose=():void=>backdrop.remove();this.events.once("shutdown",dispose);
+  }
   private snapPoint(p:Vec2):Vec2{const q=clampToField(p);return this.gridEnabled?{x:Math.round(q.x/GRID)*GRID,y:Math.round(q.y/GRID)*GRID}:q;}
 
   private pointerDown(pointer:Phaser.Input.Pointer):void{
