@@ -2,16 +2,20 @@ import Phaser from "phaser";
 import { pointerToDesign, setupDesignCamera, sharpenSceneText } from "../config/display";
 import { levelFor, levelsForMode } from "../data/campaign";
 import { BetaFeedbackSystem } from "../systems/BetaFeedbackSystem";
+import { openDevMapReviewPanel } from "../systems/DevMapReviewPanel";
 import { drawCourse, drawDynamicCourse } from "../systems/CourseRenderer";
 import { GOLF_PHYSICS, GolfSimulation, powerFromPhysicalPull, type SimulationEvent } from "../systems/GolfSimulation";
 import type { CourseMechanic, CurveDef, LevelDefinition, PortalPairDef, RectDef, Vec2 } from "../types";
 
-type EditorTool="select"|"wall"|"sand"|"ice"|"void"|"bumper"|"booster"|"fan"|"portal"|"ramp"|"trampoline"|"curve"|"moving-wall"|"moving-bumper"|"ball"|"hole";
-type RectKey="walls"|"sand"|"ice"|"voids"|"boosters"|"fans"|"ramps"|"movingWalls";
-type CircleKey="bumpers"|"trampolines"|"movingBumpers";
+type EditorTool="select"|"wall"|"triangle"|"sand"|"ice"|"void"|"bumper"|"booster"|"fan"|"portal"|"ramp"|"trampoline"|"curve"|"moving-wall"|"moving-bumper"|"pop-wall"|"pop-bumper"|"pop-void"|"ball"|"hole";
+type RectKey="walls"|"sand"|"ice"|"voids"|"boosters"|"fans"|"ramps"|"movingWalls"|"popWalls"|"popVoids";
+type CircleKey="bumpers"|"trampolines"|"movingBumpers"|"popBumpers";
+type TrapKey="popWalls"|"popBumpers"|"popVoids";
 type Selection=
   |{kind:"rect";key:RectKey;index:number}
   |{kind:"circle";key:CircleKey;index:number}
+  |{kind:"triangle";index:number}
+  |{kind:"trigger";key:TrapKey;index:number}
   |{kind:"curve";index:number}
   |{kind:"portal";index:number}
   |{kind:"ball"}
@@ -19,11 +23,11 @@ type Selection=
 
 type TransformMode="move"|"resize";
 
-const TOOLS:EditorTool[]=["select","wall","sand","ice","void","bumper","booster","fan","portal","ramp","trampoline","curve","moving-wall","moving-bumper","ball","hole"];
-const TOOL_LABEL:Record<EditorTool,string>={select:"SELECCIONAR",wall:"MURO",sand:"ARENA",ice:"HIELO",void:"VACÍO",bumper:"BUMPER",booster:"BOOST",fan:"FAN",portal:"PORTAL",ramp:"RAMPA",trampoline:"TRAMP",curve:"CURVA","moving-wall":"MURO MÓVIL","moving-bumper":"BUMPER MÓVIL",ball:"BOLA",hole:"HOYO"};
-const RECT_TOOLS=new Set<EditorTool>(["wall","sand","ice","void","booster","fan","ramp","moving-wall"]);
-const RECT_KEYS:RectKey[]=["walls","sand","ice","voids","boosters","fans","ramps","movingWalls"];
-const CIRCLE_KEYS:CircleKey[]=["bumpers","trampolines","movingBumpers"];
+const TOOLS:EditorTool[]=["select","wall","triangle","curve","bumper","pop-wall","pop-bumper","pop-void","moving-wall","moving-bumper","ramp","trampoline","booster","fan","portal","sand","ice","void","ball","hole"];
+const TOOL_LABEL:Record<EditorTool,string>={select:"SELECCIONAR",wall:"MURO",triangle:"TRIÁNGULO",sand:"ARENA",ice:"HIELO",void:"VACÍO",bumper:"BUMPER",booster:"BOOST",fan:"FAN",portal:"PORTAL",ramp:"RAMPA",trampoline:"TRAMP",curve:"CURVA","moving-wall":"MURO MÓVIL","moving-bumper":"BUMPER MÓVIL","pop-wall":"TRAMPA MURO","pop-bumper":"TRAMPA BUMPER","pop-void":"TRAMPA SUELO",ball:"BOLA",hole:"HOYO"};
+const RECT_TOOLS=new Set<EditorTool>(["wall","triangle","sand","ice","void","booster","fan","ramp","moving-wall","pop-wall","pop-void"]);
+const RECT_KEYS:RectKey[]=["walls","sand","ice","voids","boosters","fans","ramps","movingWalls","popWalls","popVoids"];
+const CIRCLE_KEYS:CircleKey[]=["bumpers","trampolines","movingBumpers","popBumpers"];
 const DRAFT_KEY="troll-golf-editor-draft-v2";
 const GRID_KEY="troll-golf-editor-grid-v1";
 const GRID=20;
@@ -60,6 +64,7 @@ export class EditorScene extends Phaser.Scene{
   private feedbackText!:Phaser.GameObjects.Text;
   private dragStart:Vec2|null=null;
   private portalStart:Vec2|null=null;
+  private pendingTrap:{key:TrapKey;index:number}|null=null;
   private play=false;
   private sim!:GolfSimulation;
   private strokes=0;
@@ -90,7 +95,7 @@ export class EditorScene extends Phaser.Scene{
     this.add.rectangle(270,58,510,104,0x0b1117,.96).setStrokeStyle(1,0x344554,.9).setDepth(40);
     this.textButton("‹",42,42,()=>this.scene.start("menu"),28);
     this.textButton("◀",84,42,()=>this.changeTool(-1),18);
-    this.toolText=this.add.text(170,42,"",{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5).setDepth(42);
+    this.toolText=this.add.text(170,42,"",{fontFamily:"system-ui, sans-serif",fontSize:"12px",fontStyle:"bold",color:"#f5f7fa"}).setOrigin(.5).setDepth(42).setInteractive({useHandCursor:true}).on("pointerup",()=>this.openToolPalette());
     this.textButton("▶",255,42,()=>this.changeTool(1),18);
     this.textButton("ROTAR",310,42,()=>this.rotateSelected(),10);
     this.textButton("DUP",360,42,()=>this.duplicateSelected(),10);
@@ -106,6 +111,8 @@ export class EditorScene extends Phaser.Scene{
     this.feedbackText=this.textButton("FEEDBACK",425,83,()=>void this.copyFeedback(),10);
     this.parText=this.add.text(500,83,"",{fontFamily:"system-ui, sans-serif",fontSize:"10px",fontStyle:"bold",color:"#e5cc82"}).setOrigin(1,.5).setDepth(42).setInteractive({useHandCursor:true}).on("pointerup",()=>this.editPar());
     this.statusText=this.add.text(42,112,"",{fontFamily:"system-ui, sans-serif",fontSize:"10px",color:"#afbeca"}).setDepth(42);
+    this.add.rectangle(270,918,510,46,0x142a2d,.98).setStrokeStyle(1,0x749c86,.8).setDepth(40);
+    this.textButton("PROPUESTAS · EXPORTAR / IMPORTAR / REVISAR",270,918,()=>this.openReview(),12);
     this.refreshUi();
   }
 
@@ -115,28 +122,47 @@ export class EditorScene extends Phaser.Scene{
     this.gridText?.setText(this.gridEnabled?"GRID ON":"GRID OFF");this.gridText?.setColor(this.gridEnabled?"#d9edff":"#74818c");
     this.playText?.setText(this.play?"SALIR":"TEST");this.parText?.setText(`★★★ ${this.draft.threeStar.maxStrokes??"-"} · ★★ ${this.draft.twoStar.maxStrokes??"-"}`);
     this.feedbackText?.setText(`FB ${BetaFeedbackSystem.count()}`);
-    this.statusText?.setText(this.play?`PLAYTEST · ${this.strokes} golpes · SPACE resetea · TEST sale`:`${this.draft.id} · V seleccionar · R rotar · D duplicar · Del borrar · G grid · P previews`);
+    this.statusText?.setText(this.play?`PLAYTEST · ${this.strokes} golpes · SPACE resetea · TEST sale`:this.pendingTrap?"TRAMPA · toca el punto que la activa (ESC cancela)":`${this.draft.id} · V seleccionar · R rotar · D duplicar · Del borrar · G grid`);
     this.drawGrid();this.drawSelection();
   }
 
   private bindDesktopInput():void{
     const k=this.input.keyboard;if(!k)return;
     k.on("keydown-V",()=>this.setTool("select"));k.on("keydown-G",()=>this.toggleGrid());k.on("keydown-R",()=>this.rotateSelected());k.on("keydown-D",()=>this.duplicateSelected());
-    k.on("keydown-DELETE",()=>this.deleteSelected());k.on("keydown-BACKSPACE",()=>this.deleteSelected());k.on("keydown-ESC",()=>{this.selection=null;this.drawSelection();});
+    k.on("keydown-DELETE",()=>this.deleteSelected());k.on("keydown-BACKSPACE",()=>this.deleteSelected());k.on("keydown-ESC",()=>{this.selection=null;this.pendingTrap=null;this.portalStart=null;this.refreshUi();});
     k.on("keydown-P",()=>{if(!this.play)this.scene.start("level-previews",{mode:this.draft.mode});});
     k.on("keydown-SPACE",()=>{if(this.play)this.resetPlaytest();else this.togglePlay();});
     k.on("keydown-Z",(e:KeyboardEvent)=>{if(e.ctrlKey||e.metaKey)this.undo();});
   }
 
-  private setTool(tool:EditorTool):void{const i=TOOLS.indexOf(tool);if(i>=0){this.toolIndex=i;this.portalStart=null;this.dragStart=null;this.overlay.clear();this.refreshUi();}}
-  private changeTool(delta:number):void{this.toolIndex=(this.toolIndex+delta+TOOLS.length)%TOOLS.length;this.portalStart=null;this.dragStart=null;this.overlay.clear();this.refreshUi();}
+  private setTool(tool:EditorTool):void{const i=TOOLS.indexOf(tool);if(i>=0){this.toolIndex=i;this.pendingTrap=null;this.portalStart=null;this.dragStart=null;this.overlay.clear();this.refreshUi();}}
+  private changeTool(delta:number):void{this.toolIndex=(this.toolIndex+delta+TOOLS.length)%TOOLS.length;this.pendingTrap=null;this.portalStart=null;this.dragStart=null;this.overlay.clear();this.refreshUi();}
   private activeTool():EditorTool{return TOOLS[this.toolIndex]!;}
+  private openToolPalette():void{
+    if(this.play)return;
+    const backdrop=document.createElement("div"),panel=document.createElement("div"),header=document.createElement("div"),content=document.createElement("div");
+    backdrop.className="dev-map-backdrop";panel.className="dev-map-panel dev-tool-panel";header.className="dev-map-header";content.className="dev-map-content";
+    const heading=document.createElement("h2");heading.textContent="ELIGE UNA HERRAMIENTA";const close=document.createElement("button");close.className="dev-map-button";close.textContent="Cerrar";close.onclick=()=>dispose();header.append(heading,close);
+    const groups:{title:string;tools:EditorTool[]}[]=[
+      {title:"Trazado y geometría",tools:["select","wall","triangle","curve","moving-wall","moving-bumper"]},
+      {title:"Trampas sorpresa",tools:["pop-wall","pop-bumper","pop-void"]},
+      {title:"Impulso y superficies",tools:["bumper","ramp","trampoline","booster","fan","portal","sand","ice","void"]},
+      {title:"Objetivos",tools:["ball","hole"]}
+    ];
+    for(const group of groups){const section=document.createElement("section"),title=document.createElement("h3"),grid=document.createElement("div");section.className="dev-map-section";title.textContent=group.title;grid.className="dev-tool-grid";
+      for(const tool of group.tools){const b=document.createElement("button");b.className="dev-map-button"+(tool===this.activeTool()?" dev-tool-active":"");b.textContent=TOOL_LABEL[tool];b.onclick=()=>{this.setTool(tool);dispose();};grid.append(b);}section.append(title,grid);content.append(section);}
+    const help=document.createElement("p");help.textContent="Arrastra para muros, triángulos y zonas. Para trampas: coloca la pieza y después su activador. TEST utiliza la física real.";content.prepend(help);
+    panel.append(header,content);backdrop.append(panel);document.body.append(backdrop);
+    backdrop.addEventListener("click",e=>{if(e.target===backdrop)dispose();});backdrop.addEventListener("keydown",e=>{e.stopPropagation();if(e.key==="Escape")dispose();});backdrop.addEventListener("keyup",e=>e.stopPropagation());
+    const dispose=():void=>backdrop.remove();this.events.once("shutdown",dispose);
+  }
   private snapPoint(p:Vec2):Vec2{const q=clampToField(p);return this.gridEnabled?{x:Math.round(q.x/GRID)*GRID,y:Math.round(q.y/GRID)*GRID}:q;}
 
   private pointerDown(pointer:Phaser.Input.Pointer):void{
     const raw=pointerToDesign(this,pointer),p=this.snapPoint(raw);if(raw.y<EDIT_TOP||raw.y>EDIT_BOTTOM)return;
     if(this.play){const b=this.sim.state.ball;if(this.sim.state.moving||this.sim.isAirborne())return;if(Phaser.Math.Distance.Between(raw.x,raw.y,b.x,b.y)<=62){this.aimStart=raw;this.drawAim(raw);}return;}
     if(pointer.button===2){this.selection=this.hitTest(raw);if(this.selection)this.deleteSelected();return;}
+    if(this.pendingTrap)return;
     if(this.activeTool()==="select"){
       this.selection=this.hitTest(raw);this.drawSelection();if(!this.selection)return;
       this.snapshot();this.transformBase=clone(this.draft);this.transformStart=p;this.transformMode=this.isResizeHandle(raw)?"resize":"move";return;
@@ -157,36 +183,43 @@ export class EditorScene extends Phaser.Scene{
     if(this.transformMode){this.transformMode=null;this.transformStart=null;this.transformBase=null;this.saveDraft();this.rebuildPreview();return;}
     const tool=this.activeTool();
     if(tool==="select")return;
-    if(RECT_TOOLS.has(tool)&&this.dragStart){const start=this.dragStart;this.dragStart=null;this.overlay.clear();const r=normalRect(start,p);if(r.w<14||r.h<14)return;this.snapshot();this.addRectTool(tool,r);this.changed();return;}
+    if(this.pendingTrap){const trap=this.trapAt(this.draft,this.pendingTrap.key,this.pendingTrap.index);if(trap){this.snapshot();trap.triggerX=p.x;trap.triggerY=p.y;this.pendingTrap=null;this.changed();this.toast("TRAMPA LISTA · TEST para probar");}return;}
+    if(RECT_TOOLS.has(tool)&&this.dragStart){const start=this.dragStart;this.dragStart=null;this.overlay.clear();const r=normalRect(start,p);if(r.w<14||r.h<14)return;this.snapshot();this.addRectTool(tool,r);this.changed();if(this.pendingTrap)this.toast("Ahora coloca el activador");return;}
     this.snapshot();
     if(tool==="ball")this.draft.ball=p;
     else if(tool==="hole")this.draft.hole=p;
     else if(tool==="bumper"){(this.draft.bumpers??=[]).push({x:p.x,y:p.y,r:32});this.draft.primaryMechanic="bumper";}
     else if(tool==="trampoline"){(this.draft.trampolines??=[]).push({x:p.x,y:p.y,r:34,power:440});this.draft.primaryMechanic="trampoline";}
     else if(tool==="moving-bumper"){(this.draft.movingBumpers??=[]).push({x:p.x,y:p.y,r:30,axis:this.orientation%2===0?"x":"y",amplitude:70,speed:1.1});this.draft.primaryMechanic="moving";}
+    else if(tool==="pop-bumper"){const list=this.draft.popBumpers??=[];list.push({x:p.x,y:p.y,r:32,triggerX:p.x,triggerY:p.y+90,triggerRadius:55});this.draft.popBumpers=list;this.pendingTrap={key:"popBumpers",index:list.length-1};this.draft.primaryMechanic="bumper";}
     else if(tool==="curve"){const a=this.orientation*Math.PI/2;(this.draft.curves??=[]).push({x:p.x,y:p.y,r:92,startAngle:a,endAngle:a+Math.PI/2,thickness:24});this.draft.primaryMechanic="curve";}
     else if(tool==="portal"){
       if(!this.portalStart){this.history.pop();this.portalStart=p;this.toast("Portal A · coloca la salida");return;}
       (this.draft.portals??=[]).push({a:{...this.portalStart,r:28},b:{...p,r:28}});this.portalStart=null;this.draft.primaryMechanic="portal";
     }else{this.history.pop();return;}
-    this.changed();
+    this.changed();if(this.pendingTrap)this.toast("Ahora coloca el activador");
   }
 
   private addRectTool(tool:EditorTool,r:RectDef):void{
     const d=direction(this.orientation),mechanics:Partial<Record<EditorTool,CourseMechanic>>={wall:"wall",sand:"sand",ice:"ice",void:"void",booster:"booster",fan:"fan",ramp:"ramp","moving-wall":"moving"};
-    if(tool==="wall")(this.draft.walls??=[]).push(r);else if(tool==="sand")(this.draft.sand??=[]).push(r);else if(tool==="ice")(this.draft.ice??=[]).push(r);else if(tool==="void")(this.draft.voids??=[]).push(r);
+    if(tool==="wall")(this.draft.walls??=[]).push(r);else if(tool==="triangle"){const corners=[{x:r.x,y:r.y},{x:r.x+r.w,y:r.y},{x:r.x+r.w,y:r.y+r.h},{x:r.x,y:r.y+r.h}];(this.draft.triangles??=[]).push({a:corners[this.orientation%4]!,b:corners[(this.orientation+1)%4]!,c:corners[(this.orientation+2)%4]!});this.draft.primaryMechanic="wall";}
+    else if(tool==="sand")(this.draft.sand??=[]).push(r);else if(tool==="ice")(this.draft.ice??=[]).push(r);else if(tool==="void")(this.draft.voids??=[]).push(r);
+    else if(tool==="pop-wall"||tool==="pop-void"){const key=tool==="pop-wall"?"popWalls":"popVoids",list=this.draft[key]??[];list.push({...r,triggerX:r.x+r.w/2,triggerY:r.y+r.h/2+90,triggerRadius:55});this.draft[key]=list;this.pendingTrap={key,index:list.length-1};this.draft.primaryMechanic=tool==="pop-wall"?"wall":"void";}
     else if(tool==="booster")(this.draft.boosters??=[]).push({...r,dx:d.x,dy:d.y,power:1.05});else if(tool==="fan")(this.draft.fans??=[]).push({...r,dx:d.x,dy:d.y,strength:285});else if(tool==="ramp")(this.draft.ramps??=[]).push({...r,dx:d.x,dy:d.y,lift:350,boost:1.03});else if(tool==="moving-wall")(this.draft.movingWalls??=[]).push({...r,axis:this.orientation%2===0?"x":"y",amplitude:72,speed:1});
     const m=mechanics[tool];if(m)this.draft.primaryMechanic=m;
   }
 
   private rectArray(level:LevelDefinition,key:RectKey):RectDef[]{return (level[key]??[]) as RectDef[];}
   private circleArray(level:LevelDefinition,key:CircleKey):Array<{x:number;y:number;r:number}>{return (level[key]??[]) as Array<{x:number;y:number;r:number}>;}
+  private trapAt(level:LevelDefinition,key:TrapKey,index:number):{triggerX:number;triggerY:number;triggerRadius:number}|undefined{return level[key]?.[index];}
 
   private hitTest(p:Vec2):Selection|null{
+    for(const key of ["popWalls","popBumpers","popVoids"] as TrapKey[]){const traps=this.draft[key]??[];for(let i=traps.length-1;i>=0;i--){const t=traps[i]!;if(Phaser.Math.Distance.Between(p.x,p.y,t.triggerX,t.triggerY)<18)return{kind:"trigger",key,index:i};}}
     if(Phaser.Math.Distance.Between(p.x,p.y,this.draft.ball.x,this.draft.ball.y)<24)return{kind:"ball"};
     if(Phaser.Math.Distance.Between(p.x,p.y,this.draft.hole.x,this.draft.hole.y)<25)return{kind:"hole"};
     const portals=this.draft.portals??[];for(let i=portals.length-1;i>=0;i--){const q=portals[i]!;if(Math.min(Phaser.Math.Distance.Between(p.x,p.y,q.a.x,q.a.y),Phaser.Math.Distance.Between(p.x,p.y,q.b.x,q.b.y))<38)return{kind:"portal",index:i};}
     const curves=this.draft.curves??[];for(let i=curves.length-1;i>=0;i--){const c=curves[i]!;if(Math.abs(Phaser.Math.Distance.Between(p.x,p.y,c.x,c.y)-c.r)<24)return{kind:"curve",index:i};}
+    const triangles=this.draft.triangles??[];for(let i=triangles.length-1;i>=0;i--){const t=triangles[i]!;const area=(a:Vec2,b:Vec2,c:Vec2)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);const s=[area(t.a,t.b,p),area(t.b,t.c,p),area(t.c,t.a,p)];if(s.every(v=>v>=-1)||s.every(v=>v<=1))return{kind:"triangle",index:i};}
     for(const key of CIRCLE_KEYS){const arr=this.circleArray(this.draft,key);for(let i=arr.length-1;i>=0;i--){const q=arr[i]!;if(Phaser.Math.Distance.Between(p.x,p.y,q.x,q.y)<=q.r+10)return{kind:"circle",key,index:i};}}
     for(const key of [...RECT_KEYS].reverse()){const arr=this.rectArray(this.draft,key);for(let i=arr.length-1;i>=0;i--){const r=arr[i]!;if(p.x>=r.x-5&&p.x<=r.x+r.w+5&&p.y>=r.y-5&&p.y<=r.y+r.h+5)return{kind:"rect",key,index:i};}}
     return null;
@@ -196,21 +229,25 @@ export class EditorScene extends Phaser.Scene{
     const s=this.selection;if(!s)return null;
     if(s.kind==="ball"){const p=level.ball;return{x:p.x-18,y:p.y-18,w:36,h:36};}
     if(s.kind==="hole"){const p=level.hole;return{x:p.x-20,y:p.y-20,w:40,h:40};}
+    if(s.kind==="trigger"){const t=this.trapAt(level,s.key,s.index);return t?{x:t.triggerX-12,y:t.triggerY-12,w:24,h:24}:null;}
+    if(s.kind==="triangle"){const t=level.triangles?.[s.index];if(!t)return null;const xs=[t.a.x,t.b.x,t.c.x],ys=[t.a.y,t.b.y,t.c.y],x=Math.min(...xs),y=Math.min(...ys);return{x,y,w:Math.max(...xs)-x,h:Math.max(...ys)-y};}
     if(s.kind==="rect")return this.rectArray(level,s.key)[s.index]??null;
     if(s.kind==="circle"){const q=this.circleArray(level,s.key)[s.index];return q?{x:q.x-q.r,y:q.y-q.r,w:q.r*2,h:q.r*2}:null;}
     if(s.kind==="curve"){const c=level.curves?.[s.index];return c?{x:c.x-c.r,y:c.y-c.r,w:c.r*2,h:c.r*2}:null;}
     const p=level.portals?.[s.index];if(!p)return null;const rr=Math.max(p.a.r??28,p.b.r??28);return{x:Math.min(p.a.x,p.b.x)-rr,y:Math.min(p.a.y,p.b.y)-rr,w:Math.abs(p.a.x-p.b.x)+rr*2,h:Math.abs(p.a.y-p.b.y)+rr*2};
   }
 
-  private isResizeHandle(p:Vec2):boolean{const b=this.selectionBounds();if(!b||this.selection?.kind==="ball"||this.selection?.kind==="hole"||this.selection?.kind==="portal")return false;return Phaser.Math.Distance.Between(p.x,p.y,b.x+b.w,b.y+b.h)<18;}
+  private isResizeHandle(p:Vec2):boolean{const b=this.selectionBounds();if(!b||this.selection?.kind==="ball"||this.selection?.kind==="hole"||this.selection?.kind==="portal"||this.selection?.kind==="trigger"||this.selection?.kind==="triangle")return false;return Phaser.Math.Distance.Between(p.x,p.y,b.x+b.w,b.y+b.h)<18;}
 
   private applyTransform(p:Vec2):void{
     if(!this.selection||!this.transformBase||!this.transformStart)return;this.draft=clone(this.transformBase);const s=this.selection,dx=p.x-this.transformStart.x,dy=p.y-this.transformStart.y;
     if(this.transformMode==="move"){
       if(s.kind==="ball")this.draft.ball={x:this.transformBase.ball.x+dx,y:this.transformBase.ball.y+dy};
       else if(s.kind==="hole")this.draft.hole={x:this.transformBase.hole.x+dx,y:this.transformBase.hole.y+dy};
-      else if(s.kind==="rect"){const q=this.rectArray(this.draft,s.key)[s.index];const b=this.rectArray(this.transformBase,s.key)[s.index];if(q&&b){q.x=b.x+dx;q.y=b.y+dy;}}
-      else if(s.kind==="circle"){const q=this.circleArray(this.draft,s.key)[s.index],b=this.circleArray(this.transformBase,s.key)[s.index];if(q&&b){q.x=b.x+dx;q.y=b.y+dy;}}
+      else if(s.kind==="trigger"){const q=this.trapAt(this.draft,s.key,s.index),b=this.trapAt(this.transformBase,s.key,s.index);if(q&&b){q.triggerX=b.triggerX+dx;q.triggerY=b.triggerY+dy;}}
+      else if(s.kind==="triangle"){const q=this.draft.triangles?.[s.index],b=this.transformBase.triangles?.[s.index];if(q&&b){for(const vertex of ["a","b","c"] as const)q[vertex]={x:b[vertex].x+dx,y:b[vertex].y+dy};}}
+      else if(s.kind==="rect"){const q=this.rectArray(this.draft,s.key)[s.index];const b=this.rectArray(this.transformBase,s.key)[s.index];if(q&&b){q.x=b.x+dx;q.y=b.y+dy;if("triggerX" in q&&"triggerX" in b&&typeof b.triggerX==="number")q.triggerX=b.triggerX+dx;if("triggerY" in q&&"triggerY" in b&&typeof b.triggerY==="number")q.triggerY=b.triggerY+dy;}}
+      else if(s.kind==="circle"){const q=this.circleArray(this.draft,s.key)[s.index],b=this.circleArray(this.transformBase,s.key)[s.index];if(q&&b){q.x=b.x+dx;q.y=b.y+dy;if("triggerX" in q&&"triggerX" in b&&typeof b.triggerX==="number")q.triggerX=b.triggerX+dx;if("triggerY" in q&&"triggerY" in b&&typeof b.triggerY==="number")q.triggerY=b.triggerY+dy;}}
       else if(s.kind==="curve"){const q=this.draft.curves?.[s.index],b=this.transformBase.curves?.[s.index];if(q&&b){q.x=b.x+dx;q.y=b.y+dy;}}
       else if(s.kind==="portal"){const q=this.draft.portals?.[s.index],b=this.transformBase.portals?.[s.index];if(q&&b){q.a.x=b.a.x+dx;q.a.y=b.a.y+dy;q.b.x=b.b.x+dx;q.b.y=b.b.y+dy;}}
     }else{
@@ -221,7 +258,7 @@ export class EditorScene extends Phaser.Scene{
   }
 
   private rotateSelected():void{
-    if(this.play||!this.selection)return;this.snapshot();const s=this.selection;
+    if(this.play)return;if(!this.selection){this.orientation=(this.orientation+1)%4;this.toast(`ORIENTACIÓN ${this.orientation*90}°`);return;}this.snapshot();const s=this.selection;
     if(s.kind==="rect"){
       const q=this.rectArray(this.draft,s.key)[s.index];if(!q){this.history.pop();return;}const cx=q.x+q.w/2,cy=q.y+q.h/2,w=q.w;q.w=q.h;q.h=w;q.x=cx-q.w/2;q.y=cy-q.h/2;
       if(s.key==="boosters"||s.key==="fans"||s.key==="ramps")rotateVector(q as RectDef&{dx:number;dy:number});
@@ -230,6 +267,8 @@ export class EditorScene extends Phaser.Scene{
       const q=this.circleArray(this.draft,s.key)[s.index] as {axis?:"x"|"y"}|undefined;if(q?.axis)q.axis=q.axis==="x"?"y":"x";
     }else if(s.kind==="curve"){
       const q=this.draft.curves?.[s.index];if(q){q.startAngle+=Math.PI/2;q.endAngle+=Math.PI/2;}
+    }else if(s.kind==="triangle"){
+      const q=this.draft.triangles?.[s.index];if(q){const xs=[q.a.x,q.b.x,q.c.x],ys=[q.a.y,q.b.y,q.c.y],cx=(Math.min(...xs)+Math.max(...xs))/2,cy=(Math.min(...ys)+Math.max(...ys))/2;for(const v of [q.a,q.b,q.c]){const x=v.x-cx,y=v.y-cy;v.x=cx-y;v.y=cy+x;}}
     }else if(s.kind==="portal"){
       const q=this.draft.portals?.[s.index];if(q){const cx=(q.a.x+q.b.x)/2,cy=(q.a.y+q.b.y)/2;for(const p of[q.a,q.b]){const x=p.x-cx,y=p.y-cy;p.x=cx-y;p.y=cy+x;}}
     }else{this.history.pop();return;}
@@ -238,8 +277,9 @@ export class EditorScene extends Phaser.Scene{
 
   private duplicateSelected():void{
     if(this.play||!this.selection)return;const s=this.selection;if(s.kind==="ball"||s.kind==="hole")return;this.snapshot();
-    if(s.kind==="rect"){const arr=this.rectArray(this.draft,s.key),q=arr[s.index];if(!q)return;arr.push({...clone(q),x:q.x+GRID,y:q.y+GRID});this.selection={...s,index:arr.length-1};}
-    else if(s.kind==="circle"){const arr=this.circleArray(this.draft,s.key),q=arr[s.index];if(!q)return;arr.push({...clone(q),x:q.x+GRID,y:q.y+GRID});this.selection={...s,index:arr.length-1};}
+    if(s.kind==="rect"){const arr=this.rectArray(this.draft,s.key),q=arr[s.index];if(!q)return;const copy=clone(q);copy.x+=GRID;copy.y+=GRID;if("triggerX" in copy&&typeof copy.triggerX==="number")copy.triggerX+=GRID;if("triggerY" in copy&&typeof copy.triggerY==="number")copy.triggerY+=GRID;arr.push(copy);this.selection={...s,index:arr.length-1};}
+    else if(s.kind==="circle"){const arr=this.circleArray(this.draft,s.key),q=arr[s.index];if(!q)return;const copy=clone(q);copy.x+=GRID;copy.y+=GRID;if("triggerX" in copy&&typeof copy.triggerX==="number")copy.triggerX+=GRID;if("triggerY" in copy&&typeof copy.triggerY==="number")copy.triggerY+=GRID;arr.push(copy);this.selection={...s,index:arr.length-1};}
+    else if(s.kind==="triangle"){const arr=this.draft.triangles??=[],q=arr[s.index];if(!q)return;const copy=clone(q);for(const v of [copy.a,copy.b,copy.c]){v.x+=GRID;v.y+=GRID;}arr.push(copy);this.selection={kind:"triangle",index:arr.length-1};}
     else if(s.kind==="curve"){const arr=this.draft.curves??=[],q=arr[s.index];if(!q)return;arr.push({...clone(q),x:q.x+GRID,y:q.y+GRID});this.selection={kind:"curve",index:arr.length-1};}
     else if(s.kind==="portal"){const arr=this.draft.portals??=[],q=arr[s.index];if(!q)return;const copy=clone(q);copy.a.x+=GRID;copy.a.y+=GRID;copy.b.x+=GRID;copy.b.y+=GRID;arr.push(copy);this.selection={kind:"portal",index:arr.length-1};}
     this.changed();
@@ -247,7 +287,7 @@ export class EditorScene extends Phaser.Scene{
 
   private deleteSelected():void{
     if(this.play||!this.selection)return;const s=this.selection;if(s.kind==="ball"||s.kind==="hole"){this.toast("Bola y hoyo se mueven, no se borran");return;}this.snapshot();
-    if(s.kind==="rect")this.rectArray(this.draft,s.key).splice(s.index,1);else if(s.kind==="circle")this.circleArray(this.draft,s.key).splice(s.index,1);else if(s.kind==="curve")this.draft.curves?.splice(s.index,1);else if(s.kind==="portal")this.draft.portals?.splice(s.index,1);
+    if(s.kind==="rect")this.rectArray(this.draft,s.key).splice(s.index,1);else if(s.kind==="circle")this.circleArray(this.draft,s.key).splice(s.index,1);else if(s.kind==="trigger")this.draft[s.key]?.splice(s.index,1);else if(s.kind==="triangle")this.draft.triangles?.splice(s.index,1);else if(s.kind==="curve")this.draft.curves?.splice(s.index,1);else if(s.kind==="portal")this.draft.portals?.splice(s.index,1);
     this.selection=null;this.changed();
   }
 
@@ -258,13 +298,19 @@ export class EditorScene extends Phaser.Scene{
   }
 
   private drawSelection():void{
-    if(!this.overlay||this.dragStart||this.play)return;this.overlay.clear();const b=this.selectionBounds();if(!b)return;this.overlay.lineStyle(2,0x9dd7ff,.95);this.overlay.strokeRect(b.x-4,b.y-4,b.w+8,b.h+8);this.overlay.fillStyle(0x9dd7ff,.95);this.overlay.fillRect(b.x+b.w-6,b.y+b.h-6,12,12);
+    if(!this.overlay||this.dragStart||this.play)return;this.overlay.clear();this.drawTrapGuides();const b=this.selectionBounds();if(!b)return;this.overlay.lineStyle(2,0x9dd7ff,.95);this.overlay.strokeRect(b.x-4,b.y-4,b.w+8,b.h+8);if(this.selection?.kind!=="trigger"&&this.selection?.kind!=="triangle"){this.overlay.fillStyle(0x9dd7ff,.95);this.overlay.fillRect(b.x+b.w-6,b.y+b.h-6,12,12);}
+  }
+  private drawTrapGuides():void{
+    for(const key of ["popWalls","popBumpers","popVoids"] as TrapKey[])for(const t of this.draft[key]??[]){
+      this.overlay.lineStyle(2,key==="popVoids"?0xffa86b:0xffdc77,.8);this.overlay.strokeCircle(t.triggerX,t.triggerY,t.triggerRadius);this.overlay.fillStyle(0xffffff,.95);this.overlay.fillCircle(t.triggerX,t.triggerY,5);
+      this.overlay.lineStyle(2,0xffdc77,.65);if("r" in t)this.overlay.strokeCircle(t.x,t.y,t.r);else this.overlay.strokeRect(t.x,t.y,t.w,t.h);
+    }
   }
 
   private toggleGrid():void{this.gridEnabled=!this.gridEnabled;try{localStorage.setItem(GRID_KEY,this.gridEnabled?"1":"0");}catch{/* optional */}this.refreshUi();}
   private loadGridPreference():void{try{const x=localStorage.getItem(GRID_KEY);if(x!==null)this.gridEnabled=x!=="0";}catch{/* default */}}
   private snapshot():void{this.history.push(clone(this.draft));if(this.history.length>60)this.history.shift();}
-  private undo():void{if(this.play)return;const previous=this.history.pop();if(!previous)return;this.draft=previous;this.selection=null;this.portalStart=null;this.changed(false);}
+  private undo():void{if(this.play)return;const previous=this.history.pop();if(!previous)return;this.draft=previous;this.selection=null;this.pendingTrap=null;this.portalStart=null;this.changed(false);}
   private changed(save=true):void{if(save)this.saveDraft();this.rebuildPreview();this.refreshUi();}
   private rebuildPreview(selection=true):void{this.sim=new GolfSimulation(this.draft);drawCourse(this.course,this.draft,this.sim.state);drawDynamicCourse(this.dynamic,this.draft,0);this.ball.setPosition(this.draft.ball.x,this.draft.ball.y).setVisible(true);this.drawGrid();if(selection)this.drawSelection();}
 
@@ -276,12 +322,13 @@ export class EditorScene extends Phaser.Scene{
 
   private saveDraft():void{try{localStorage.setItem(DRAFT_KEY,JSON.stringify(this.draft));}catch{/* optional */}}
   private loadDraft():void{try{const raw=localStorage.getItem(DRAFT_KEY);if(raw)this.draft=JSON.parse(raw) as LevelDefinition;}catch{this.draft=blank();}}
-  private newDraft():void{if(this.play||!window.confirm("¿Mapa nuevo?"))return;this.snapshot();this.draft=blank();this.selection=null;this.changed();}
-  private clearObjects():void{if(this.play||!window.confirm("¿Borrar todos los obstáculos?"))return;this.snapshot();const keep=blank();keep.id=this.draft.id;keep.mode=this.draft.mode;keep.ball=clone(this.draft.ball);keep.hole=clone(this.draft.hole);keep.threeStar=clone(this.draft.threeStar);keep.twoStar=clone(this.draft.twoStar);this.draft=keep;this.selection=null;this.changed();}
+  private newDraft():void{if(this.play||!window.confirm("¿Mapa nuevo?"))return;this.snapshot();this.draft=blank();this.selection=null;this.pendingTrap=null;this.changed();}
+  private clearObjects():void{if(this.play||!window.confirm("¿Borrar todos los obstáculos?"))return;this.snapshot();const keep=blank();keep.id=this.draft.id;keep.mode=this.draft.mode;keep.ball=clone(this.draft.ball);keep.hole=clone(this.draft.hole);keep.threeStar=clone(this.draft.threeStar);keep.twoStar=clone(this.draft.twoStar);this.draft=keep;this.selection=null;this.pendingTrap=null;this.changed();}
   private loadCoursePrompt():void{if(this.play)return;const raw=window.prompt("Nivel: classic-01 o troll-01",this.draft.id);if(raw)this.loadCourseById(raw,true);}
-  private loadCourseById(raw:string,notify=true):void{const m=/^(classic|troll)-(\d{1,2})$/i.exec(raw.trim());if(!m){if(notify)this.toast("ID no válido");return;}const mode=m[1]!.toLowerCase() as "classic"|"troll",index=Number(m[2])-1,levels=levelsForMode(mode);if(index<0||index>=levels.length){if(notify)this.toast("Ese nivel no existe");return;}this.draft=clone(levelFor(mode,index));this.selection=null;this.saveDraft();if(this.course)this.rebuildPreview();if(notify)this.toast(`${this.draft.id} cargado`);}
+  private loadCourseById(raw:string,notify=true):void{const m=/^(classic|troll)-(\d{1,2})$/i.exec(raw.trim());if(!m){if(notify)this.toast("ID no válido");return;}const mode=m[1]!.toLowerCase() as "classic"|"troll",index=Number(m[2])-1,levels=levelsForMode(mode);if(index<0||index>=levels.length){if(notify)this.toast("Ese nivel no existe");return;}this.draft=clone(levelFor(mode,index));this.selection=null;this.pendingTrap=null;this.saveDraft();if(this.course)this.rebuildPreview();if(notify)this.toast(`${this.draft.id} cargado`);}
   private editPar():void{const three=Number(window.prompt("Golpes para ★★★",String(this.draft.threeStar.maxStrokes??2)));if(!Number.isFinite(three)||three<1)return;const two=Number(window.prompt("Golpes para ★★",String(this.draft.twoStar.maxStrokes??three+2)));if(!Number.isFinite(two)||two<three)return;this.snapshot();this.draft.threeStar={maxStrokes:Math.round(three)};this.draft.twoStar={maxStrokes:Math.round(two)};this.changed();}
   private async exportDraft():Promise<void>{const json=JSON.stringify(this.draft,null,2);try{await navigator.clipboard.writeText(json);this.toast("JSON COPIADO");}catch{window.prompt("Copia el JSON",json);}}
   private async copyFeedback():Promise<void>{if(await BetaFeedbackSystem.copyAll())this.toast(`${BetaFeedbackSystem.count()} FEEDBACK COPIADOS`);else window.prompt("Copia el feedback",BetaFeedbackSystem.exportText());}
+  private openReview():void{if(this.play){this.toast("Sal del TEST antes de revisar");return;}const close=openDevMapReviewPanel(this.draft,item=>{this.snapshot();this.draft=clone(item.level);this.pendingTrap=null;this.selection=null;this.changed();this.toast(`VISTA PREVIA · ${item.title}`);});this.events.once("shutdown",close);}
   private toast(message:string):void{const t=this.add.text(270,858,message,{fontFamily:"system-ui, sans-serif",fontSize:"13px",fontStyle:"bold",color:"#f4f7fa",backgroundColor:"#111a22",padding:{x:12,y:8}}).setOrigin(.5).setDepth(100);this.tweens.add({targets:t,alpha:0,y:848,delay:900,duration:260,onComplete:()=>t.destroy()});}
 }

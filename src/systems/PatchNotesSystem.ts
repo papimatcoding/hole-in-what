@@ -11,6 +11,18 @@ const READ_KEY="troll-golf-last-read-patch-v1";
 
 export const PATCH_NOTES:PatchNote[]=[
   {
+    id:"beta-map-workshop-sep29",
+    title:"BETA · TALLER DE MAPAS",
+    date:"29 SEP 2026",
+    summary:"Nuevos tiros para Grassland y herramientas para proponer hoyos.",
+    bullets:[
+      "Ajustadas rutas, trampas y objetivos de estrellas en los primeros diez hoyos.",
+      "Al volver de una sección, el menú recuerda dónde estabas.",
+      "BETA LAB permite diseñar, probar y compartir propuestas de mapas para revisión.",
+      "Los mapas de Grassland siguen en prueba: tus comentarios nos ayudan a mejorarlos."
+    ]
+  },
+  {
     id:"beta-rc7-worlds",
     title:"RC7 · WORLDS",
     date:"22 SEP 2026",
