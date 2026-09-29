@@ -21,6 +21,9 @@ interface SectionDefinition{ id:DesktopSection; label:string; }
 interface ChapterMenuCard{ index:number; name:string; exists:boolean; }
 interface MenuData{ section?:DesktopSection; carouselOffset?:number; }
 
+// Keep the player's place when a card opens a full-screen menu scene.
+let previousMenuLocation:{section:DesktopSection;carouselOffset:number}={section:"campaign",carouselOffset:0};
+
 const DESKTOP_SECTIONS:SectionDefinition[]=[
   {id:"campaign",label:"CAMPAÑA"},
   {id:"cosmetics",label:"COSMÉTICOS"},
@@ -51,12 +54,14 @@ export class MenuScene extends Phaser.Scene {
 
   init(data:MenuData={}):void{
     const validSection=DESKTOP_SECTIONS.some(section=>section.id===data.section);
-    this.desktopSection=validSection?data.section!:"campaign";
-    this.carouselOffset=Math.max(0,Math.floor((data.carouselOffset??0)/3)*3);
+    this.desktopSection=validSection?data.section!:previousMenuLocation.section;
+    this.carouselOffset=Math.max(0,data.carouselOffset??(validSection?0:previousMenuLocation.carouselOffset));
   }
 
   create():void{
     setupDesignCamera(this);this.desktop=isDesktopUI();
+    if(this.desktop)this.carouselOffset=Math.floor(this.carouselOffset/3)*3;
+    this.events.once("shutdown",()=>{previousMenuLocation={section:this.desktopSection,carouselOffset:this.carouselOffset};});
     this.cameras.main.setBackgroundColor("#0b0f14");
     void BetaTelemetry.ensureTester(false);
     void ProductTelemetry.ensureSession();
