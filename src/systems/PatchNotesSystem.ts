@@ -8,17 +8,17 @@ export interface PatchNote{
 
 // Legacy key retained so the rebrand does not make old notes unread again for existing testers.
 const READ_KEY="troll-golf-last-read-patch-v1";
+const DISMISSED_KEY="hole-in-what-dismissed-patches-v1";
 
 export const PATCH_NOTES:PatchNote[]=[
   {
     id:"beta-map-workshop-sep29",
-    title:"BETA · TALLER DE MAPAS",
+    title:"BETA · GRASSLAND",
     date:"29 SEP 2026",
-    summary:"Nuevos tiros para Grassland y herramientas para proponer hoyos.",
+    summary:"Nuevos ángulos y trampas en los primeros hoyos.",
     bullets:[
       "Ajustadas rutas, trampas y objetivos de estrellas en los primeros diez hoyos.",
       "Al volver de una sección, el menú recuerda dónde estabas.",
-      "BETA LAB permite diseñar, probar y compartir propuestas de mapas para revisión.",
       "Los mapas de Grassland siguen en prueba: tus comentarios nos ayudan a mejorarlos."
     ]
   },
@@ -90,8 +90,11 @@ export const PATCH_NOTES:PatchNote[]=[
 ];
 
 function readId():string|null{try{return localStorage.getItem(READ_KEY);}catch{return null;}}
+function dismissed():string[]{try{const value=JSON.parse(localStorage.getItem(DISMISSED_KEY)??"[]") as unknown;return Array.isArray(value)?value.filter((x):x is string=>typeof x==="string"):[];}catch{return[];}}
 export const PatchNotes={
-  latest():PatchNote{return PATCH_NOTES[0]!;},
-  hasUnread():boolean{return readId()!==PATCH_NOTES[0]?.id;},
-  markRead():void{try{const id=PATCH_NOTES[0]?.id;if(id)localStorage.setItem(READ_KEY,id);}catch{/* optional */}}
+  visible():PatchNote[]{const hidden=new Set(dismissed());return PATCH_NOTES.filter(note=>!hidden.has(note.id));},
+  latest():PatchNote{return this.visible()[0]??PATCH_NOTES[0]!;},
+  hasUnread():boolean{const latest=this.visible()[0];return Boolean(latest&&readId()!==latest.id);},
+  markRead():void{try{const id=this.visible()[0]?.id;if(id)localStorage.setItem(READ_KEY,id);}catch{/* optional */}},
+  dismiss(id:string):void{if(!PATCH_NOTES.some(note=>note.id===id))return;try{localStorage.setItem(DISMISSED_KEY,JSON.stringify([...new Set([...dismissed(),id])]));}catch{/* optional */}}
 };

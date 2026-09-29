@@ -159,8 +159,11 @@ export function sanitizeCourse(level:LevelDefinition):LevelDefinition {
   next.voids=(next.voids ?? []).filter(v=>!spawn.some(p=>pointInRect(p.x,p.y,v,45)));
 
   for(const key of ["voids","sand","ice","fans","ramps"] as const) cleanRects(next,key);
-  next.popWalls=(next.popWalls ?? []).filter(p=>!(next.walls ?? []).some(w=>overlap(p,w,3)) && !(next.voids ?? []).some(v=>overlap(p,v,3)));
-  next.popVoids=(next.popVoids ?? []).filter(p=>!(next.walls ?? []).some(w=>overlap(p,w,3)));
+  // Authored traps may meet a wall exactly at its edge to read as one structure.
+  // Procedural courses keep their clearance margin because their joins are not curated.
+  const trapMargin=next.authored?0:3;
+  next.popWalls=(next.popWalls ?? []).filter(p=>!(next.walls ?? []).some(w=>overlap(p,w,trapMargin)) && !(next.voids ?? []).some(v=>overlap(p,v,trapMargin)));
+  next.popVoids=(next.popVoids ?? []).filter(p=>!(next.walls ?? []).some(w=>overlap(p,w,trapMargin)));
   next.portals=(next.portals ?? []).filter(pair=>[pair.a,pair.b].every(p=>
     !(next.walls ?? []).some(w=>pointInRect(p.x,p.y,w,36)) && !(next.voids ?? []).some(v=>pointInRect(p.x,p.y,v,34))
   ));

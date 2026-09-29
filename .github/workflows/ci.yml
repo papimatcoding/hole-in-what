@@ -42,6 +42,8 @@ jobs:
         run: npm run test:hole
       - name: Check first-shot tutorial identity
         run: npm run test:tutorial
+      - name: Check patch inbox translations and dismissal
+        run: npm run test:patch-notes
       - name: Check authored mechanics
         if: steps.campaign_changes.outputs.changed == 'true'
         run: npm run test:mechanics
