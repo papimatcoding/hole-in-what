@@ -258,7 +258,7 @@ export class EditorScene extends Phaser.Scene{
   }
 
   private rotateSelected():void{
-    if(this.play||!this.selection)return;this.snapshot();const s=this.selection;
+    if(this.play)return;if(!this.selection){this.orientation=(this.orientation+1)%4;this.toast(`ORIENTACIÓN ${this.orientation*90}°`);return;}this.snapshot();const s=this.selection;
     if(s.kind==="rect"){
       const q=this.rectArray(this.draft,s.key)[s.index];if(!q){this.history.pop();return;}const cx=q.x+q.w/2,cy=q.y+q.h/2,w=q.w;q.w=q.h;q.h=w;q.x=cx-q.w/2;q.y=cy-q.h/2;
       if(s.key==="boosters"||s.key==="fans"||s.key==="ramps")rotateVector(q as RectDef&{dx:number;dy:number});
