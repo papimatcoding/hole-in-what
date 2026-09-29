@@ -135,8 +135,8 @@ export class EditorScene extends Phaser.Scene{
     k.on("keydown-Z",(e:KeyboardEvent)=>{if(e.ctrlKey||e.metaKey)this.undo();});
   }
 
-  private setTool(tool:EditorTool):void{const i=TOOLS.indexOf(tool);if(i>=0){this.toolIndex=i;this.pendingTrap=null;this.portalStart=null;this.dragStart=null;this.overlay.clear();this.refreshUi();}}
-  private changeTool(delta:number):void{this.toolIndex=(this.toolIndex+delta+TOOLS.length)%TOOLS.length;this.pendingTrap=null;this.portalStart=null;this.dragStart=null;this.overlay.clear();this.refreshUi();}
+  private setTool(tool:EditorTool):void{const i=TOOLS.indexOf(tool);if(i>=0){this.toolIndex=i;this.selection=null;this.pendingTrap=null;this.portalStart=null;this.dragStart=null;this.overlay.clear();this.refreshUi();}}
+  private changeTool(delta:number):void{this.toolIndex=(this.toolIndex+delta+TOOLS.length)%TOOLS.length;this.selection=null;this.pendingTrap=null;this.portalStart=null;this.dragStart=null;this.overlay.clear();this.refreshUi();}
   private activeTool():EditorTool{return TOOLS[this.toolIndex]!;}
   private openToolPalette():void{
     if(this.play)return;
