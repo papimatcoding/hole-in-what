@@ -21,4 +21,8 @@ The map workshop is preserved on `feature/map-workshop` and removed from the pub
 
 ## Next playtest questions
 
+### 3 October follow-up
+
+C03's gate now meets the central block exactly, closing its misleading 4 px slit. C05's gate meets the vertical barrier, closing its 24 px slit. Neither trap overlaps the existing wall. Targeted full human-model checks pass for both holes, retaining two-stroke human routes and 72% modeled trap consequences; C03 touch/casual 98%/88%, C05 89%/83%. Geometry, persistent-state clearance, Grassland contracts, localized patch inbox and build pass. This closes two visual joins, not the whole chapter's remaining design review.
+
 For every wall or shape: what shot angle, route choice or recovery does it enable? For every surprise: what tempting line does it alter, what does the player learn, and can they recover? Inspect 04, 06, 07, 09 and 10 on a normal phone, including the activated trap state. Record unclear shapes and unfair retries before accepting the chapter as final.
