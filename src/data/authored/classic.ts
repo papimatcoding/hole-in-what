@@ -29,7 +29,7 @@ bait(c2,pt(420,684),pt(402,516));
 const c3=base("classic",3,pt(270,836),pt(270,166),2,3,"wall");
 c3.trollArchetype="safe-lane-collapse";
 c3.walls=[r(205,405,130,220)];
-c3.popWalls=[{...r(339,540,173,22),triggerX:402,triggerY:700,triggerRadius:105}];
+c3.popWalls=[{...r(335,540,177,22),triggerX:402,triggerY:700,triggerRadius:105}];
 path(c3,pt(132,670),pt(132,322),pt(270,166));
 bait(c3,pt(402,700),pt(402,540),pt(402,322));
 
@@ -47,7 +47,7 @@ const c5=base("classic",5,pt(116,836),pt(422,166),2,3,"bumper");
 c5.trollArchetype="rebound-punish";
 c5.walls=[r(210,548,24,166),r(326,320,24,160),r(28,714,220,24)];
 c5.bumpers=[{x:385,y:605,r:42}];
-c5.popWalls=[{...r(258,680,150,22),triggerX:220,triggerY:770,triggerRadius:110}];
+c5.popWalls=[{...r(234,680,174,22),triggerX:220,triggerY:770,triggerRadius:110}];
 path(c5,pt(390,626),pt(426,510),pt(270,420),pt(238,258),pt(422,166));
 bait(c5,pt(220,770),pt(340,680),pt(390,626));
 

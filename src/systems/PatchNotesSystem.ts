@@ -12,6 +12,16 @@ const DISMISSED_KEY="hole-in-what-dismissed-patches-v1";
 
 export const PATCH_NOTES:PatchNote[]=[
   {
+    id:"beta-grassland-joins-oct03",
+    title:"BETA · GRASSLAND",
+    date:"03 OCT 2026",
+    summary:"Trampas mejor integradas en los obstáculos.",
+    bullets:[
+      "Las trampas de los hoyos 3 y 5 ahora continúan los obstáculos, sin rendijas falsas.",
+      "Se mantienen las rutas alternativas y el objetivo de dos golpes para tres estrellas."
+    ]
+  },
+  {
     id:"beta-map-workshop-sep29",
     title:"BETA · GRASSLAND",
     date:"29 SEP 2026",
